@@ -1,0 +1,16 @@
+{
+  "@@locale": "en",
+  "appTitle": "Service Marketplace",
+  "@appTitle": {
+    "description": "Application name shown in the app bar and task switcher."
+  },
+  "homeWelcome": "Welcome to Service Marketplace",
+  "homeSubtitle": "Home services, on demand.",
+  "servicesTitle": "Services",
+  "profileTitle": "Profile",
+  "authTitle": "Sign in",
+  "placeholderNotice": "This screen is a placeholder.",
+  "pageNotFoundTitle": "Page not found",
+  "languageLabel": "Language",
+  "languageSystemDefault": "Device language"
+}

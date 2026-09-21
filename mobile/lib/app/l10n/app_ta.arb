@@ -1,0 +1,13 @@
+{
+  "@@locale": "ta",
+  "appTitle": "சேவை சந்தை",
+  "homeWelcome": "சேவை சந்தைக்கு வரவேற்கிறோம்",
+  "homeSubtitle": "வீட்டு சேவைகள், தேவையான நேரத்தில்.",
+  "servicesTitle": "சேவைகள்",
+  "profileTitle": "சுயவிவரம்",
+  "authTitle": "உள்நுழை",
+  "placeholderNotice": "இது ஒரு தற்காலிகத் திரை.",
+  "pageNotFoundTitle": "பக்கம் கிடைக்கவில்லை",
+  "languageLabel": "மொழி",
+  "languageSystemDefault": "சாதன மொழி"
+}

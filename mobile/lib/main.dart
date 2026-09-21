@@ -1,31 +1,18 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/app/app.dart';
+import 'package:mobile/core/config/app_config.dart';
 
 void main() {
-  runApp(const ServiceMarketplaceApp());
-}
+  WidgetsFlutterBinding.ensureInitialized();
 
-class ServiceMarketplaceApp extends StatelessWidget {
-  const ServiceMarketplaceApp({super.key});
+  // Throws on invalid configuration, so a misconfigured build fails at launch.
+  final config = AppConfig.fromEnvironment();
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Service Marketplace',
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Service Marketplace'),
-        ),
-        body: const Center(
-          child: Text(
-            'Welcome to Service Marketplace',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  runApp(
+    ProviderScope(
+      overrides: [appConfigProvider.overrideWithValue(config)],
+      child: const ServiceMarketplaceApp(),
+    ),
+  );
 }

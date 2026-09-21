@@ -1,0 +1,13 @@
+{
+  "@@locale": "si",
+  "appTitle": "සේවා වෙළඳපොළ",
+  "homeWelcome": "සේවා වෙළඳපොළට සාදරයෙන් පිළිගනිමු",
+  "homeSubtitle": "ගෘහ සේවා, ඔබට අවශ්‍ය වේලාවට.",
+  "servicesTitle": "සේවා",
+  "profileTitle": "පැතිකඩ",
+  "authTitle": "පිවිසෙන්න",
+  "placeholderNotice": "මෙය තාවකාලික තිරයකි.",
+  "pageNotFoundTitle": "පිටුව හමු නොවීය",
+  "languageLabel": "භාෂාව",
+  "languageSystemDefault": "උපාංගයේ භාෂාව"
+}

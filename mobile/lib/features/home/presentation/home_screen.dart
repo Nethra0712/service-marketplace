@@ -1,0 +1,53 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mobile/app/l10n/app_localizations.dart';
+import 'package:mobile/app/l10n/language_menu.dart';
+import 'package:mobile/app/router/app_routes.dart';
+import 'package:mobile/app/theme/app_spacing.dart';
+
+/// Placeholder home screen. Demonstrates localization and navigation only.
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.appTitle),
+        actions: const [LanguageMenu()],
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: AppSpacing.screen,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: AppSpacing.lg),
+              Text(l10n.homeWelcome, style: textTheme.headlineMedium),
+              const SizedBox(height: AppSpacing.sm),
+              Text(l10n.homeSubtitle, style: textTheme.bodyLarge),
+              const SizedBox(height: AppSpacing.xl),
+              FilledButton(
+                onPressed: () => context.push(AppRoutes.services.path),
+                child: Text(l10n.servicesTitle),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              OutlinedButton(
+                onPressed: () => context.push(AppRoutes.profile.path),
+                child: Text(l10n.profileTitle),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              OutlinedButton(
+                onPressed: () => context.push(AppRoutes.auth.path),
+                child: Text(l10n.authTitle),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
