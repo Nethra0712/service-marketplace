@@ -1,12 +1,12 @@
 // CLI: `npm run db:seed`. Loads DEVELOPMENT example data only.
 import '../../config/dotenv.js';
 
-import { loadEnv } from '../../config/env.js';
+import { loadDatabaseEnv } from '../../config/env.js';
 import { createDatabase } from '../client.js';
 import { assertSeedAllowed } from './guard.js';
 import { seedServiceCategories } from './service-categories.js';
 
-const config = loadEnv();
+const config = loadDatabaseEnv();
 assertSeedAllowed(config.nodeEnv);
 
 const handle = createDatabase(config.databaseUrl);

@@ -4,6 +4,11 @@ import 'package:mobile/features/auth/domain/auth_status.dart';
 /// Decides whether navigating to [location] must be redirected, given the
 /// current [status]. Returns the path to redirect to, or null to proceed.
 ///
+/// While the status is still [AuthStatus.unknown] (a stored session is being
+/// restored) every route waits on the splash screen, so a signed-in person is
+/// never flashed the sign-in screen and a signed-out person never sees a
+/// protected screen. Once it is known the splash forwards to the right place.
+///
 /// Pure function so the access rules can be unit-tested without a router.
 String? resolveAuthRedirect({
   required AuthStatus status,
@@ -11,9 +16,18 @@ String? resolveAuthRedirect({
   Iterable<AppRoute> routes = AppRoutes.all,
 }) {
   final route = _match(routes, location);
-  if (route == null) return null;
+  final onSplash = route?.path == AppRoutes.splash.path;
+
+  if (status == AuthStatus.unknown) {
+    return onSplash ? null : AppRoutes.splash.path;
+  }
 
   final signedIn = status == AuthStatus.authenticated;
+  if (onSplash) {
+    return signedIn ? AppRoutes.home.path : AppRoutes.auth.path;
+  }
+  if (route == null) return null;
+
   switch (route.access) {
     case RouteAccess.public:
       return null;

@@ -4,6 +4,7 @@ import { createApp } from './app.js';
 import { EnvValidationError, loadEnv, type AppConfig } from './config/env.js';
 import { createDatabase } from './db/client.js';
 import { createLogger } from './lib/logger.js';
+import { createSmsProvider } from './modules/sms/index.js';
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -20,7 +21,13 @@ try {
 
 const logger = createLogger(config);
 const database = createDatabase(config.databaseUrl, { logger });
-const app = createApp({ config, logger, pingDatabase: database.ping });
+const app = createApp({
+  config,
+  logger,
+  db: database.db,
+  pingDatabase: database.ping,
+  sms: createSmsProvider(config, logger),
+});
 
 const server = app.listen(config.port, () => {
   logger.info({ port: config.port, env: config.nodeEnv }, 'API server listening');

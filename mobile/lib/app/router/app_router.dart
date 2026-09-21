@@ -8,7 +8,9 @@ import 'package:mobile/app/router/auth_redirect.dart';
 import 'package:mobile/core/widgets/placeholder_screen.dart';
 import 'package:mobile/features/auth/application/auth_status_provider.dart';
 import 'package:mobile/features/auth/domain/auth_status.dart';
-import 'package:mobile/features/auth/presentation/auth_screen.dart';
+import 'package:mobile/features/auth/presentation/otp_verification_screen.dart';
+import 'package:mobile/features/auth/presentation/phone_entry_screen.dart';
+import 'package:mobile/features/auth/presentation/splash_screen.dart';
 import 'package:mobile/features/home/presentation/home_screen.dart';
 import 'package:mobile/features/profile/presentation/profile_screen.dart';
 import 'package:mobile/features/services/presentation/services_screen.dart';
@@ -16,8 +18,9 @@ import 'package:mobile/features/services/presentation/services_screen.dart';
 /// The app's single [GoRouter]. All routes are declared here; access rules live
 /// in [AppRoutes] and are applied by [resolveAuthRedirect].
 final routerProvider = Provider<GoRouter>((ref) {
-  // go_router re-evaluates `redirect` whenever this notifier changes, so a
-  // sign-in or sign-out moves the user to the right place automatically.
+  // go_router re-evaluates `redirect` whenever this notifier changes, so
+  // signing in, signing out, or a session expiring moves the user to the right
+  // place automatically.
   final authListenable = ValueNotifier<AuthStatus>(
     ref.read(authStatusProvider),
   );
@@ -36,14 +39,24 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
     routes: [
       GoRoute(
-        name: AppRoutes.home.name,
-        path: AppRoutes.home.path,
-        builder: (context, state) => const HomeScreen(),
+        name: AppRoutes.splash.name,
+        path: AppRoutes.splash.path,
+        builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
         name: AppRoutes.auth.name,
         path: AppRoutes.auth.path,
-        builder: (context, state) => const AuthScreen(),
+        builder: (context, state) => const PhoneEntryScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.otp.name,
+        path: AppRoutes.otp.path,
+        builder: (context, state) => const OtpVerificationScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.home.name,
+        path: AppRoutes.home.path,
+        builder: (context, state) => const HomeScreen(),
       ),
       GoRoute(
         name: AppRoutes.services.name,

@@ -1,11 +1,11 @@
 // CLI: `npm run db:migrate`. Applies pending migrations to DATABASE_URL.
 import '../config/dotenv.js';
 
-import { loadEnv } from '../config/env.js';
+import { loadDatabaseEnv } from '../config/env.js';
 import { createDatabase } from './client.js';
 import { runMigrations } from './migrator.js';
 
-const config = loadEnv();
+const config = loadDatabaseEnv();
 const handle = createDatabase(config.databaseUrl);
 
 try {

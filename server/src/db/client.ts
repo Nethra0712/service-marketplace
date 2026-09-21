@@ -7,6 +7,9 @@ import * as schema from './schema/index.js';
 
 export type Database = NodePgDatabase<typeof schema>;
 
+/** The transaction handle passed to `db.transaction(async (tx) => ...)`. */
+export type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
+
 export interface DatabaseHandle {
   db: Database;
   pool: pg.Pool;

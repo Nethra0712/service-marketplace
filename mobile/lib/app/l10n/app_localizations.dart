@@ -118,6 +118,12 @@ abstract class AppLocalizations {
   /// **'Home services, on demand.'**
   String get homeSubtitle;
 
+  /// No description provided for @homeSignedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {phone}'**
+  String homeSignedInAs(String phone);
+
   /// No description provided for @servicesTitle.
   ///
   /// In en, this message translates to:
@@ -130,11 +136,11 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profileTitle;
 
-  /// No description provided for @authTitle.
+  /// No description provided for @profilePhoneLabel.
   ///
   /// In en, this message translates to:
-  /// **'Sign in'**
-  String get authTitle;
+  /// **'Mobile number'**
+  String get profilePhoneLabel;
 
   /// No description provided for @placeholderNotice.
   ///
@@ -159,6 +165,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Device language'**
   String get languageSystemDefault;
+
+  /// No description provided for @authTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authTitle;
+
+  /// No description provided for @authPhoneIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your mobile number and we\'ll text you a verification code.'**
+  String get authPhoneIntro;
+
+  /// No description provided for @authPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile number'**
+  String get authPhoneLabel;
+
+  /// No description provided for @authPhoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'77 123 4567'**
+  String get authPhoneHint;
+
+  /// No description provided for @authSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get authSendCode;
+
+  /// No description provided for @authVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your number'**
+  String get authVerifyTitle;
+
+  /// No description provided for @authVerifyInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code we sent to {phone}.'**
+  String authVerifyInstruction(String phone);
+
+  /// No description provided for @authCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code'**
+  String get authCodeLabel;
+
+  /// No description provided for @authVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get authVerify;
+
+  /// No description provided for @authResendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get authResendCode;
+
+  /// No description provided for @authResendIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code in {seconds}s'**
+  String authResendIn(int seconds);
+
+  /// No description provided for @authChangeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different number'**
+  String get authChangeNumber;
+
+  /// No description provided for @authSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get authSignOut;
+
+  /// No description provided for @errorInvalidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid Sri Lankan mobile number.'**
+  String get errorInvalidPhone;
+
+  /// No description provided for @errorInvalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is incorrect or has expired.'**
+  String get errorInvalidCode;
+
+  /// No description provided for @errorAttemptsExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many incorrect attempts. Request a new code.'**
+  String get errorAttemptsExceeded;
+
+  /// No description provided for @errorCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait a moment before requesting another code.'**
+  String get errorCooldown;
+
+  /// No description provided for @errorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please try again later.'**
+  String get errorRateLimited;
+
+  /// No description provided for @errorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach the server. Check your connection and try again.'**
+  String get errorNetwork;
+
+  /// No description provided for @errorSmsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t send the code. Please try again shortly.'**
+  String get errorSmsUnavailable;
+
+  /// No description provided for @errorAccountSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is suspended.'**
+  String get errorAccountSuspended;
+
+  /// No description provided for @errorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get errorGeneric;
 }
 
 class _AppLocalizationsDelegate

@@ -1,13 +1,12 @@
-import { afterAll, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 
-import { createApp } from '../../src/app.js';
-import { createLogger } from '../../src/lib/logger.js';
+import { buildTestApp } from '../helpers/app.js';
 import { createTestDatabase } from '../helpers/database.js';
 import { errorOf } from '../helpers/http.js';
 
-const logger = createLogger({ logLevel: 'silent' });
 const database = createTestDatabase();
+const { db } = database;
 
 afterAll(async () => {
   await database.close();
@@ -16,7 +15,7 @@ afterAll(async () => {
 describe('GET /api/health', () => {
   it('reports the process is up without touching the database', async () => {
     const pingDatabase = vi.fn().mockRejectedValue(new Error('must not be called'));
-    const app = createApp({ config: { corsOrigins: [] }, logger, pingDatabase });
+    const { app } = buildTestApp({ db, pingDatabase });
 
     const res = await request(app).get('/api/health');
 
@@ -30,7 +29,7 @@ describe('GET /api/health', () => {
 
 describe('GET /api/health/db', () => {
   it('connects to the real PostgreSQL database', async () => {
-    const app = createApp({ config: { corsOrigins: [] }, logger, pingDatabase: database.ping });
+    const { app } = buildTestApp({ db, pingDatabase: database.ping });
 
     const res = await request(app).get('/api/health/db');
 
@@ -44,7 +43,7 @@ describe('GET /api/health/db', () => {
       .mockRejectedValue(
         new Error('connect ECONNREFUSED 10.0.0.5:5432 password authentication failed hunter2'),
       );
-    const app = createApp({ config: { corsOrigins: [] }, logger, pingDatabase });
+    const { app } = buildTestApp({ db, pingDatabase });
 
     const res = await request(app).get('/api/health/db');
 
@@ -59,11 +58,7 @@ describe('GET /api/health/db', () => {
 });
 
 describe('request handling foundation', () => {
-  const app = createApp({
-    config: { corsOrigins: [] },
-    logger,
-    pingDatabase: () => Promise.resolve(),
-  });
+  const { app } = buildTestApp({ db });
 
   it('answers unknown routes with the standard 404 error body', async () => {
     const res = await request(app).get('/api/does-not-exist');
@@ -112,16 +107,18 @@ describe('request handling foundation', () => {
 });
 
 describe('CORS', () => {
-  const makeApp = (corsOrigins: string[]) =>
-    createApp({ config: { corsOrigins }, logger, pingDatabase: () => Promise.resolve() });
+  const appWithOrigins = (corsOrigins: string[]) =>
+    buildTestApp({ db, config: { corsOrigins } }).app;
 
   it('grants no cross-origin access by default', async () => {
-    const res = await request(makeApp([])).get('/api/health').set('Origin', 'https://evil.example');
+    const res = await request(appWithOrigins([]))
+      .get('/api/health')
+      .set('Origin', 'https://evil.example');
     expect(res.headers['access-control-allow-origin']).toBeUndefined();
   });
 
   it('allows only configured origins', async () => {
-    const app = makeApp(['https://admin.example.com']);
+    const app = appWithOrigins(['https://admin.example.com']);
 
     const allowed = await request(app)
       .get('/api/health')

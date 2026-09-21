@@ -1,71 +1,87 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/app/app.dart';
 import 'package:mobile/app/l10n/app_localizations.dart';
-import 'package:mobile/core/config/app_config.dart';
-import 'package:mobile/core/config/app_environment.dart';
+import 'package:mobile/features/auth/data/session_store.dart';
 
-Future<void> pumpApp(WidgetTester tester) async {
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        appConfigProvider.overrideWithValue(
-          const AppConfig(
-            environment: AppEnvironment.dev,
-            apiBaseUrl: 'http://localhost:3000',
-            enableNetworkLogging: false,
-          ),
-        ),
-      ],
-      child: const ServiceMarketplaceApp(),
-    ),
-  );
-  await tester.pumpAndSettle();
-}
+import '../helpers/fakes.dart';
+import '../helpers/pump_app.dart';
 
 void main() {
-  testWidgets('starts on the home screen in English', (tester) async {
-    await pumpApp(tester);
+  late AuthHarness h;
 
-    expect(find.text('Welcome to Service Marketplace'), findsOneWidget);
+  setUp(() => h = AuthHarness());
+  tearDown(() => h.dispose());
+
+  testWidgets('starts on the sign-in screen, in English, when signed out', (
+    tester,
+  ) async {
+    await pumpApp(tester, h);
+
+    expect(find.text('Sign in'), findsOneWidget); // App bar title.
+    expect(find.text('Send code'), findsOneWidget);
+    expect(phoneField, findsOneWidget);
   });
 
-  testWidgets('navigates to each placeholder route', (tester) async {
-    await pumpApp(tester);
+  testWidgets('navigates to each placeholder route once signed in', (
+    tester,
+  ) async {
+    await SessionStore(h.storage).write(makeSession(h.clock.now));
+    await pumpApp(tester, h);
+    expect(homeWelcome, findsOneWidget);
 
-    for (final label in ['Services', 'Profile', 'Sign in']) {
+    for (final label in ['Services', 'Profile']) {
       await tester.tap(find.text(label));
-      await tester.pumpAndSettle();
+      await settle(tester);
 
-      expect(
-        find.text('This screen is a placeholder.'),
-        findsOneWidget,
-        reason: label,
-      );
       expect(find.widgetWithText(AppBar, label), findsOneWidget, reason: label);
 
       await tester.pageBack();
-      await tester.pumpAndSettle();
-      expect(find.text('Welcome to Service Marketplace'), findsOneWidget);
+      await settle(tester);
+      expect(homeWelcome, findsOneWidget);
     }
   });
 
-  testWidgets('switches language to Sinhala and Tamil', (tester) async {
-    await pumpApp(tester);
+  testWidgets(
+    'switches language to Sinhala and Tamil, on the sign-in screen and after',
+    (tester) async {
+      await pumpApp(tester, h);
 
-    for (final (nativeName, locale) in [
-      ('සිංහල', const Locale('si')),
-      ('தமிழ்', const Locale('ta')),
-    ]) {
-      await tester.tap(find.byIcon(Icons.language));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(nativeName));
-      await tester.pumpAndSettle();
+      for (final (nativeName, locale) in [
+        ('සිංහල', const Locale('si')),
+        ('தமிழ்', const Locale('ta')),
+      ]) {
+        await tester.tap(find.byIcon(Icons.language));
+        await settle(tester);
+        await tester.tap(find.text(nativeName));
+        await settle(tester);
 
-      final expected = lookupAppLocalizations(locale).homeWelcome;
-      expect(find.text(expected), findsOneWidget, reason: nativeName);
-      expect(expected, isNot('Welcome to Service Marketplace'));
-    }
+        final l10n = lookupAppLocalizations(locale);
+        expect(
+          find.text(l10n.authSendCode),
+          findsOneWidget,
+          reason: nativeName,
+        );
+        expect(
+          find.text(l10n.authPhoneIntro),
+          findsOneWidget,
+          reason: nativeName,
+        );
+        expect(l10n.authSendCode, isNot('Send code'));
+      }
+    },
+  );
+
+  testWidgets('the signed-in home screen is localized too', (tester) async {
+    await SessionStore(h.storage).write(makeSession(h.clock.now));
+    await pumpApp(tester, h);
+
+    await tester.tap(find.byIcon(Icons.language));
+    await settle(tester);
+    await tester.tap(find.text('தமிழ்'));
+    await settle(tester);
+
+    final ta = lookupAppLocalizations(const Locale('ta'));
+    expect(find.text(ta.homeWelcome), findsOneWidget);
+    expect(find.text(ta.authSignOut), findsOneWidget);
   });
 }

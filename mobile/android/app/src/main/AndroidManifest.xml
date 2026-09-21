@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The app talks to the platform API, so every build (not just debug)
+         needs network access. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="mobile"
         android:name="${applicationName}"

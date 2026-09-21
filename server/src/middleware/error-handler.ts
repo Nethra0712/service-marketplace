@@ -83,5 +83,6 @@ export const errorHandler: ErrorRequestHandler = (err: unknown, req, res, next) 
     },
   };
 
+  if (appError.headers) res.set(appError.headers);
   res.status(appError.status).json(body);
 };

@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/features/auth/application/auth_providers.dart';
 import 'package:mobile/features/auth/domain/auth_status.dart';
 
-/// Placeholder: authentication is not implemented yet, so the user is always
-/// signed out. The router already reacts to this provider, so replacing it with
-/// a real session notifier requires no router changes.
+/// The current sign-in status. The router watches this (and only this), so it
+/// stays independent of how sessions are stored or refreshed.
 final authStatusProvider = Provider<AuthStatus>(
-  (ref) => AuthStatus.unauthenticated,
+  (ref) => ref.watch(authControllerProvider.select((state) => state.status)),
 );

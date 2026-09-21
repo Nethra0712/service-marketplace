@@ -1,12 +1,12 @@
 /// Who may open a route.
 enum RouteAccess {
-  /// Anyone.
+  /// Anyone, signed in or not.
   public,
 
-  /// Signed-in users only; signed-out users are sent to the auth route.
+  /// Signed-in users only; signed-out users are sent to the sign-in screen.
   authenticatedOnly,
 
-  /// Signed-out users only (e.g. the sign-in screen); signed-in users are sent
+  /// Signed-out users only (the sign-in screens); signed-in users are sent
   /// home.
   guestOnly,
 }
@@ -26,19 +26,39 @@ class AppRoute {
 }
 
 abstract final class AppRoutes {
-  static const home = AppRoute(name: 'home', path: '/');
+  /// Shown while a stored session is being checked at launch.
+  static const splash = AppRoute(name: 'splash', path: '/splash');
 
+  // Sign-in: reachable only while signed out.
   static const auth = AppRoute(
     name: 'auth',
     path: '/auth',
     access: RouteAccess.guestOnly,
   );
+  static const otp = AppRoute(
+    name: 'otp',
+    path: '/auth/otp',
+    access: RouteAccess.guestOnly,
+  );
 
-  // Which routes require sign-in is a product decision that has not been made.
-  // Until then everything except /auth is public. When it is decided, change
-  // `access` here; the redirect logic already handles it.
-  static const services = AppRoute(name: 'services', path: '/services');
-  static const profile = AppRoute(name: 'profile', path: '/profile');
+  // The signed-in app. Everything past sign-in requires a session. (Whether
+  // any screens should be browsable without an account is a product decision
+  // that can be revisited here by changing `access`.)
+  static const home = AppRoute(
+    name: 'home',
+    path: '/',
+    access: RouteAccess.authenticatedOnly,
+  );
+  static const services = AppRoute(
+    name: 'services',
+    path: '/services',
+    access: RouteAccess.authenticatedOnly,
+  );
+  static const profile = AppRoute(
+    name: 'profile',
+    path: '/profile',
+    access: RouteAccess.authenticatedOnly,
+  );
 
-  static const all = [home, auth, services, profile];
+  static const all = [splash, auth, otp, home, services, profile];
 }

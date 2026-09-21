@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/core/config/app_config.dart';
@@ -9,35 +6,7 @@ import 'package:mobile/core/errors/app_exception.dart';
 import 'package:mobile/core/network/api_client.dart';
 import 'package:mobile/core/network/dio_factory.dart';
 
-/// Answers requests in-process. No socket is ever opened.
-class FakeAdapter implements HttpClientAdapter {
-  FakeAdapter(this.handler);
-
-  final Future<ResponseBody> Function(RequestOptions options) handler;
-  RequestOptions? lastRequest;
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<Uint8List>? requestStream,
-    Future<void>? cancelFuture,
-  ) {
-    lastRequest = options;
-    return handler(options);
-  }
-
-  @override
-  void close({bool force = false}) {}
-}
-
-ResponseBody jsonBody(Object body, {int status = 200}) =>
-    ResponseBody.fromString(
-      jsonEncode(body),
-      status,
-      headers: {
-        Headers.contentTypeHeader: ['application/json'],
-      },
-    );
+import '../../helpers/fake_http.dart';
 
 const config = AppConfig(
   environment: AppEnvironment.dev,

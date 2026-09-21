@@ -6,11 +6,45 @@
   },
   "homeWelcome": "Welcome to Service Marketplace",
   "homeSubtitle": "Home services, on demand.",
+  "homeSignedInAs": "Signed in as {phone}",
+  "@homeSignedInAs": {
+    "placeholders": { "phone": { "type": "String" } }
+  },
   "servicesTitle": "Services",
   "profileTitle": "Profile",
-  "authTitle": "Sign in",
+  "profilePhoneLabel": "Mobile number",
   "placeholderNotice": "This screen is a placeholder.",
   "pageNotFoundTitle": "Page not found",
   "languageLabel": "Language",
-  "languageSystemDefault": "Device language"
+  "languageSystemDefault": "Device language",
+
+  "authTitle": "Sign in",
+  "authPhoneIntro": "Enter your mobile number and we'll text you a verification code.",
+  "authPhoneLabel": "Mobile number",
+  "authPhoneHint": "77 123 4567",
+  "authSendCode": "Send code",
+  "authVerifyTitle": "Verify your number",
+  "authVerifyInstruction": "Enter the code we sent to {phone}.",
+  "@authVerifyInstruction": {
+    "placeholders": { "phone": { "type": "String" } }
+  },
+  "authCodeLabel": "Verification code",
+  "authVerify": "Verify",
+  "authResendCode": "Resend code",
+  "authResendIn": "Resend code in {seconds}s",
+  "@authResendIn": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "authChangeNumber": "Use a different number",
+  "authSignOut": "Sign out",
+
+  "errorInvalidPhone": "Enter a valid Sri Lankan mobile number.",
+  "errorInvalidCode": "That code is incorrect or has expired.",
+  "errorAttemptsExceeded": "Too many incorrect attempts. Request a new code.",
+  "errorCooldown": "Please wait a moment before requesting another code.",
+  "errorRateLimited": "Too many attempts. Please try again later.",
+  "errorNetwork": "Can't reach the server. Check your connection and try again.",
+  "errorSmsUnavailable": "We couldn't send the code. Please try again shortly.",
+  "errorAccountSuspended": "This account is suspended.",
+  "errorGeneric": "Something went wrong. Please try again."
 }

@@ -8,6 +8,15 @@ export const ErrorCode = {
   UnsupportedMediaType: 'UNSUPPORTED_MEDIA_TYPE',
   DatabaseUnavailable: 'DATABASE_UNAVAILABLE',
   InternalError: 'INTERNAL_ERROR',
+  // Authentication
+  Unauthenticated: 'UNAUTHENTICATED',
+  AccountSuspended: 'ACCOUNT_SUSPENDED',
+  InvalidOtp: 'INVALID_OTP',
+  OtpAttemptsExceeded: 'OTP_ATTEMPTS_EXCEEDED',
+  OtpResendCooldown: 'OTP_RESEND_COOLDOWN',
+  InvalidRefreshToken: 'INVALID_REFRESH_TOKEN',
+  RateLimited: 'RATE_LIMITED',
+  SmsUnavailable: 'SMS_UNAVAILABLE',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -23,20 +32,23 @@ export interface ErrorDetail {
  *
  * Anything that is NOT an AppError is treated as a bug and reported as a
  * generic 500. `cause` is logged server-side and never sent to clients.
+ * `headers` are sent with the response (for example `Retry-After`).
  */
 export class AppError extends Error {
   constructor(
     readonly status: number,
     readonly code: ErrorCode,
     message: string,
-    options?: { details?: ErrorDetail[]; cause?: unknown },
+    options?: { details?: ErrorDetail[]; cause?: unknown; headers?: Record<string, string> },
   ) {
     super(message, options?.cause === undefined ? undefined : { cause: options.cause });
     this.name = 'AppError';
     this.details = options?.details;
+    this.headers = options?.headers;
   }
 
   readonly details: ErrorDetail[] | undefined;
+  readonly headers: Record<string, string> | undefined;
 }
 
 /** The JSON body of every error response. */
