@@ -1,4 +1,5 @@
-import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { drizzle, type NodePgDatabase, type NodePgQueryResultHKT } from 'drizzle-orm/node-postgres';
+import type { PgDatabase } from 'drizzle-orm/pg-core';
 import pg from 'pg';
 
 import { withTimeout } from '../lib/timeout.js';
@@ -6,6 +7,12 @@ import type { Logger } from '../lib/logger.js';
 import * as schema from './schema/index.js';
 
 export type Database = NodePgDatabase<typeof schema>;
+
+/**
+ * Anything queries can run on: the database itself or a transaction. Repositories
+ * accept this, so a service can decide whether several calls share a transaction.
+ */
+export type Queryable = PgDatabase<NodePgQueryResultHKT, typeof schema>;
 
 /** The transaction handle passed to `db.transaction(async (tx) => ...)`. */
 export type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];

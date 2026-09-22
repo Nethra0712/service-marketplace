@@ -34,5 +34,109 @@
   "errorNetwork": "சேவையகத்தை அடைய முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலுங்கள்.",
   "errorSmsUnavailable": "குறியீட்டை அனுப்ப முடியவில்லை. சிறிது நேரத்தில் மீண்டும் முயலுங்கள்.",
   "errorAccountSuspended": "இந்தக் கணக்கு இடைநிறுத்தப்பட்டுள்ளது.",
-  "errorGeneric": "ஏதோ தவறு நடந்தது. மீண்டும் முயலுங்கள்."
+  "errorGeneric": "ஏதோ தவறு நடந்தது. மீண்டும் முயலுங்கள்.",
+
+  "commonRetry": "மீண்டும் முயற்சிக்கவும்",
+  "commonCancel": "ரத்து செய்",
+
+  "servicesSearchHint": "சேவைகளைத் தேடுங்கள்",
+  "servicesFilterAll": "அனைத்தும்",
+  "servicesEmpty": "இன்னும் சேவைகள் எதுவும் இல்லை.",
+  "servicesNoMatch": "உங்கள் தேடலுக்குப் பொருந்தும் சேவைகள் இல்லை.",
+  "servicesClearFilters": "வடிப்பான்களை அழி",
+  "pricingFixed": "நிலையான விலை",
+  "pricingHourly": "மணிநேரத்துக்கு",
+  "pricingQuote": "கேட்டால் விலை மதிப்பீடு",
+  "pricingFixedHelp": "வேலைக்கு நிர்ணயிக்கப்பட்ட விலை.",
+  "pricingHourlyHelp": "சேவை வழங்குநர் வேலைக்குச் செலவிடும் நேரத்துக்கு நீங்கள் செலுத்துவீர்கள்.",
+  "pricingQuoteHelp": "வேலையைப் புரிந்துகொண்ட பிறகு சேவை வழங்குநர் விலையைத் தெரிவிப்பார்.",
+  "serviceDetailPricing": "விலை நிர்ணயம் எவ்வாறு செயல்படுகிறது",
+  "serviceDetailAvailableIn": "கிடைக்கும் நகரங்கள்",
+  "serviceDetailProviders": "{count, plural, =0{அங்கீகரிக்கப்பட்ட சேவை வழங்குநர்கள் இன்னும் இல்லை} =1{அங்கீகரிக்கப்பட்ட சேவை வழங்குநர் 1} other{அங்கீகரிக்கப்பட்ட சேவை வழங்குநர்கள் {count}}}",
+  "@serviceDetailProviders": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "serviceDetailNotAvailable": "இந்தச் சேவை இப்போது கிடைக்கவில்லை.",
+  "serviceDetailOffer": "இந்தச் சேவையை வழங்குங்கள்",
+
+  "homeProviderArea": "சேவை வழங்குநர் பகுதி",
+  "providerAreaTitle": "சேவை வழங்குநர் பகுதி",
+  "providerIntroTitle": "உங்கள் திறமையால் வருமானம் ஈட்டுங்கள்",
+  "providerIntroBody": "சேவை வழங்குநர் சுயவிவரத்தை உருவாக்கி, நீங்கள் வழங்கும் சேவைகளைத் தேர்ந்தெடுங்கள். உங்கள் விண்ணப்பத்தை நாங்கள் மதிப்பாய்வு செய்வோம்.",
+  "providerSetupProfile": "சேவை வழங்குநர் சுயவிவரத்தை அமைக்கவும்",
+  "providerEditProfile": "சுயவிவரத்தைத் திருத்து",
+  "providerProfileTitle": "சேவை வழங்குநர் சுயவிவரம்",
+  "providerFullNameLabel": "முழுப் பெயர்",
+  "providerYearsLabel": "அனுபவ ஆண்டுகள்",
+  "providerBioLabel": "உங்களைப் பற்றி",
+  "providerBioHint": "உங்கள் திறமைகளையும் நீங்கள் செய்யும் வேலையையும் விவரிக்கவும்.",
+  "providerSave": "சுயவிவரத்தைச் சேமி",
+  "providerSaved": "சுயவிவரம் சேமிக்கப்பட்டது.",
+  "providerNameRequired": "உங்கள் முழுப் பெயரை உள்ளிடவும்.",
+  "providerNameTooLong": "பெயர் 100 எழுத்துகளுக்குள் இருக்க வேண்டும்.",
+  "providerYearsInvalid": "0 முதல் 60 வரை முழு எண்ணை உள்ளிடவும்.",
+  "providerBioTooLong": "1000 எழுத்துகளுக்குள் வைத்திருங்கள்.",
+  "providerSubmitForReview": "மதிப்பாய்வுக்குச் சமர்ப்பிக்கவும்",
+  "providerSubmitted": "சுயவிவரம் மதிப்பாய்வுக்குச் சமர்ப்பிக்கப்பட்டது.",
+  "providerReviewNote": "மதிப்பாய்வாளர் குறிப்பு: {note}",
+  "@providerReviewNote": {
+    "placeholders": { "note": { "type": "String" } }
+  },
+  "verificationDraft": "சமர்ப்பிக்கப்படவில்லை",
+  "verificationSubmitted": "மதிப்பாய்வில் உள்ளது",
+  "verificationVerified": "சரிபார்க்கப்பட்டது",
+  "verificationRejected": "அங்கீகரிக்கப்படவில்லை",
+  "verificationDraftHelp": "நாங்கள் மதிப்பாய்வு செய்ய உங்கள் சுயவிவரத்தைச் சமர்ப்பிக்கவும்.",
+  "verificationSubmittedHelp": "உங்கள் சுயவிவரத்தை மதிப்பாய்வு செய்கிறோம். முடிவு இங்கே தோன்றும்.",
+  "verificationVerifiedHelp": "உங்கள் சுயவிவரம் சரிபார்க்கப்பட்டது. அங்கீகரிக்கப்பட்ட சேவைகளுக்கு வாடிக்கையாளர்கள் உங்களை முன்பதிவு செய்யலாம்.",
+  "verificationRejectedHelp": "உங்கள் சுயவிவரம் அங்கீகரிக்கப்படவில்லை. அதைப் புதுப்பித்து மீண்டும் சமர்ப்பிக்கவும்.",
+  "providerMyServices": "என் சேவைகள்",
+  "providerManageServices": "சேவைகளை நிர்வகி",
+  "providerAddServices": "சேவைகளைச் சேர்",
+  "providerServicesSummary": "{count, plural, =0{நீங்கள் இன்னும் எந்தச் சேவைக்கும் விண்ணப்பிக்கவில்லை.} =1{1 சேவை விண்ணப்பம்} other{{count} சேவை விண்ணப்பங்கள்}}",
+  "@providerServicesSummary": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerVerifyFirst": "உங்கள் சுயவிவரம் சரிபார்க்கப்பட்ட பிறகே வாடிக்கையாளர்கள் உங்களைக் கண்டறிய முடியும்.",
+  "applicationPending": "மதிப்பாய்வுக்குக் காத்திருக்கிறது",
+  "applicationApproved": "அங்கீகரிக்கப்பட்டது",
+  "applicationRejected": "நிராகரிக்கப்பட்டது",
+  "applicationSuspended": "இடைநிறுத்தப்பட்டது",
+  "applicationPendingHelp": "இந்த விண்ணப்பத்தை மதிப்பாய்வு செய்கிறோம்.",
+  "applicationApprovedHelp": "இந்தச் சேவைக்கு நீங்கள் அங்கீகரிக்கப்பட்டுள்ளீர்கள்.",
+  "applicationRejectedHelp": "இந்த விண்ணப்பம் அங்கீகரிக்கப்படவில்லை. மீண்டும் விண்ணப்பிக்கலாம்.",
+  "applicationSuspendedHelp": "இந்தச் சேவையில் இப்போது நீங்கள் வேலைகளை ஏற்க முடியாது.",
+  "providerApplyTitle": "சேவைகளுக்கு விண்ணப்பிக்கவும்",
+  "providerApplyIntro": "நீங்கள் வழங்க விரும்பும் சேவைகளைத் தேர்ந்தெடுங்கள். ஒவ்வொன்றும் தனித்தனியாக மதிப்பாய்வு செய்யப்படும்.",
+  "providerApplyCity": "நகரம்",
+  "providerApplyNothingLeft": "கிடைக்கும் அனைத்துச் சேவைகளுக்கும் நீங்கள் ஏற்கெனவே விண்ணப்பித்துவிட்டீர்கள்.",
+  "providerApplyNeedProfile": "சேவைகளுக்கு விண்ணப்பிக்கும் முன் உங்கள் சேவை வழங்குநர் சுயவிவரத்தை அமைக்கவும்.",
+  "providerApplyButton": "{count, plural, =1{1 சேவைக்கு விண்ணப்பி} other{{count} சேவைகளுக்கு விண்ணப்பி}}",
+  "@providerApplyButton": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerApplySent": "{count, plural, =1{விண்ணப்பம் அனுப்பப்பட்டது.} other{{count} விண்ணப்பங்கள் அனுப்பப்பட்டன.}}",
+  "@providerApplySent": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerApplyPartial": "{count, plural, =1{1 விண்ணப்பத்தை அனுப்ப முடியவில்லை.} other{{count} விண்ணப்பங்களை அனுப்ப முடியவில்லை.}}",
+  "@providerApplyPartial": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerResubmit": "மீண்டும் விண்ணப்பி",
+  "providerResubmitted": "விண்ணப்பம் மீண்டும் அனுப்பப்பட்டது.",
+  "providerWithdraw": "விண்ணப்பத்தைத் திரும்பப் பெறு",
+  "providerWithdrawTitle": "விண்ணப்பத்தைத் திரும்பப் பெறவா?",
+  "providerWithdrawBody": "{service} க்கான உங்கள் விண்ணப்பத்தைத் திரும்பப் பெறவா? பின்னர் மீண்டும் விண்ணப்பிக்கலாம்.",
+  "@providerWithdrawBody": {
+    "placeholders": { "service": { "type": "String" } }
+  },
+  "providerWithdrawn": "விண்ணப்பம் திரும்பப் பெறப்பட்டது.",
+
+  "errorAlreadyApplied": "இந்தச் சேவைக்கு நீங்கள் ஏற்கெனவே விண்ணப்பித்துவிட்டீர்கள்.",
+  "errorProfileIncomplete": "சமர்ப்பிக்கும் முன் உங்கள் பெயரைச் சேர்த்து, குறைந்தது ஒரு சேவைக்கு விண்ணப்பிக்கவும்.",
+  "errorInvalidState": "தற்போதைய நிலையில் அதைச் செய்ய முடியாது. புதுப்பித்து மீண்டும் முயற்சிக்கவும்.",
+  "errorProfileRequired": "முதலில் உங்கள் சேவை வழங்குநர் சுயவிவரத்தை அமைக்கவும்.",
+  "errorNotFound": "அதைக் கண்டறிய முடியவில்லை. அது இனி கிடைக்காமல் இருக்கலாம்.",
+  "errorValidation": "நீங்கள் உள்ளிட்ட விவரங்களைச் சரிபார்க்கவும்."
 }

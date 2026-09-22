@@ -21,6 +21,18 @@ export const providerServiceStatus = pgEnum('provider_service_status', [
   'suspended',
 ]);
 
+/**
+ * Whether the provider as a person has been checked. Separate from the
+ * per-category approvals in `provider_services`: a provider must be both
+ * verified and approved for a category before they can be booked for it.
+ */
+export const providerVerificationStatus = pgEnum('provider_verification_status', [
+  'draft',
+  'submitted',
+  'verified',
+  'rejected',
+]);
+
 /** Provider's own online/offline toggle (persisted intent; live presence comes later). */
 export const providerAvailability = pgEnum('provider_availability', ['offline', 'online']);
 
@@ -29,3 +41,4 @@ export type AppLanguage = (typeof appLanguage.enumValues)[number];
 export type PricingModel = (typeof pricingModel.enumValues)[number];
 export type ProviderServiceStatus = (typeof providerServiceStatus.enumValues)[number];
 export type ProviderAvailability = (typeof providerAvailability.enumValues)[number];
+export type ProviderVerificationStatus = (typeof providerVerificationStatus.enumValues)[number];

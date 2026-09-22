@@ -17,6 +17,12 @@ export const ErrorCode = {
   InvalidRefreshToken: 'INVALID_REFRESH_TOKEN',
   RateLimited: 'RATE_LIMITED',
   SmsUnavailable: 'SMS_UNAVAILABLE',
+  // Providers
+  ProviderProfileNotFound: 'PROVIDER_PROFILE_NOT_FOUND',
+  ProviderProfileRequired: 'PROVIDER_PROFILE_REQUIRED',
+  ProfileIncomplete: 'PROFILE_INCOMPLETE',
+  AlreadyApplied: 'ALREADY_APPLIED',
+  InvalidState: 'INVALID_STATE',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

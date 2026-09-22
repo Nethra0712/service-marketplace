@@ -34,5 +34,109 @@
   "errorNetwork": "සේවාදායකයට සම්බන්ධ විය නොහැක. ඔබගේ සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
   "errorSmsUnavailable": "කේතය යැවීමට නොහැකි විය. මඳ වේලාවකින් නැවත උත්සාහ කරන්න.",
   "errorAccountSuspended": "මෙම ගිණුම අත්හිටුවා ඇත.",
-  "errorGeneric": "යම් දෙයක් වැරදී ඇත. නැවත උත්සාහ කරන්න."
+  "errorGeneric": "යම් දෙයක් වැරදී ඇත. නැවත උත්සාහ කරන්න.",
+
+  "commonRetry": "නැවත උත්සාහ කරන්න",
+  "commonCancel": "අවලංගු කරන්න",
+
+  "servicesSearchHint": "සේවා සොයන්න",
+  "servicesFilterAll": "සියල්ල",
+  "servicesEmpty": "තවම සේවා නොමැත.",
+  "servicesNoMatch": "ඔබේ සෙවුමට ගැළපෙන සේවා නොමැත.",
+  "servicesClearFilters": "පෙරහන් ඉවත් කරන්න",
+  "pricingFixed": "ස්ථාවර මිල",
+  "pricingHourly": "පැයකට",
+  "pricingQuote": "ඉල්ලුවොත් මිල ගණන්",
+  "pricingFixedHelp": "වැඩයට නියමිත මිලක්.",
+  "pricingHourlyHelp": "සේවා සපයන්නා වැඩයට ගත කරන කාලයට ඔබ ගෙවයි.",
+  "pricingQuoteHelp": "වැඩය තේරුම් ගත් පසු සේවා සපයන්නා මිල ගණන් කියයි.",
+  "serviceDetailPricing": "මිල ගණන් ක්‍රියා කරන ආකාරය",
+  "serviceDetailAvailableIn": "ලබා ගත හැකි නගර",
+  "serviceDetailProviders": "{count, plural, =0{අනුමත සේවා සපයන්නන් තවම නැත} =1{අනුමත සේවා සපයන්නෙක් 1} other{අනුමත සේවා සපයන්නන් {count}}}",
+  "@serviceDetailProviders": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "serviceDetailNotAvailable": "මෙම සේවාව දැනට නොමැත.",
+  "serviceDetailOffer": "මෙම සේවාව ලබා දෙන්න",
+
+  "homeProviderArea": "සේවා සපයන්නන්ගේ කොටස",
+  "providerAreaTitle": "සේවා සපයන්නන්ගේ කොටස",
+  "providerIntroTitle": "ඔබේ නිපුණතාවෙන් ආදායම් උපයන්න",
+  "providerIntroBody": "සේවා සපයන්නෙකු ලෙස පැතිකඩක් සාදා, ඔබ ලබා දෙන සේවා තෝරන්න. අපි ඔබේ ඉල්ලුම්පත සමාලෝචනය කරන්නෙමු.",
+  "providerSetupProfile": "සේවා සපයන්නෙකු ලෙස පැතිකඩ සකසන්න",
+  "providerEditProfile": "පැතිකඩ සංස්කරණය",
+  "providerProfileTitle": "සේවා සපයන්නාගේ පැතිකඩ",
+  "providerFullNameLabel": "සම්පූර්ණ නම",
+  "providerYearsLabel": "පළපුරුදු වසර ගණන",
+  "providerBioLabel": "ඔබ ගැන",
+  "providerBioHint": "ඔබේ හැකියාවන් සහ ඔබ කරන වැඩ විස්තර කරන්න.",
+  "providerSave": "පැතිකඩ සුරකින්න",
+  "providerSaved": "පැතිකඩ සුරැකිණි.",
+  "providerNameRequired": "ඔබේ සම්පූර්ණ නම ඇතුළත් කරන්න.",
+  "providerNameTooLong": "නම අක්ෂර 100ක් හෝ ඊට අඩු විය යුතුය.",
+  "providerYearsInvalid": "0 සිට 60 දක්වා පූර්ණ සංඛ්‍යාවක් ඇතුළත් කරන්න.",
+  "providerBioTooLong": "අක්ෂර 1000ක් හෝ ඊට අඩු කරන්න.",
+  "providerSubmitForReview": "සමාලෝචනයට ඉදිරිපත් කරන්න",
+  "providerSubmitted": "පැතිකඩ සමාලෝචනයට ඉදිරිපත් කරන ලදී.",
+  "providerReviewNote": "සමාලෝචකයාගේ සටහන: {note}",
+  "@providerReviewNote": {
+    "placeholders": { "note": { "type": "String" } }
+  },
+  "verificationDraft": "ඉදිරිපත් කර නැත",
+  "verificationSubmitted": "සමාලෝචනය වෙමින්",
+  "verificationVerified": "තහවුරු කරන ලදී",
+  "verificationRejected": "අනුමත නොකළා",
+  "verificationDraftHelp": "අපට සමාලෝචනය කළ හැකි වන පරිදි ඔබේ පැතිකඩ ඉදිරිපත් කරන්න.",
+  "verificationSubmittedHelp": "අපි ඔබේ පැතිකඩ සමාලෝචනය කරමින් සිටිමු. ප්‍රතිඵලය මෙහි පෙන්වයි.",
+  "verificationVerifiedHelp": "ඔබේ පැතිකඩ තහවුරු කර ඇත. අනුමත සේවා සඳහා පාරිභෝගිකයන්ට ඔබව වෙන්කරවා ගත හැක.",
+  "verificationRejectedHelp": "ඔබේ පැතිකඩ අනුමත නොකළා. එය යාවත්කාලීන කර නැවත ඉදිරිපත් කරන්න.",
+  "providerMyServices": "මගේ සේවා",
+  "providerManageServices": "සේවා කළමනාකරණය",
+  "providerAddServices": "සේවා එක් කරන්න",
+  "providerServicesSummary": "{count, plural, =0{ඔබ තවම කිසිදු සේවාවකට ඉල්ලුම් කර නැත.} =1{සේවා ඉල්ලුම්පත් 1} other{සේවා ඉල්ලුම්පත් {count}}}",
+  "@providerServicesSummary": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerVerifyFirst": "ඔබේ පැතිකඩ තහවුරු කළ පසු පමණක් පාරිභෝගිකයන්ට ඔබව සොයාගත හැක.",
+  "applicationPending": "සමාලෝචනය බලාපොරොත්තුවෙන්",
+  "applicationApproved": "අනුමතයි",
+  "applicationRejected": "ප්‍රතික්ෂේප කළා",
+  "applicationSuspended": "අත්හිටුවා ඇත",
+  "applicationPendingHelp": "අපි මෙම ඉල්ලුම්පත සමාලෝචනය කරමින් සිටිමු.",
+  "applicationApprovedHelp": "ඔබ මෙම සේවාව සඳහා අනුමතයි.",
+  "applicationRejectedHelp": "මෙම ඉල්ලුම්පත අනුමත නොකළා. ඔබට නැවත ඉල්ලුම් කළ හැක.",
+  "applicationSuspendedHelp": "මෙම සේවාවේ රැකියා ගැනීමට ඔබට දැනට නොහැක.",
+  "providerApplyTitle": "සේවා සඳහා ඉල්ලුම් කරන්න",
+  "providerApplyIntro": "ඔබ ලබා දීමට කැමති සේවා තෝරන්න. ඒ සෑම එකක්ම වෙන වෙනම සමාලෝචනය කෙරේ.",
+  "providerApplyCity": "නගරය",
+  "providerApplyNothingLeft": "ලබා ගත හැකි සියලු සේවා සඳහා ඔබ දැනටමත් ඉල්ලුම් කර ඇත.",
+  "providerApplyNeedProfile": "සේවා සඳහා ඉල්ලුම් කිරීමට පෙර ඔබේ සේවා සපයන්නාගේ පැතිකඩ සකසන්න.",
+  "providerApplyButton": "{count, plural, =1{සේවා 1කට ඉල්ලුම් කරන්න} other{සේවා {count}කට ඉල්ලුම් කරන්න}}",
+  "@providerApplyButton": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerApplySent": "{count, plural, =1{ඉල්ලුම්පත යැව්වා.} other{ඉල්ලුම්පත් {count}ක් යැව්වා.}}",
+  "@providerApplySent": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerApplyPartial": "{count, plural, =1{ඉල්ලුම්පත් 1ක් යැවීමට නොහැකි විය.} other{ඉල්ලුම්පත් {count}ක් යැවීමට නොහැකි විය.}}",
+  "@providerApplyPartial": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerResubmit": "නැවත ඉල්ලුම් කරන්න",
+  "providerResubmitted": "ඉල්ලුම්පත නැවත යැව්වා.",
+  "providerWithdraw": "ඉල්ලුම්පත ඉවත් කරන්න",
+  "providerWithdrawTitle": "ඉල්ලුම්පත ඉවත් කරන්නද?",
+  "providerWithdrawBody": "{service} සඳහා ඔබේ ඉල්ලුම්පත ඉවත් කරන්නද? ඔබට පසුව නැවත ඉල්ලුම් කළ හැක.",
+  "@providerWithdrawBody": {
+    "placeholders": { "service": { "type": "String" } }
+  },
+  "providerWithdrawn": "ඉල්ලුම්පත ඉවත් කළා.",
+
+  "errorAlreadyApplied": "ඔබ දැනටමත් මෙම සේවාව සඳහා ඉල්ලුම් කර ඇත.",
+  "errorProfileIncomplete": "ඉදිරිපත් කිරීමට පෙර ඔබේ නම එක් කර අවම වශයෙන් එක් සේවාවකට ඉල්ලුම් කරන්න.",
+  "errorInvalidState": "වත්මන් තත්ත්වයේදී එය කළ නොහැක. නැවුම් කර නැවත උත්සාහ කරන්න.",
+  "errorProfileRequired": "පළමුව ඔබේ සේවා සපයන්නාගේ පැතිකඩ සකසන්න.",
+  "errorNotFound": "එය සොයා ගැනීමට නොහැකි විය. එය තවදුරටත් නොතිබිය හැක.",
+  "errorValidation": "කරුණාකර ඔබ ඇතුළත් කළ තොරතුරු පරීක්ෂා කරන්න."
 }

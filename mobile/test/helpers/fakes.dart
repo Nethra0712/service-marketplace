@@ -150,9 +150,12 @@ class FakeCurrentUserRepository implements CurrentUserRepository {
 
 /// Everything a test needs, wired into one container.
 class AuthHarness {
-  AuthHarness({DateTime? start, InMemorySecureStorage? storage})
-    : clock = TestClock(start),
-      storage = storage ?? InMemorySecureStorage() {
+  AuthHarness({
+    DateTime? start,
+    InMemorySecureStorage? storage,
+    this.extraOverrides = const [],
+  }) : clock = TestClock(start),
+       storage = storage ?? InMemorySecureStorage() {
     auth = FakeAuthRepository(clock);
     users = FakeCurrentUserRepository();
     container = ProviderContainer(overrides: overrides);
@@ -160,6 +163,10 @@ class AuthHarness {
 
   final TestClock clock;
   final InMemorySecureStorage storage;
+
+  /// Extra overrides (feature repositories, usually) applied on top of the
+  /// auth fakes.
+  final List<Override> extraOverrides;
   late final FakeAuthRepository auth;
   late final FakeCurrentUserRepository users;
   late final ProviderContainer container;
@@ -177,6 +184,7 @@ class AuthHarness {
     authRepositoryProvider.overrideWithValue(auth),
     currentUserRepositoryProvider.overrideWithValue(users),
     clockProvider.overrideWithValue(clock.call),
+    ...extraOverrides,
   ];
 
   void dispose() => container.dispose();

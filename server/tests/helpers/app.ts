@@ -5,6 +5,7 @@ import type { AppConfig } from '../../src/config/env.js';
 import type { Database } from '../../src/db/client.js';
 import type { Clock } from '../../src/lib/clock.js';
 import { createLogger, type Logger } from '../../src/lib/logger.js';
+import type { RateLimitPolicy } from '../../src/middleware/ip-rate-limit.js';
 import type { AuthPolicy } from '../../src/modules/auth/index.js';
 import { MockSmsProvider, type SmsProvider } from '../../src/modules/sms/index.js';
 
@@ -44,6 +45,7 @@ export interface TestAppOptions {
   db: Database;
   config?: Partial<TestConfig>;
   authPolicy?: Partial<AuthPolicy>;
+  catalogueRateLimit?: RateLimitPolicy;
   pingDatabase?: () => Promise<void>;
   /** Replaces the default in-memory mock, e.g. with one that always fails. */
   smsOverride?: SmsProvider;
@@ -61,6 +63,7 @@ export function buildTestApp({
   db,
   config,
   authPolicy,
+  catalogueRateLimit,
   pingDatabase = () => Promise.resolve(),
   smsOverride,
   logger = createLogger({ logLevel: 'silent' }),
@@ -75,6 +78,7 @@ export function buildTestApp({
     sms: smsOverride ?? sms,
     clock: clock.now,
     authPolicy,
+    catalogueRateLimit,
   });
   return { app, sms, clock };
 }

@@ -13,6 +13,11 @@ import 'package:mobile/features/auth/presentation/phone_entry_screen.dart';
 import 'package:mobile/features/auth/presentation/splash_screen.dart';
 import 'package:mobile/features/home/presentation/home_screen.dart';
 import 'package:mobile/features/profile/presentation/profile_screen.dart';
+import 'package:mobile/features/provider/presentation/provider_apply_screen.dart';
+import 'package:mobile/features/provider/presentation/provider_hub_screen.dart';
+import 'package:mobile/features/provider/presentation/provider_profile_screen.dart';
+import 'package:mobile/features/provider/presentation/provider_services_screen.dart';
+import 'package:mobile/features/services/presentation/service_detail_screen.dart';
 import 'package:mobile/features/services/presentation/services_screen.dart';
 
 /// The app's single [GoRouter]. All routes are declared here; access rules live
@@ -64,9 +69,37 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ServicesScreen(),
       ),
       GoRoute(
+        name: AppRoutes.serviceDetail.name,
+        path: AppRoutes.serviceDetail.path,
+        builder: (context, state) =>
+            ServiceDetailScreen(slug: state.pathParameters['slug']!),
+      ),
+      GoRoute(
         name: AppRoutes.profile.name,
         path: AppRoutes.profile.path,
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.provider.name,
+        path: AppRoutes.provider.path,
+        builder: (context, state) => const ProviderHubScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.providerProfile.name,
+        path: AppRoutes.providerProfile.path,
+        builder: (context, state) => const ProviderProfileScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.providerServices.name,
+        path: AppRoutes.providerServices.path,
+        builder: (context, state) => const ProviderServicesScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.providerApply.name,
+        path: AppRoutes.providerApply.path,
+        builder: (context, state) => ProviderApplyScreen(
+          initialCategorySlug: state.uri.queryParameters['category'],
+        ),
       ),
     ],
     errorBuilder: (context, state) => PlaceholderScreen(

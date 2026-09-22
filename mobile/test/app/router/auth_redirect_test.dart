@@ -141,4 +141,86 @@ void main() {
       }
     });
   });
+
+  group('parameterised and nested routes', () {
+    const protectedLocations = [
+      '/services/plumbing',
+      '/services/plumbing?city=colombo',
+      '/services/ac%20repair',
+      '/provider',
+      '/provider/profile',
+      '/provider/services',
+      '/provider/services/apply',
+      '/provider/services/apply?category=plumbing',
+    ];
+
+    test('every service and provider screen requires a session', () {
+      for (final location in protectedLocations) {
+        expect(
+          redirect(AuthStatus.unauthenticated, location),
+          AppRoutes.auth.path,
+          reason: location,
+        );
+        expect(
+          redirect(AuthStatus.authenticated, location),
+          isNull,
+          reason: location,
+        );
+      }
+    });
+
+    test('wait on the splash like every other route', () {
+      for (final location in protectedLocations) {
+        expect(
+          redirect(AuthStatus.unknown, location),
+          AppRoutes.splash.path,
+          reason: location,
+        );
+      }
+    });
+
+    test('a pattern matches exactly one segment', () {
+      // Neither is a real route, so both are left to the router error page.
+      expect(redirect(AuthStatus.unauthenticated, '/services/a/b'), isNull);
+      expect(redirect(AuthStatus.unauthenticated, '/provider/other/x'), isNull);
+    });
+
+    test('a literal path beats a pattern', () {
+      const literal = AppRoute(name: 'new', path: '/services/new');
+      const guarded = AppRoute(
+        name: 'detail',
+        path: '/services/:slug',
+        access: RouteAccess.authenticatedOnly,
+      );
+      // Signed out: `/services/new` is public, `/services/x` is protected.
+      expect(
+        resolveAuthRedirect(
+          status: AuthStatus.unauthenticated,
+          location: '/services/new',
+          routes: [guarded, literal],
+        ),
+        isNull,
+      );
+      expect(
+        resolveAuthRedirect(
+          status: AuthStatus.unauthenticated,
+          location: '/services/x',
+          routes: [guarded, literal],
+        ),
+        AppRoutes.auth.path,
+      );
+    });
+
+    test('helpers build locations the router recognises', () {
+      expect(
+        AppRoutes.serviceDetailLocation('ac-repair'),
+        '/services/ac-repair',
+      );
+      expect(
+        AppRoutes.providerApplyLocation(categorySlug: 'plumbing'),
+        '/provider/services/apply?category=plumbing',
+      );
+      expect(AppRoutes.providerApplyLocation(), '/provider/services/apply');
+    });
+  });
 }

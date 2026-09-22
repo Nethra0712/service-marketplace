@@ -9,10 +9,13 @@ import type { AppConfig } from './config/env.js';
 import type { Database } from './db/client.js';
 import { systemClock, type Clock } from './lib/clock.js';
 import type { Logger } from './lib/logger.js';
+import type { RateLimitPolicy } from './middleware/ip-rate-limit.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { notFoundHandler } from './middleware/not-found.js';
 import { createAuthModule, type AuthPolicy } from './modules/auth/index.js';
+import { createCatalogueModule } from './modules/catalogue/index.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
+import { createProvidersModule } from './modules/providers/index.js';
 import type { SmsProvider } from './modules/sms/index.js';
 
 /** Largest JSON request body accepted. Raise per-route later if a feature needs it. */
@@ -38,6 +41,8 @@ export interface AppDependencies {
   clock?: Clock;
   /** Overrides individual authentication policy values. Tests use tiny limits. */
   authPolicy?: Partial<AuthPolicy>;
+  /** Per-IP limit on the public catalogue endpoints. */
+  catalogueRateLimit?: RateLimitPolicy;
 }
 
 /**
@@ -53,6 +58,7 @@ export function createApp({
   sms,
   clock = systemClock,
   authPolicy,
+  catalogueRateLimit,
 }: AppDependencies): Express {
   const app = express();
 
@@ -85,6 +91,17 @@ export function createApp({
 
   const auth = createAuthModule({ db, sms, logger, clock, policy: authPolicy, config });
   app.use('/api/auth', auth.router);
+
+  const providers = createProvidersModule({ db, clock, requireAuth: auth.requireAuth });
+  app.use('/api/provider', providers.router);
+
+  // Public, read-only catalogue (/api/cities, /api/service-categories).
+  const catalogue = createCatalogueModule({
+    db,
+    countBookableProviders: providers.service.countBookableProviders,
+    rateLimit: catalogueRateLimit,
+  });
+  app.use('/api', catalogue.router);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

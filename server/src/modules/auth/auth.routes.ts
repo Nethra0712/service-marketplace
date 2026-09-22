@@ -1,8 +1,8 @@
 import { Router, type RequestHandler } from 'express';
 
 import { parseRequest } from '../../lib/validation.js';
+import { createIpRateLimiter } from '../../middleware/ip-rate-limit.js';
 import type { AuthPolicy } from './auth.policy.js';
-import { createIpRateLimiter } from './auth.rate-limit.js';
 import { getAuth } from './auth.middleware.js';
 import type { AuthSchemas } from './auth.schemas.js';
 import type { AuthService } from './auth.service.js';

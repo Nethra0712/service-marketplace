@@ -80,6 +80,22 @@ belongs in Git.
 | `npm run db:generate`  | Generate a migration from schema changes (`drizzle-kit`)      |
 | `npm run db:migrate`   | Apply pending migrations to `DATABASE_URL`                    |
 | `npm run db:seed`      | Load development example data (refuses `NODE_ENV=production`) |
+| `npm run dev:review`   | Dev-only: approve/reject a provider (see below)               |
+
+### Reviewing providers (development only)
+
+Approving, rejecting and suspending providers is a platform decision and is
+deliberately **not** exposed over HTTP. Until an admin dashboard exists, use the
+CLI (it refuses to run when `NODE_ENV=production`):
+
+```bash
+npm run dev:review -- +94771234567 show
+npm run dev:review -- +94771234567 profile verified
+npm run dev:review -- +94771234567 service plumbing approved "Certificate checked"
+```
+
+A provider is bookable only when their profile is `verified` **and** the
+category application is `approved`.
 
 ## Layout
 

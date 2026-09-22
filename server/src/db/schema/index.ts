@@ -1,4 +1,6 @@
 export * from './auth-sessions.js';
+export * from './cities.js';
+export * from './city-categories.js';
 export * from './enums.js';
 export * from './otp-challenges.js';
 export * from './provider-profiles.js';
@@ -6,4 +8,5 @@ export * from './provider-services.js';
 export * from './profiles.js';
 export * from './refresh-tokens.js';
 export * from './service-categories.js';
+export * from './service-category-translations.js';
 export * from './users.js';

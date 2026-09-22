@@ -54,11 +54,63 @@ abstract final class AppRoutes {
     path: '/services',
     access: RouteAccess.authenticatedOnly,
   );
+  static const serviceDetail = AppRoute(
+    name: 'serviceDetail',
+    path: '/services/:slug',
+    access: RouteAccess.authenticatedOnly,
+  );
   static const profile = AppRoute(
     name: 'profile',
     path: '/profile',
     access: RouteAccess.authenticatedOnly,
   );
 
-  static const all = [splash, auth, otp, home, services, profile];
+  // Becoming and being a provider.
+  static const provider = AppRoute(
+    name: 'provider',
+    path: '/provider',
+    access: RouteAccess.authenticatedOnly,
+  );
+  static const providerProfile = AppRoute(
+    name: 'providerProfile',
+    path: '/provider/profile',
+    access: RouteAccess.authenticatedOnly,
+  );
+  static const providerServices = AppRoute(
+    name: 'providerServices',
+    path: '/provider/services',
+    access: RouteAccess.authenticatedOnly,
+  );
+  static const providerApply = AppRoute(
+    name: 'providerApply',
+    path: '/provider/services/apply',
+    access: RouteAccess.authenticatedOnly,
+  );
+
+  static const all = [
+    splash,
+    auth,
+    otp,
+    home,
+    services,
+    serviceDetail,
+    profile,
+    provider,
+    providerProfile,
+    providerServices,
+    providerApply,
+  ];
+
+  /// The location of one service's detail screen.
+  static String serviceDetailLocation(String slug) =>
+      '/services/${Uri.encodeComponent(slug)}';
+
+  /// The apply screen, optionally with a service already ticked.
+  static String providerApplyLocation({String? categorySlug}) =>
+      categorySlug == null
+      ? providerApply.path
+      : Uri(
+          path: providerApply.path,
+          queryParameters: {'category': categorySlug},
+        ).toString();
 }

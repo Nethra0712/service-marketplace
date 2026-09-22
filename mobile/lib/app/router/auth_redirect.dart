@@ -38,10 +38,32 @@ String? resolveAuthRedirect({
   }
 }
 
+/// Finds the route for [location]. A literal path always beats a pattern, and
+/// a `:name` segment matches exactly one non-empty segment, so `/services/x`
+/// is `serviceDetail` but `/services/x/y` matches nothing.
+///
+/// Patterns must be matched here: a parameterised route that only matched by
+/// exact string would silently skip its access rule.
 AppRoute? _match(Iterable<AppRoute> routes, String location) {
   final path = Uri.parse(location).path;
   for (final route in routes) {
     if (route.path == path) return route;
   }
+  final segments = _segments(path);
+  for (final route in routes) {
+    if (_matchesPattern(_segments(route.path), segments)) return route;
+  }
   return null;
+}
+
+List<String> _segments(String path) =>
+    path.split('/').where((s) => s.isNotEmpty).toList(growable: false);
+
+bool _matchesPattern(List<String> pattern, List<String> segments) {
+  if (pattern.length != segments.length) return false;
+  for (var i = 0; i < pattern.length; i += 1) {
+    if (pattern[i].startsWith(':')) continue;
+    if (pattern[i] != segments[i]) return false;
+  }
+  return true;
 }

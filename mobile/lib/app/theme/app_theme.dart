@@ -57,3 +57,10 @@ abstract final class AppTheme {
     );
   }
 }
+
+/// For buttons that sit side by side (in a `Row` or `Wrap`). The theme's
+/// buttons are full width (`Size.fromHeight`), which has an infinite minimum
+/// width and cannot be laid out next to anything else.
+const compactButtonStyle = ButtonStyle(
+  minimumSize: WidgetStatePropertyAll(Size(0, 48)),
+);

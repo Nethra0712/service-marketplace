@@ -1,8 +1,6 @@
-export interface RateLimitPolicy {
-  windowMs: number;
-  /** Maximum requests per client IP within the window. */
-  limit: number;
-}
+import type { RateLimitPolicy } from '../../middleware/ip-rate-limit.js';
+
+export type { RateLimitPolicy };
 
 /**
  * Every security-relevant number in one place. These are defaults chosen for

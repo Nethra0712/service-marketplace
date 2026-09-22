@@ -48,6 +48,12 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               OutlinedButton(
+                key: const Key('provider_area_button'),
+                onPressed: () => context.push(AppRoutes.provider.path),
+                child: Text(l10n.homeProviderArea),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              OutlinedButton(
                 onPressed: () => context.push(AppRoutes.profile.path),
                 child: Text(l10n.profileTitle),
               ),

@@ -46,5 +46,109 @@
   "errorNetwork": "Can't reach the server. Check your connection and try again.",
   "errorSmsUnavailable": "We couldn't send the code. Please try again shortly.",
   "errorAccountSuspended": "This account is suspended.",
-  "errorGeneric": "Something went wrong. Please try again."
+  "errorGeneric": "Something went wrong. Please try again.",
+
+  "commonRetry": "Try again",
+  "commonCancel": "Cancel",
+
+  "servicesSearchHint": "Search services",
+  "servicesFilterAll": "All",
+  "servicesEmpty": "No services are available yet.",
+  "servicesNoMatch": "No services match your search.",
+  "servicesClearFilters": "Clear filters",
+  "pricingFixed": "Fixed price",
+  "pricingHourly": "Per hour",
+  "pricingQuote": "Quote on request",
+  "pricingFixedHelp": "A set price for the job.",
+  "pricingHourlyHelp": "You pay for the time the provider spends on the job.",
+  "pricingQuoteHelp": "The provider quotes a price once they understand the job.",
+  "serviceDetailPricing": "How pricing works",
+  "serviceDetailAvailableIn": "Available in",
+  "serviceDetailProviders": "{count, plural, =0{No approved providers yet} =1{1 approved provider} other{{count} approved providers}}",
+  "@serviceDetailProviders": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "serviceDetailNotAvailable": "This service isn't available right now.",
+  "serviceDetailOffer": "Offer this service",
+
+  "homeProviderArea": "Provider area",
+  "providerAreaTitle": "Provider area",
+  "providerIntroTitle": "Earn by offering your skills",
+  "providerIntroBody": "Create a provider profile, choose the services you offer, and we'll review your application.",
+  "providerSetupProfile": "Set up provider profile",
+  "providerEditProfile": "Edit profile",
+  "providerProfileTitle": "Provider profile",
+  "providerFullNameLabel": "Full name",
+  "providerYearsLabel": "Years of experience",
+  "providerBioLabel": "About you",
+  "providerBioHint": "Describe your skills and the work you do.",
+  "providerSave": "Save profile",
+  "providerSaved": "Profile saved.",
+  "providerNameRequired": "Enter your full name.",
+  "providerNameTooLong": "Your name must be 100 characters or fewer.",
+  "providerYearsInvalid": "Enter a whole number from 0 to 60.",
+  "providerBioTooLong": "Keep this to 1000 characters or fewer.",
+  "providerSubmitForReview": "Submit for review",
+  "providerSubmitted": "Profile submitted for review.",
+  "providerReviewNote": "Reviewer's note: {note}",
+  "@providerReviewNote": {
+    "placeholders": { "note": { "type": "String" } }
+  },
+  "verificationDraft": "Not submitted",
+  "verificationSubmitted": "Under review",
+  "verificationVerified": "Verified",
+  "verificationRejected": "Not approved",
+  "verificationDraftHelp": "Submit your profile so we can review it.",
+  "verificationSubmittedHelp": "We're reviewing your profile. The result will appear here.",
+  "verificationVerifiedHelp": "Your profile is verified. Customers can book you for services that are approved.",
+  "verificationRejectedHelp": "Your profile wasn't approved. Update it and submit again.",
+  "providerMyServices": "My services",
+  "providerManageServices": "Manage services",
+  "providerAddServices": "Add services",
+  "providerServicesSummary": "{count, plural, =0{You haven't applied for any services yet.} =1{1 service application} other{{count} service applications}}",
+  "@providerServicesSummary": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerVerifyFirst": "Customers can only find you once your profile is verified.",
+  "applicationPending": "Pending review",
+  "applicationApproved": "Approved",
+  "applicationRejected": "Rejected",
+  "applicationSuspended": "Suspended",
+  "applicationPendingHelp": "We're reviewing this application.",
+  "applicationApprovedHelp": "You're approved for this service.",
+  "applicationRejectedHelp": "This application wasn't approved. You can apply again.",
+  "applicationSuspendedHelp": "You can't take jobs in this service right now.",
+  "providerApplyTitle": "Apply for services",
+  "providerApplyIntro": "Choose the services you want to offer. Each one is reviewed separately.",
+  "providerApplyCity": "City",
+  "providerApplyNothingLeft": "You've already applied for every available service.",
+  "providerApplyNeedProfile": "Set up your provider profile before applying for services.",
+  "providerApplyButton": "{count, plural, =1{Apply for 1 service} other{Apply for {count} services}}",
+  "@providerApplyButton": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerApplySent": "{count, plural, =1{Application sent.} other{{count} applications sent.}}",
+  "@providerApplySent": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerApplyPartial": "{count, plural, =1{1 application couldn't be sent.} other{{count} applications couldn't be sent.}}",
+  "@providerApplyPartial": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "providerResubmit": "Apply again",
+  "providerResubmitted": "Application sent again.",
+  "providerWithdraw": "Withdraw",
+  "providerWithdrawTitle": "Withdraw application?",
+  "providerWithdrawBody": "Withdraw your application for {service}? You can apply again later.",
+  "@providerWithdrawBody": {
+    "placeholders": { "service": { "type": "String" } }
+  },
+  "providerWithdrawn": "Application withdrawn.",
+
+  "errorAlreadyApplied": "You've already applied for this service.",
+  "errorProfileIncomplete": "Add your name and apply for at least one service before submitting.",
+  "errorInvalidState": "That can't be done in the current state. Refresh and try again.",
+  "errorProfileRequired": "Set up your provider profile first.",
+  "errorNotFound": "We couldn't find that. It may no longer be available.",
+  "errorValidation": "Please check the details you entered."
 }
