@@ -11,9 +11,8 @@ import 'package:mobile/features/services/application/catalogue_providers.dart';
 import 'package:mobile/features/services/domain/service_category.dart';
 import 'package:mobile/features/services/presentation/pricing_model_labels.dart';
 
-/// One service: what it is, how it is priced, where it is offered.
-///
-/// Read-only. There is intentionally no way to book from here yet.
+/// One service: what it is, how it is priced, where it is offered, and the
+/// entry points to request it as a customer or offer it as a provider.
 class ServiceDetailScreen extends ConsumerWidget {
   const ServiceDetailScreen({required this.slug, super.key});
 
@@ -108,6 +107,13 @@ class _Detail extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.xl),
+        FilledButton(
+          key: const Key('request_service_button'),
+          onPressed: () =>
+              context.push(AppRoutes.serviceRequestLocation(category.slug)),
+          child: Text(l10n.serviceDetailRequest),
+        ),
+        const SizedBox(height: AppSpacing.md),
         OutlinedButton(
           key: const Key('offer_service_button'),
           onPressed: () => context.push(

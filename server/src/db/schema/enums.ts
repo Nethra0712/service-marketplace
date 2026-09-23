@@ -36,9 +36,42 @@ export const providerVerificationStatus = pgEnum('provider_verification_status',
 /** Provider's own online/offline toggle (persisted intent; live presence comes later). */
 export const providerAvailability = pgEnum('provider_availability', ['offline', 'online']);
 
+/** Whether the customer wants the work now or at a chosen time. */
+export const bookingType = pgEnum('booking_type', ['on_demand', 'scheduled']);
+
+/**
+ * A booking's stage. Transitions are explicit and one-directional except for
+ * a provider cancelling after acceptance, which returns the booking to
+ * `searching` rather than ending it, so it can be picked up again (automatic
+ * re-dispatch is Sprint 6; this sprint only prepares the state for it).
+ *
+ *   searching -> accepted -> en_route -> arrived -> in_progress -> completed
+ *   searching/accepted/en_route/arrived -> cancelled   (customer, terminal)
+ *   accepted/en_route/arrived -> searching             (provider releases)
+ */
+export const bookingStatus = pgEnum('booking_status', [
+  'searching',
+  'accepted',
+  'en_route',
+  'arrived',
+  'in_progress',
+  'completed',
+  'cancelled',
+]);
+
+/** A provider's proposed price for a quote-priced booking. */
+export const bookingQuoteStatus = pgEnum('booking_quote_status', [
+  'pending',
+  'accepted',
+  'rejected',
+]);
+
 export type UserStatus = (typeof userStatus.enumValues)[number];
 export type AppLanguage = (typeof appLanguage.enumValues)[number];
 export type PricingModel = (typeof pricingModel.enumValues)[number];
 export type ProviderServiceStatus = (typeof providerServiceStatus.enumValues)[number];
 export type ProviderAvailability = (typeof providerAvailability.enumValues)[number];
 export type ProviderVerificationStatus = (typeof providerVerificationStatus.enumValues)[number];
+export type BookingType = (typeof bookingType.enumValues)[number];
+export type BookingStatus = (typeof bookingStatus.enumValues)[number];
+export type BookingQuoteStatus = (typeof bookingQuoteStatus.enumValues)[number];

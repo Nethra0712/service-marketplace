@@ -1,4 +1,7 @@
 export * from './auth-sessions.js';
+export * from './booking-provider-releases.js';
+export * from './booking-quotes.js';
+export * from './bookings.js';
 export * from './cities.js';
 export * from './city-categories.js';
 export * from './enums.js';

@@ -13,6 +13,7 @@ import type { RateLimitPolicy } from './middleware/ip-rate-limit.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { notFoundHandler } from './middleware/not-found.js';
 import { createAuthModule, type AuthPolicy } from './modules/auth/index.js';
+import { createBookingsModule } from './modules/bookings/index.js';
 import { createCatalogueModule } from './modules/catalogue/index.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
 import { createProvidersModule } from './modules/providers/index.js';
@@ -102,6 +103,18 @@ export function createApp({
     rateLimit: catalogueRateLimit,
   });
   app.use('/api', catalogue.router);
+
+  const bookings = createBookingsModule({
+    db,
+    clock,
+    requireAuth: auth.requireAuth,
+    findOfferedCategory: catalogue.service.findOfferedCategory,
+    findProviderProfileId: providers.service.findProviderProfileId,
+    isBookable: providers.service.isBookable,
+    listEligibleOfferings: (providerProfileId) =>
+      providers.service.listBookableProviderServices({ providerProfileId }),
+  });
+  app.use('/api/bookings', bookings.router);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

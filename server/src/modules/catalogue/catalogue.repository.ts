@@ -154,6 +154,38 @@ export function createCatalogueRepository(db: Queryable) {
       return row;
     },
 
+    /**
+     * The category/city pair, if the category is active and currently offered in
+     * that active city. Used wherever a category must be resolved to book or
+     * apply against, not just displayed.
+     */
+    async findOfferedCategory(
+      categorySlug: string,
+      citySlug: string,
+    ): Promise<
+      { serviceCategoryId: string; cityId: string; pricingModel: PricingModel } | undefined
+    > {
+      const [row] = await db
+        .select({
+          serviceCategoryId: serviceCategories.id,
+          cityId: cities.id,
+          pricingModel: serviceCategories.pricingModel,
+        })
+        .from(cityCategories)
+        .innerJoin(serviceCategories, eq(serviceCategories.id, cityCategories.serviceCategoryId))
+        .innerJoin(cities, eq(cities.id, cityCategories.cityId))
+        .where(
+          and(
+            eq(serviceCategories.slug, categorySlug),
+            eq(cities.slug, citySlug),
+            eq(serviceCategories.isActive, true),
+            eq(cities.isActive, true),
+            eq(cityCategories.isActive, true),
+          ),
+        );
+      return row;
+    },
+
     /** Active cities that currently offer the category. */
     async listCitiesOffering(categoryId: string): Promise<CityRow[]> {
       return db

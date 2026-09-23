@@ -87,6 +87,30 @@ abstract final class AppRoutes {
     access: RouteAccess.authenticatedOnly,
   );
 
+  /// Open requests and assigned jobs, for a provider.
+  static const providerJobs = AppRoute(
+    name: 'providerJobs',
+    path: '/provider/jobs',
+    access: RouteAccess.authenticatedOnly,
+  );
+
+  // Bookings.
+  static const serviceRequest = AppRoute(
+    name: 'serviceRequest',
+    path: '/services/:slug/request',
+    access: RouteAccess.authenticatedOnly,
+  );
+  static const bookings = AppRoute(
+    name: 'bookings',
+    path: '/bookings',
+    access: RouteAccess.authenticatedOnly,
+  );
+  static const bookingDetail = AppRoute(
+    name: 'bookingDetail',
+    path: '/bookings/:id',
+    access: RouteAccess.authenticatedOnly,
+  );
+
   static const all = [
     splash,
     auth,
@@ -99,6 +123,10 @@ abstract final class AppRoutes {
     providerProfile,
     providerServices,
     providerApply,
+    providerJobs,
+    serviceRequest,
+    bookings,
+    bookingDetail,
   ];
 
   /// The location of one service's detail screen.
@@ -113,4 +141,12 @@ abstract final class AppRoutes {
           path: providerApply.path,
           queryParameters: {'category': categorySlug},
         ).toString();
+
+  /// The location to request a given service.
+  static String serviceRequestLocation(String categorySlug) =>
+      '/services/${Uri.encodeComponent(categorySlug)}/request';
+
+  /// The location of one booking's detail screen.
+  static String bookingDetailLocation(String bookingId) =>
+      '/bookings/${Uri.encodeComponent(bookingId)}';
 }

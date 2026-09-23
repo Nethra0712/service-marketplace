@@ -11,6 +11,10 @@ import 'package:mobile/features/auth/domain/auth_status.dart';
 import 'package:mobile/features/auth/presentation/otp_verification_screen.dart';
 import 'package:mobile/features/auth/presentation/phone_entry_screen.dart';
 import 'package:mobile/features/auth/presentation/splash_screen.dart';
+import 'package:mobile/features/booking/presentation/booking_detail_screen.dart';
+import 'package:mobile/features/booking/presentation/booking_history_screen.dart';
+import 'package:mobile/features/booking/presentation/provider_jobs_screen.dart';
+import 'package:mobile/features/booking/presentation/service_request_screen.dart';
 import 'package:mobile/features/home/presentation/home_screen.dart';
 import 'package:mobile/features/profile/presentation/profile_screen.dart';
 import 'package:mobile/features/provider/presentation/provider_apply_screen.dart';
@@ -100,6 +104,28 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ProviderApplyScreen(
           initialCategorySlug: state.uri.queryParameters['category'],
         ),
+      ),
+      GoRoute(
+        name: AppRoutes.providerJobs.name,
+        path: AppRoutes.providerJobs.path,
+        builder: (context, state) => const ProviderJobsScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.serviceRequest.name,
+        path: AppRoutes.serviceRequest.path,
+        builder: (context, state) =>
+            ServiceRequestScreen(categorySlug: state.pathParameters['slug']!),
+      ),
+      GoRoute(
+        name: AppRoutes.bookings.name,
+        path: AppRoutes.bookings.path,
+        builder: (context, state) => const BookingHistoryScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.bookingDetail.name,
+        path: AppRoutes.bookingDetail.path,
+        builder: (context, state) =>
+            BookingDetailScreen(bookingId: state.pathParameters['id']!),
       ),
     ],
     errorBuilder: (context, state) => PlaceholderScreen(

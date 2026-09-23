@@ -24,48 +24,57 @@ class HomeScreen extends ConsumerWidget {
         actions: const [LanguageMenu()],
       ),
       body: SafeArea(
-        child: Padding(
+        child: ListView(
           padding: AppSpacing.screen,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: AppSpacing.lg),
-              Text(l10n.homeWelcome, style: textTheme.headlineMedium),
+          children: [
+            const SizedBox(height: AppSpacing.lg),
+            Text(l10n.homeWelcome, style: textTheme.headlineMedium),
+            const SizedBox(height: AppSpacing.sm),
+            Text(l10n.homeSubtitle, style: textTheme.bodyLarge),
+            if (user != null) ...[
               const SizedBox(height: AppSpacing.sm),
-              Text(l10n.homeSubtitle, style: textTheme.bodyLarge),
-              if (user != null) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.homeSignedInAs(formatPhoneForDisplay(user.phone)),
-                  key: const Key('signed_in_as'),
-                  style: textTheme.bodyMedium,
-                ),
-              ],
-              const SizedBox(height: AppSpacing.xl),
-              FilledButton(
-                onPressed: () => context.push(AppRoutes.services.path),
-                child: Text(l10n.servicesTitle),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              OutlinedButton(
-                key: const Key('provider_area_button'),
-                onPressed: () => context.push(AppRoutes.provider.path),
-                child: Text(l10n.homeProviderArea),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              OutlinedButton(
-                onPressed: () => context.push(AppRoutes.profile.path),
-                child: Text(l10n.profileTitle),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              OutlinedButton(
-                key: const Key('sign_out_button'),
-                onPressed: () =>
-                    ref.read(authControllerProvider.notifier).logout(),
-                child: Text(l10n.authSignOut),
+              Text(
+                l10n.homeSignedInAs(formatPhoneForDisplay(user.phone)),
+                key: const Key('signed_in_as'),
+                style: textTheme.bodyMedium,
               ),
             ],
-          ),
+            const SizedBox(height: AppSpacing.xl),
+            FilledButton(
+              onPressed: () => context.push(AppRoutes.services.path),
+              child: Text(l10n.servicesTitle),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton(
+              key: const Key('my_bookings_button'),
+              onPressed: () => context.push(AppRoutes.bookings.path),
+              child: Text(l10n.bookingHistoryTitle),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton(
+              key: const Key('provider_area_button'),
+              onPressed: () => context.push(AppRoutes.provider.path),
+              child: Text(l10n.homeProviderArea),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton(
+              key: const Key('provider_jobs_button'),
+              onPressed: () => context.push(AppRoutes.providerJobs.path),
+              child: Text(l10n.providerJobsTitle),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton(
+              onPressed: () => context.push(AppRoutes.profile.path),
+              child: Text(l10n.profileTitle),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton(
+              key: const Key('sign_out_button'),
+              onPressed: () =>
+                  ref.read(authControllerProvider.notifier).logout(),
+              child: Text(l10n.authSignOut),
+            ),
+          ],
         ),
       ),
     );

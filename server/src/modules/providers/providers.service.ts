@@ -277,7 +277,16 @@ export function createProvidersService({ db, clock }: ProvidersServiceDeps) {
       );
     },
 
-    // ---- the bookable-provider gate (used by the catalogue now, booking later) ----
+    /**
+     * The caller's provider profile id, or undefined if they have none. Unlike
+     * {@link getProfile} this never throws: callers (the bookings module) use it
+     * to decide "is this person a provider at all" without an existence check
+     * of their own.
+     */
+    findProviderProfileId: async (userId: string): Promise<string | undefined> =>
+      (await repository.findProfileByUserId(userId))?.id,
+
+    // ---- the bookable-provider gate (used by the catalogue and bookings modules) ----
 
     listBookableProviderServices: (filter: BookableFilter) => repository.listBookable(filter),
     countBookableProviders: (filter: BookableFilter) => repository.countBookableProviders(filter),

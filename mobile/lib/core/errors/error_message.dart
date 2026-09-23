@@ -22,6 +22,12 @@ String errorMessage(AppLocalizations l10n, Object error) {
       return l10n.errorValidation;
     case 'RATE_LIMITED':
       return l10n.errorRateLimited;
+    case 'QUOTE_NOT_APPLICABLE':
+      return l10n.errorQuoteNotApplicable;
+    case 'PROVIDER_NOT_ELIGIBLE':
+      return l10n.errorProviderNotEligible;
+    case 'ALREADY_QUOTED':
+      return l10n.errorAlreadyQuoted;
   }
 
   return switch (error) {

@@ -419,4 +419,293 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get errorValidation => 'කරුණාකර ඔබ ඇතුළත් කළ තොරතුරු පරීක්ෂා කරන්න.';
+
+  @override
+  String get serviceDetailRequest => 'මෙම සේවාව ඉල්ලන්න';
+
+  @override
+  String get bookingHistoryTitle => 'මගේ වෙන්කිරීම්';
+
+  @override
+  String get bookingHistoryActive => 'සක්‍රීය';
+
+  @override
+  String get bookingHistoryPast => 'අතීත';
+
+  @override
+  String get bookingHistoryActiveEmpty => 'ඔබට සක්‍රීය වෙන්කිරීම් නොමැත.';
+
+  @override
+  String get bookingHistoryPastEmpty => 'ඔබට තවම අතීත වෙන්කිරීම් නොමැත.';
+
+  @override
+  String get bookingDetailTitle => 'වෙන්කිරීම';
+
+  @override
+  String get bookingCategoryLabel => 'සේවාව';
+
+  @override
+  String get bookingCityLabel => 'නගරය';
+
+  @override
+  String get bookingPricingLabel => 'මිල ගණන්';
+
+  @override
+  String get bookingAgreedAmountLabel => 'එකඟ වූ මිල';
+
+  @override
+  String bookingAmountLkr(String amount) {
+    return 'රු. $amount';
+  }
+
+  @override
+  String get bookingScheduledLabel => 'නියමිත වේලාව';
+
+  @override
+  String get bookingAddressLabel => 'ලිපිනය';
+
+  @override
+  String get bookingNotesLabel => 'සටහන්';
+
+  @override
+  String get bookingCustomerLabel => 'පාරිභෝගිකයා';
+
+  @override
+  String get bookingProviderLabel => 'සේවා සපයන්නා';
+
+  @override
+  String get bookingNameUnknown => 'සඳහන් කර නැත';
+
+  @override
+  String get bookingTimelineLabel => 'කාල රේඛාව';
+
+  @override
+  String get bookingTimelineEmpty => 'තවම කිසිවක් සිදු වී නැත.';
+
+  @override
+  String get bookingStatusSearching => 'සේවා සපයන්නෙකු සොයමින්';
+
+  @override
+  String get bookingStatusSearchingHelp =>
+      'මෙම වැඩය කළ හැකි සේවා සපයන්නන්ට අපි මෙම ඉල්ලීම පෙන්වමින් සිටිමු.';
+
+  @override
+  String get bookingStatusAccepted => 'අනුමතයි';
+
+  @override
+  String get bookingStatusAcceptedHelp =>
+      'සේවා සපයන්නෙකු එය පිළිගෙන ඇත. වේලාව එළඹෙන විට ඔවුන් පිටත් වනු ඇත.';
+
+  @override
+  String get bookingStatusEnRoute => 'මාර්ගයේ';
+
+  @override
+  String get bookingStatusEnRouteHelp => 'ඔබේ සේවා සපයන්නා මාර්ගයේ පවතී.';
+
+  @override
+  String get bookingStatusArrived => 'පැමිණ ඇත';
+
+  @override
+  String get bookingStatusArrivedHelp => 'ඔබේ සේවා සපයන්නා පැමිණ ඇත.';
+
+  @override
+  String get bookingStatusInProgress => 'සිදු වෙමින්';
+
+  @override
+  String get bookingStatusInProgressHelp => 'වැඩය සිදු වෙමින් පවතී.';
+
+  @override
+  String get bookingStatusCompleted => 'සම්පූර්ණයි';
+
+  @override
+  String get bookingStatusCompletedHelp => 'මෙම කාර්යය අවසන් වී ඇත.';
+
+  @override
+  String get bookingStatusCancelled => 'අවලංගු කරන ලදී';
+
+  @override
+  String get bookingStatusCancelledHelp => 'මෙම වෙන්කිරීම අවලංගු කරන ලදී.';
+
+  @override
+  String get bookingCancel => 'වෙන්කිරීම අවලංගු කරන්න';
+
+  @override
+  String get bookingCancelTitle => 'මෙම වෙන්කිරීම අවලංගු කරන්නද?';
+
+  @override
+  String get bookingCancelBody => 'ඔබ අවලංගු කරන්නේ ඇයිද යන්න අපට කියන්න.';
+
+  @override
+  String get bookingCancelReasonLabel => 'හේතුව';
+
+  @override
+  String get bookingCancelled => 'වෙන්කිරීම අවලංගු කරන ලදී.';
+
+  @override
+  String bookingCancelReason(String reason) {
+    return 'හේතුව: $reason';
+  }
+
+  @override
+  String get bookingRelease => 'මෙම කාර්යය මුදාහරින්න';
+
+  @override
+  String get bookingReleaseTitle => 'මෙම කාර්යය මුදාහරින්නද?';
+
+  @override
+  String get bookingReleaseBody =>
+      'එය නැවත වෙනත් සේවා සපයන්නෙකුට ගත හැකි විවෘත ඉල්ලීමක් බවට පත් වනු ඇත.';
+
+  @override
+  String get bookingReleaseReasonLabel => 'හේතුව';
+
+  @override
+  String get bookingReleased => 'කාර්යය මුදාහරින ලදී.';
+
+  @override
+  String get bookingAcceptJob => 'මෙම කාර්යය පිළිගන්න';
+
+  @override
+  String get bookingAcceptedMessage => 'කාර්යය පිළිගන්නා ලදී.';
+
+  @override
+  String get bookingStartEnRoute => 'මම මාර්ගයේ සිටිමි';
+
+  @override
+  String get bookingEnRouteStarted => 'මාර්ගයේ ලෙස සලකුණු කරන ලදී.';
+
+  @override
+  String get bookingMarkArrived => 'මම පැමිණ ඇත්තෙමි';
+
+  @override
+  String get bookingArrivedMarked => 'පැමිණි ලෙස සලකුණු කරන ලදී.';
+
+  @override
+  String get bookingStartWork => 'වැඩය ආරම්භ කරන්න';
+
+  @override
+  String get bookingWorkStarted => 'වැඩය ආරම්භ විය.';
+
+  @override
+  String get bookingComplete => 'සම්පූර්ණ ලෙස සලකුණු කරන්න';
+
+  @override
+  String get bookingCompletedMessage =>
+      'වෙන්කිරීම සම්පූර්ණ ලෙස සලකුණු කරන ලදී.';
+
+  @override
+  String get bookingQuotesTitle => 'මිල ගණන්';
+
+  @override
+  String get bookingNoQuotesYet => 'තවම මිල ගණන් නොමැත.';
+
+  @override
+  String get bookingSubmitQuote => 'මිලක් ඉදිරිපත් කරන්න';
+
+  @override
+  String get bookingQuoteAmountLabel => 'ඔබේ මිල';
+
+  @override
+  String get bookingQuoteAmountInvalid =>
+      'බිංදුවට වඩා වැඩි මුදලක් ඇතුළත් කරන්න.';
+
+  @override
+  String get bookingQuoteNoteLabel => 'සටහන (විකල්ප)';
+
+  @override
+  String get bookingQuoteSubmit => 'මිල ගණන් යවන්න';
+
+  @override
+  String get bookingQuoteSubmitted => 'මිල ගණන් යවන ලදී.';
+
+  @override
+  String get bookingAcceptQuote => 'පිළිගන්න';
+
+  @override
+  String get bookingRejectQuote => 'ප්‍රතික්ෂේප කරන්න';
+
+  @override
+  String get bookingQuoteAccepted => 'මිල ගණන් පිළිගන්නා ලදී.';
+
+  @override
+  String get bookingQuoteRejected => 'මිල ගණන් ප්‍රතික්ෂේප කරන ලදී.';
+
+  @override
+  String get quoteStatusPending => 'බලාපොරොත්තුවෙන්';
+
+  @override
+  String get quoteStatusAccepted => 'පිළිගන්නා ලදී';
+
+  @override
+  String get quoteStatusRejected => 'ප්‍රතික්ෂේප කරන ලදී';
+
+  @override
+  String get providerJobsTitle => 'රැකියා';
+
+  @override
+  String get providerJobsOpen => 'විවෘත ඉල්ලීම්';
+
+  @override
+  String get providerJobsAssigned => 'මගේ රැකියා';
+
+  @override
+  String get providerJobsOpenEmpty => 'දැනට ඔබේ සේවා සඳහා විවෘත ඉල්ලීම් නොමැත.';
+
+  @override
+  String get providerJobsAssignedEmpty => 'ඔබට තවම පවරන ලද රැකියා නොමැත.';
+
+  @override
+  String get serviceRequestTitle => 'මෙම සේවාව ඉල්ලන්න';
+
+  @override
+  String get serviceRequestOnDemand => 'දැන්ම';
+
+  @override
+  String get serviceRequestScheduled => 'වේලාවක් තෝරන්න';
+
+  @override
+  String get serviceRequestPickTime => 'දිනයක් සහ වේලාවක් තෝරන්න';
+
+  @override
+  String get serviceRequestScheduledTimeInvalid => 'අනාගත වේලාවක් තෝරන්න.';
+
+  @override
+  String get serviceRequestAddressLabel => 'සේවා ලිපිනය';
+
+  @override
+  String get serviceRequestAddressHint => 'සේවා සපයන්නා පැමිණිය යුත්තේ කොහේද?';
+
+  @override
+  String get serviceRequestAddressRequired => 'සේවා ලිපිනය ඇතුළත් කරන්න.';
+
+  @override
+  String get serviceRequestAddressTooLong => 'අක්ෂර 500ක් හෝ ඊට අඩු කරන්න.';
+
+  @override
+  String get serviceRequestNotesLabel => 'සේවා සපයන්නාට සටහන් (විකල්ප)';
+
+  @override
+  String get serviceRequestNotesHint =>
+      'සේවා සපයන්නා කල් තියා දැනගත යුතු ඕනෑම දෙයක්.';
+
+  @override
+  String get serviceRequestNotesTooLong => 'අක්ෂර 1000ක් හෝ ඊට අඩු කරන්න.';
+
+  @override
+  String get serviceRequestSubmit => 'සේවාව ඉල්ලන්න';
+
+  @override
+  String get serviceRequestSent => 'ඉල්ලීම යවන ලදී.';
+
+  @override
+  String get errorQuoteNotApplicable =>
+      'මෙම වර්ගයේ සේවාව සඳහා එය ලබා ගත නොහැක.';
+
+  @override
+  String get errorProviderNotEligible =>
+      'මෙම නගරයේ මෙම සේවාව සඳහා ඔබ අනුමත කර නැත.';
+
+  @override
+  String get errorAlreadyQuoted =>
+      'ඔබ දැනටමත් මෙම වෙන්කිරීම සඳහා මිලක් යවා ඇත.';
 }

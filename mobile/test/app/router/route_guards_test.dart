@@ -117,6 +117,14 @@ void main() {
       await storeSession();
       await pumpApp(tester, h);
 
+      // The home screen has grown past one screen's height; make the test
+      // surface tall enough that every button, including sign-out, is laid
+      // out and tappable without needing to scroll to it.
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pump();
+
       await tester.tap(find.byKey(const Key('sign_out_button')));
       await settle(tester);
 

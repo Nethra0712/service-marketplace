@@ -152,6 +152,10 @@ void main() {
       '/provider/services',
       '/provider/services/apply',
       '/provider/services/apply?category=plumbing',
+      '/provider/jobs',
+      '/services/plumbing/request',
+      '/bookings',
+      '/bookings/9c858b1e-14d1-4e0f-9c1a-000000000001',
     ];
 
     test('every service and provider screen requires a session', () {

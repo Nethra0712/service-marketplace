@@ -10,7 +10,12 @@ import {
   type CatalogueService,
 } from './catalogue.service.js';
 
-export type { CategoryView, CategoryDetailView, CityView } from './catalogue.service.js';
+export type {
+  CategoryView,
+  CategoryDetailView,
+  CityView,
+  OfferedCategory,
+} from './catalogue.service.js';
 
 /** Generous: catalogue reads are cheap, and many phones share one carrier IP. */
 export const defaultCatalogueRateLimit: RateLimitPolicy = { windowMs: 15 * 60_000, limit: 600 };

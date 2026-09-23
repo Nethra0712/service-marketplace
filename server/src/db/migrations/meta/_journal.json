@@ -50,6 +50,20 @@
       "when": 1789996653228,
       "tag": "0006_catalogue_updated_at_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790100364434,
+      "tag": "0007_bookings",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790100390637,
+      "tag": "0008_bookings_updated_at_triggers",
+      "breakpoints": true
     }
   ]
 }

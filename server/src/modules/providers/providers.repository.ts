@@ -59,6 +59,8 @@ export interface BookableFilter {
   serviceCategoryId?: string | undefined;
   cityId?: string | undefined;
   citySlug?: string | undefined;
+  /** Narrow to one provider, e.g. "which of my approved categories/cities". */
+  providerProfileId?: string | undefined;
 }
 
 /** A category offered in a city, both currently active. */
@@ -166,6 +168,9 @@ export function createProvidersRepository(db: Queryable) {
         : eq(providerServices.serviceCategoryId, filter.serviceCategoryId),
       filter.cityId === undefined ? undefined : eq(providerServices.cityId, filter.cityId),
       filter.citySlug === undefined ? undefined : eq(cities.slug, filter.citySlug),
+      filter.providerProfileId === undefined
+        ? undefined
+        : eq(providerServices.providerProfileId, filter.providerProfileId),
     );
   }
 

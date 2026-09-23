@@ -419,4 +419,295 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorValidation => 'Please check the details you entered.';
+
+  @override
+  String get serviceDetailRequest => 'Request this service';
+
+  @override
+  String get bookingHistoryTitle => 'My bookings';
+
+  @override
+  String get bookingHistoryActive => 'Active';
+
+  @override
+  String get bookingHistoryPast => 'Past';
+
+  @override
+  String get bookingHistoryActiveEmpty => 'You have no active bookings.';
+
+  @override
+  String get bookingHistoryPastEmpty => 'You have no past bookings yet.';
+
+  @override
+  String get bookingDetailTitle => 'Booking';
+
+  @override
+  String get bookingCategoryLabel => 'Service';
+
+  @override
+  String get bookingCityLabel => 'City';
+
+  @override
+  String get bookingPricingLabel => 'Pricing';
+
+  @override
+  String get bookingAgreedAmountLabel => 'Agreed price';
+
+  @override
+  String bookingAmountLkr(String amount) {
+    return 'LKR $amount';
+  }
+
+  @override
+  String get bookingScheduledLabel => 'Scheduled for';
+
+  @override
+  String get bookingAddressLabel => 'Address';
+
+  @override
+  String get bookingNotesLabel => 'Notes';
+
+  @override
+  String get bookingCustomerLabel => 'Customer';
+
+  @override
+  String get bookingProviderLabel => 'Provider';
+
+  @override
+  String get bookingNameUnknown => 'Not given';
+
+  @override
+  String get bookingTimelineLabel => 'Timeline';
+
+  @override
+  String get bookingTimelineEmpty => 'Nothing has happened yet.';
+
+  @override
+  String get bookingStatusSearching => 'Looking for a provider';
+
+  @override
+  String get bookingStatusSearchingHelp =>
+      'We\'re showing this request to providers who can do this job.';
+
+  @override
+  String get bookingStatusAccepted => 'Accepted';
+
+  @override
+  String get bookingStatusAcceptedHelp =>
+      'A provider has accepted. They\'ll set off when it\'s time.';
+
+  @override
+  String get bookingStatusEnRoute => 'On the way';
+
+  @override
+  String get bookingStatusEnRouteHelp => 'Your provider is on their way.';
+
+  @override
+  String get bookingStatusArrived => 'Arrived';
+
+  @override
+  String get bookingStatusArrivedHelp => 'Your provider has arrived.';
+
+  @override
+  String get bookingStatusInProgress => 'In progress';
+
+  @override
+  String get bookingStatusInProgressHelp => 'Work is under way.';
+
+  @override
+  String get bookingStatusCompleted => 'Completed';
+
+  @override
+  String get bookingStatusCompletedHelp => 'This job is done.';
+
+  @override
+  String get bookingStatusCancelled => 'Cancelled';
+
+  @override
+  String get bookingStatusCancelledHelp => 'This booking was cancelled.';
+
+  @override
+  String get bookingCancel => 'Cancel booking';
+
+  @override
+  String get bookingCancelTitle => 'Cancel this booking?';
+
+  @override
+  String get bookingCancelBody => 'Let us know why you\'re cancelling.';
+
+  @override
+  String get bookingCancelReasonLabel => 'Reason';
+
+  @override
+  String get bookingCancelled => 'Booking cancelled.';
+
+  @override
+  String bookingCancelReason(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get bookingRelease => 'Release this job';
+
+  @override
+  String get bookingReleaseTitle => 'Release this job?';
+
+  @override
+  String get bookingReleaseBody =>
+      'It will go back to being an open request for another provider to take.';
+
+  @override
+  String get bookingReleaseReasonLabel => 'Reason';
+
+  @override
+  String get bookingReleased => 'Job released.';
+
+  @override
+  String get bookingAcceptJob => 'Accept this job';
+
+  @override
+  String get bookingAcceptedMessage => 'Job accepted.';
+
+  @override
+  String get bookingStartEnRoute => 'I\'m on my way';
+
+  @override
+  String get bookingEnRouteStarted => 'Marked as on the way.';
+
+  @override
+  String get bookingMarkArrived => 'I\'ve arrived';
+
+  @override
+  String get bookingArrivedMarked => 'Marked as arrived.';
+
+  @override
+  String get bookingStartWork => 'Start work';
+
+  @override
+  String get bookingWorkStarted => 'Work started.';
+
+  @override
+  String get bookingComplete => 'Mark as complete';
+
+  @override
+  String get bookingCompletedMessage => 'Booking marked as complete.';
+
+  @override
+  String get bookingQuotesTitle => 'Quotes';
+
+  @override
+  String get bookingNoQuotesYet => 'No quotes yet.';
+
+  @override
+  String get bookingSubmitQuote => 'Submit a quote';
+
+  @override
+  String get bookingQuoteAmountLabel => 'Your price';
+
+  @override
+  String get bookingQuoteAmountInvalid => 'Enter an amount greater than zero.';
+
+  @override
+  String get bookingQuoteNoteLabel => 'Note (optional)';
+
+  @override
+  String get bookingQuoteSubmit => 'Send quote';
+
+  @override
+  String get bookingQuoteSubmitted => 'Quote sent.';
+
+  @override
+  String get bookingAcceptQuote => 'Accept';
+
+  @override
+  String get bookingRejectQuote => 'Decline';
+
+  @override
+  String get bookingQuoteAccepted => 'Quote accepted.';
+
+  @override
+  String get bookingQuoteRejected => 'Quote declined.';
+
+  @override
+  String get quoteStatusPending => 'Pending';
+
+  @override
+  String get quoteStatusAccepted => 'Accepted';
+
+  @override
+  String get quoteStatusRejected => 'Declined';
+
+  @override
+  String get providerJobsTitle => 'Jobs';
+
+  @override
+  String get providerJobsOpen => 'Open requests';
+
+  @override
+  String get providerJobsAssigned => 'My jobs';
+
+  @override
+  String get providerJobsOpenEmpty =>
+      'No open requests for your services right now.';
+
+  @override
+  String get providerJobsAssignedEmpty => 'You have no assigned jobs yet.';
+
+  @override
+  String get serviceRequestTitle => 'Request this service';
+
+  @override
+  String get serviceRequestOnDemand => 'Now';
+
+  @override
+  String get serviceRequestScheduled => 'Schedule';
+
+  @override
+  String get serviceRequestPickTime => 'Choose a date and time';
+
+  @override
+  String get serviceRequestScheduledTimeInvalid =>
+      'Choose a time in the future.';
+
+  @override
+  String get serviceRequestAddressLabel => 'Service address';
+
+  @override
+  String get serviceRequestAddressHint => 'Where should the provider come?';
+
+  @override
+  String get serviceRequestAddressRequired => 'Enter the service address.';
+
+  @override
+  String get serviceRequestAddressTooLong =>
+      'Keep this to 500 characters or fewer.';
+
+  @override
+  String get serviceRequestNotesLabel => 'Notes for the provider (optional)';
+
+  @override
+  String get serviceRequestNotesHint =>
+      'Anything the provider should know beforehand.';
+
+  @override
+  String get serviceRequestNotesTooLong =>
+      'Keep this to 1000 characters or fewer.';
+
+  @override
+  String get serviceRequestSubmit => 'Request service';
+
+  @override
+  String get serviceRequestSent => 'Request sent.';
+
+  @override
+  String get errorQuoteNotApplicable =>
+      'That\'s not available for this kind of service.';
+
+  @override
+  String get errorProviderNotEligible =>
+      'You\'re not approved for this service in this city.';
+
+  @override
+  String get errorAlreadyQuoted =>
+      'You\'ve already sent a quote for this booking.';
 }

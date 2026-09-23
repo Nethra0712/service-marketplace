@@ -23,6 +23,10 @@ export const ErrorCode = {
   ProfileIncomplete: 'PROFILE_INCOMPLETE',
   AlreadyApplied: 'ALREADY_APPLIED',
   InvalidState: 'INVALID_STATE',
+  // Bookings
+  ProviderNotEligible: 'PROVIDER_NOT_ELIGIBLE',
+  AlreadyQuoted: 'ALREADY_QUOTED',
+  QuoteNotApplicable: 'QUOTE_NOT_APPLICABLE',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

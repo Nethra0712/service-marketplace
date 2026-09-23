@@ -25,6 +25,13 @@ export interface CategoryDetailView extends CategoryView {
   availableProviderCount: number;
 }
 
+/** A category/city pair a booking or application can be made against. */
+export interface OfferedCategory {
+  serviceCategoryId: string;
+  cityId: string;
+  pricingModel: PricingModel;
+}
+
 /**
  * How many providers can currently be booked for a category. The key is
  * `serviceCategoryId`, the same name the providers module filters on: an
@@ -84,6 +91,13 @@ export function createCatalogueService({
       ]);
       return { ...category, cities: cities.map(toCityView), availableProviderCount };
     },
+
+    /** Resolves a category/city pair for booking or application, or undefined if not offered. */
+    findOfferedCategory: (
+      categorySlug: string,
+      citySlug: string,
+    ): Promise<OfferedCategory | undefined> =>
+      repository.findOfferedCategory(categorySlug, citySlug),
   };
 }
 
