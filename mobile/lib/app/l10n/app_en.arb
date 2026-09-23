@@ -110,6 +110,11 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "providerVerifyFirst": "Customers can only find you once your profile is verified.",
+  "providerAvailabilityTitle": "Availability",
+  "providerAvailabilityOnline": "Online — visible for new jobs",
+  "providerAvailabilityOffline": "Offline — not receiving offers",
+  "providerAvailabilityHelp": "Go online to be matched with nearby customers.",
+  "providerAvailabilityUpdated": "Availability updated.",
   "applicationPending": "Pending review",
   "applicationApproved": "Approved",
   "applicationRejected": "Rejected",
@@ -192,6 +197,8 @@
   "bookingStatusCompletedHelp": "This job is done.",
   "bookingStatusCancelled": "Cancelled",
   "bookingStatusCancelledHelp": "This booking was cancelled.",
+  "bookingStatusExpired": "No provider found",
+  "bookingStatusExpiredHelp": "We couldn't find an available provider in time. You can try requesting again.",
 
   "bookingCancel": "Cancel booking",
   "bookingCancelTitle": "Cancel this booking?",
@@ -211,6 +218,12 @@
 
   "bookingAcceptJob": "Accept this job",
   "bookingAcceptedMessage": "Job accepted.",
+  "bookingDeclineOffer": "Decline",
+  "bookingOfferDeclined": "Offer declined.",
+  "bookingOfferRespondBy": "Respond by {time}",
+  "@bookingOfferRespondBy": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "bookingStartEnRoute": "I'm on my way",
   "bookingEnRouteStarted": "Marked as on the way.",
   "bookingMarkArrived": "I've arrived",
@@ -238,9 +251,9 @@
   "quoteStatusRejected": "Declined",
 
   "providerJobsTitle": "Jobs",
-  "providerJobsOpen": "Open requests",
+  "providerJobsOpen": "Offers",
   "providerJobsAssigned": "My jobs",
-  "providerJobsOpenEmpty": "No open requests for your services right now.",
+  "providerJobsOpenEmpty": "No offers right now. Go online to start receiving them.",
   "providerJobsAssignedEmpty": "You have no assigned jobs yet.",
 
   "serviceRequestTitle": "Request this service",

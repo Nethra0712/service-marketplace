@@ -10,7 +10,8 @@ enum BookingStatus {
   arrived,
   inProgress,
   completed,
-  cancelled;
+  cancelled,
+  expired;
 
   static BookingStatus fromWire(String value) => switch (value) {
     'searching' => BookingStatus.searching,
@@ -20,6 +21,7 @@ enum BookingStatus {
     'in_progress' => BookingStatus.inProgress,
     'completed' => BookingStatus.completed,
     'cancelled' => BookingStatus.cancelled,
+    'expired' => BookingStatus.expired,
     _ => throw FormatException('Unknown booking status "$value".'),
   };
 
@@ -31,6 +33,7 @@ enum BookingStatus {
     BookingStatus.inProgress => 'in_progress',
     BookingStatus.completed => 'completed',
     BookingStatus.cancelled => 'cancelled',
+    BookingStatus.expired => 'expired',
   };
 }
 

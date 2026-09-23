@@ -7,6 +7,7 @@ import { createProvidersService, type ProvidersService } from './providers.servi
 import { createReviewService, type ReviewService } from './review.service.js';
 
 export type { ApplicationView, ProviderProfileView } from './providers.service.js';
+export type { DispatchCandidate, OfferedService } from './providers.repository.js';
 export { createReviewService, type ReviewService } from './review.service.js';
 
 export interface ProvidersModuleDeps {

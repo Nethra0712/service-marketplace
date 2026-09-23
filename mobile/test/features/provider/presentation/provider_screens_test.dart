@@ -203,6 +203,60 @@ void main() {
     });
   });
 
+  // ------------------------------------------------------ availability ---
+
+  group('availability toggle', () {
+    testWidgets('starts offline by default and can go online', (tester) async {
+      f.provider.profile = profileOf(VerificationStatus.verified);
+      await f.open(tester, AppRoutes.provider.path);
+
+      expect(find.text(en.providerAvailabilityOffline), findsOneWidget);
+      final availabilitySwitch = tester.widget<Switch>(
+        key('availability_switch'),
+      );
+      expect(availabilitySwitch.value, isFalse);
+
+      await tester.tap(key('availability_switch'));
+      await settle(tester);
+
+      expect(find.text(en.providerAvailabilityOnline), findsOneWidget);
+      expect(find.text(en.providerAvailabilityUpdated), findsOneWidget);
+      expect(f.provider.profile?.availability, ProviderAvailability.online);
+    });
+
+    testWidgets('can go back offline', (tester) async {
+      f.provider.profile = profileOf(
+        VerificationStatus.verified,
+        availability: ProviderAvailability.online,
+      );
+      await f.open(tester, AppRoutes.provider.path);
+
+      expect(find.text(en.providerAvailabilityOnline), findsOneWidget);
+
+      await tester.tap(key('availability_switch'));
+      await settle(tester);
+
+      expect(find.text(en.providerAvailabilityOffline), findsOneWidget);
+      expect(f.provider.profile?.availability, ProviderAvailability.offline);
+    });
+
+    testWidgets('a failure is shown and the toggle keeps its state', (
+      tester,
+    ) async {
+      f.provider.profile = profileOf(VerificationStatus.verified);
+      f.provider.failures['setAvailability'] = const NetworkException(
+        'offline',
+      );
+      await f.open(tester, AppRoutes.provider.path);
+
+      await tester.tap(key('availability_switch'));
+      await settle(tester);
+
+      expect(find.text(en.errorNetwork), findsOneWidget);
+      expect(find.text(en.providerAvailabilityOffline), findsOneWidget);
+    });
+  });
+
   // ------------------------------------------------------- profile form ---
 
   group('provider profile form', () {

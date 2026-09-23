@@ -1,5 +1,6 @@
 import 'package:mobile/core/network/json_helpers.dart';
 import 'package:mobile/features/booking/domain/booking_status.dart';
+import 'package:mobile/features/booking/domain/offer.dart';
 import 'package:mobile/features/booking/domain/quote.dart';
 import 'package:mobile/features/services/domain/pricing_model.dart';
 
@@ -89,6 +90,7 @@ class Booking {
     this.agreedAmount,
     this.provider,
     this.cancellation,
+    this.myOffer,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -96,6 +98,7 @@ class Booking {
     final city = asJsonObject(json['city']);
     final provider = json['provider'];
     final cancellation = json['cancellation'];
+    final myOffer = json['myOffer'];
     return Booking(
       id: readString(json, 'id'),
       status: readBookingStatus(json, 'status'),
@@ -118,6 +121,7 @@ class Booking {
       cancellation: cancellation == null
           ? null
           : Cancellation.fromJson(asJsonObject(cancellation)),
+      myOffer: myOffer == null ? null : Offer.fromJson(asJsonObject(myOffer)),
       quotes: readObjects(
         json,
         'quotes',
@@ -145,6 +149,10 @@ class Booking {
   final BookingParty? provider;
   final BookingTimestamps timestamps;
   final Cancellation? cancellation;
+
+  /// The viewing provider's own dispatch offer on this booking, if any. Never
+  /// set for a customer's view.
+  final Offer? myOffer;
   final List<Quote> quotes;
 
   bool get isQuotePriced => pricingModel == PricingModel.quote;
@@ -158,7 +166,8 @@ class Booking {
     BookingStatus.arrived => true,
     BookingStatus.inProgress ||
     BookingStatus.completed ||
-    BookingStatus.cancelled => false,
+    BookingStatus.cancelled ||
+    BookingStatus.expired => false,
   };
 
   /// Whether the assigned provider could still release this job.

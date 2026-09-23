@@ -45,6 +45,30 @@ class ProviderProfileController extends AsyncNotifier<ProviderProfile?> {
     state = AsyncData(submitted);
     return submitted;
   }
+
+  /// Toggles online/offline. Requires an existing profile: the caller checks
+  /// [ProviderProfile] is non-null before offering this.
+  Future<ProviderProfile> setAvailability(
+    ProviderAvailability availability,
+  ) async {
+    final updated = await ref
+        .read(providerRepositoryProvider)
+        .setAvailability(availability);
+    state = AsyncData(updated);
+    return updated;
+  }
+
+  /// Reports the provider's current location as a matching input.
+  Future<ProviderProfile> setLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    final updated = await ref
+        .read(providerRepositoryProvider)
+        .setLocation(latitude: latitude, longitude: longitude);
+    state = AsyncData(updated);
+    return updated;
+  }
 }
 
 final providerProfileProvider =

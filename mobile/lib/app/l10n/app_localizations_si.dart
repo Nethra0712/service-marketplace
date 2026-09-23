@@ -302,6 +302,24 @@ class AppLocalizationsSi extends AppLocalizations {
       'ඔබේ පැතිකඩ තහවුරු කළ පසු පමණක් පාරිභෝගිකයන්ට ඔබව සොයාගත හැක.';
 
   @override
+  String get providerAvailabilityTitle => 'ලබා ගත හැකි බව';
+
+  @override
+  String get providerAvailabilityOnline =>
+      'සබැඳිව — නව රැකියා සඳහා දෘශ්‍යමානයි';
+
+  @override
+  String get providerAvailabilityOffline => 'නොබැඳිව — දීමනා ලැබෙන්නේ නැත';
+
+  @override
+  String get providerAvailabilityHelp =>
+      'ආසන්න පාරිභෝගිකයන් සමඟ ගැළපීමට සබැඳි වන්න.';
+
+  @override
+  String get providerAvailabilityUpdated =>
+      'ලබා ගත හැකි බව යාවත්කාලීන කරන ලදී.';
+
+  @override
   String get applicationPending => 'සමාලෝචනය බලාපොරොත්තුවෙන්';
 
   @override
@@ -527,6 +545,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String get bookingStatusCancelledHelp => 'මෙම වෙන්කිරීම අවලංගු කරන ලදී.';
 
   @override
+  String get bookingStatusExpired => 'සේවා සපයන්නෙකු හමු නොවීය';
+
+  @override
+  String get bookingStatusExpiredHelp =>
+      'නියමිත වේලාවට ලබා ගත හැකි සේවා සපයන්නෙකු අපට හමු නොවීය. ඔබට නැවත ඉල්ලීමක් කළ හැක.';
+
+  @override
   String get bookingCancel => 'වෙන්කිරීම අවලංගු කරන්න';
 
   @override
@@ -567,6 +592,17 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get bookingAcceptedMessage => 'කාර්යය පිළිගන්නා ලදී.';
+
+  @override
+  String get bookingDeclineOffer => 'ප්‍රතික්ෂේප කරන්න';
+
+  @override
+  String get bookingOfferDeclined => 'දීමනාව ප්‍රතික්ෂේප කරන ලදී.';
+
+  @override
+  String bookingOfferRespondBy(String time) {
+    return '$time වන විට පිළිතුරු දෙන්න';
+  }
 
   @override
   String get bookingStartEnRoute => 'මම මාර්ගයේ සිටිමි';
@@ -643,13 +679,14 @@ class AppLocalizationsSi extends AppLocalizations {
   String get providerJobsTitle => 'රැකියා';
 
   @override
-  String get providerJobsOpen => 'විවෘත ඉල්ලීම්';
+  String get providerJobsOpen => 'දීමනා';
 
   @override
   String get providerJobsAssigned => 'මගේ රැකියා';
 
   @override
-  String get providerJobsOpenEmpty => 'දැනට ඔබේ සේවා සඳහා විවෘත ඉල්ලීම් නොමැත.';
+  String get providerJobsOpenEmpty =>
+      'දැනට දීමනා නොමැත. ඒවා ලැබීමට සබැඳි වන්න.';
 
   @override
   String get providerJobsAssignedEmpty => 'ඔබට තවම පවරන ලද රැකියා නොමැත.';

@@ -51,6 +51,29 @@ class ProviderApiRepository implements ProviderRepository {
   }
 
   @override
+  Future<ProviderProfile> setAvailability(
+    ProviderAvailability availability,
+  ) async {
+    final data = await _api.put(
+      '/api/provider/profile/availability',
+      data: {'availability': availability.name},
+    );
+    return parseResponse(() => ProviderProfile.fromJson(asJsonObject(data)));
+  }
+
+  @override
+  Future<ProviderProfile> setLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    final data = await _api.put(
+      '/api/provider/profile/location',
+      data: {'latitude': latitude, 'longitude': longitude},
+    );
+    return parseResponse(() => ProviderProfile.fromJson(asJsonObject(data)));
+  }
+
+  @override
   Future<List<ProviderApplication>> listApplications({
     required String language,
   }) async {

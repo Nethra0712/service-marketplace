@@ -1,7 +1,21 @@
-import { and, asc, count, countDistinct, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  countDistinct,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  notExists,
+  notInArray,
+  sql,
+} from 'drizzle-orm';
 
 import type { Queryable } from '../../db/client.js';
 import {
+  bookingOffers,
+  bookings,
   cities,
   cityCategories,
   profiles,
@@ -16,6 +30,9 @@ import {
   type ProviderServiceStatus,
   type ProviderVerificationStatus,
 } from '../../db/schema/index.js';
+
+/** Booking stages that keep a provider unavailable for a new dispatch. */
+const ACTIVE_BOOKING_STATUSES = ['accepted', 'en_route', 'arrived', 'in_progress'] as const;
 
 export interface ProviderProfileRow {
   id: string;
@@ -67,6 +84,16 @@ export interface BookableFilter {
 export interface OfferedService {
   serviceCategoryId: string;
   cityId: string;
+}
+
+/** A provider eligible for a fresh dispatch offer, with the raw inputs matching ranks on. */
+export interface DispatchCandidate {
+  providerProfileId: string;
+  /** The provider's latest known location, or null if never reported. Numeric columns come back as strings. */
+  lastLatitude: string | null;
+  lastLongitude: string | null;
+  /** How many OTHER bookings currently have a pending offer out to this provider. */
+  pendingOfferCount: number;
 }
 
 /**
@@ -225,6 +252,38 @@ export function createProvidersRepository(db: Queryable) {
             inArray(providerProfiles.verificationStatus, ['draft', 'rejected']),
           ),
         )
+        .returning({ id: providerProfiles.id });
+      return updated.length === 1;
+    },
+
+    /** The provider's own online/offline toggle. Returns false if they have no profile yet. */
+    async updateAvailability(userId: string, availability: ProviderAvailability): Promise<boolean> {
+      const updated = await db
+        .update(providerProfiles)
+        .set({ availability })
+        .where(eq(providerProfiles.userId, userId))
+        .returning({ id: providerProfiles.id });
+      return updated.length === 1;
+    },
+
+    /**
+     * Overwrites the provider's latest known location. A snapshot, not a log:
+     * the previous value is gone once this runs. Returns false if they have no
+     * profile yet.
+     */
+    async updateLocation(
+      userId: string,
+      location: { latitude: number; longitude: number },
+      now: Date,
+    ): Promise<boolean> {
+      const updated = await db
+        .update(providerProfiles)
+        .set({
+          lastLatitude: location.latitude.toFixed(6),
+          lastLongitude: location.longitude.toFixed(6),
+          lastLocationAt: now,
+        })
+        .where(eq(providerProfiles.userId, userId))
         .returning({ id: providerProfiles.id });
       return updated.length === 1;
     },
@@ -420,6 +479,73 @@ export function createProvidersRepository(db: Queryable) {
         )
         .limit(1);
       return rows.length > 0;
+    },
+
+    // ---- dispatch (used by the matching module) --------------------------
+
+    /**
+     * Providers who could be offered `offering` right now: everything
+     * {@link bookableConditions} requires, plus online availability, no
+     * currently active booking, and not already in `excludeProviderProfileIds`
+     * (already offered this booking, in an earlier wave or this one). Carries
+     * the raw location/workload each candidate needs for ranking; ranking
+     * itself is the matching module's job, not this query's.
+     */
+    async listDispatchCandidates(
+      offering: OfferedService,
+      excludeProviderProfileIds: readonly string[],
+    ): Promise<DispatchCandidate[]> {
+      const hasActiveBooking = db
+        .select({ id: bookings.id })
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.providerProfileId, providerServices.providerProfileId),
+            inArray(bookings.status, ACTIVE_BOOKING_STATUSES),
+          ),
+        );
+
+      return db
+        .select({
+          providerProfileId: providerServices.providerProfileId,
+          lastLatitude: providerProfiles.lastLatitude,
+          lastLongitude: providerProfiles.lastLongitude,
+          pendingOfferCount: count(bookingOffers.id),
+        })
+        .from(providerServices)
+        .innerJoin(providerProfiles, eq(providerProfiles.id, providerServices.providerProfileId))
+        .innerJoin(users, eq(users.id, providerProfiles.userId))
+        .innerJoin(serviceCategories, eq(serviceCategories.id, providerServices.serviceCategoryId))
+        .innerJoin(cities, eq(cities.id, providerServices.cityId))
+        .innerJoin(
+          cityCategories,
+          and(
+            eq(cityCategories.cityId, providerServices.cityId),
+            eq(cityCategories.serviceCategoryId, providerServices.serviceCategoryId),
+          ),
+        )
+        .leftJoin(
+          bookingOffers,
+          and(
+            eq(bookingOffers.providerProfileId, providerServices.providerProfileId),
+            eq(bookingOffers.status, 'pending'),
+          ),
+        )
+        .where(
+          and(
+            bookableConditions(offering),
+            eq(providerProfiles.availability, 'online'),
+            excludeProviderProfileIds.length === 0
+              ? undefined
+              : notInArray(providerServices.providerProfileId, [...excludeProviderProfileIds]),
+            notExists(hasActiveBooking),
+          ),
+        )
+        .groupBy(
+          providerServices.providerProfileId,
+          providerProfiles.lastLatitude,
+          providerProfiles.lastLongitude,
+        );
     },
   };
 }

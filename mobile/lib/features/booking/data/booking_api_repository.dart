@@ -100,6 +100,13 @@ class BookingApiRepository implements BookingRepository {
       );
 
   @override
+  Future<Booking> decline(String bookingId, {required String language}) =>
+      _action(
+        '/api/bookings/${Uri.encodeComponent(bookingId)}/decline',
+        language: language,
+      );
+
+  @override
   Future<Booking> startEnRoute(String bookingId, {required String language}) =>
       _action(
         '/api/bookings/${Uri.encodeComponent(bookingId)}/en-route',

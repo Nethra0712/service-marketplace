@@ -604,6 +604,36 @@ abstract class AppLocalizations {
   /// **'Customers can only find you once your profile is verified.'**
   String get providerVerifyFirst;
 
+  /// No description provided for @providerAvailabilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability'**
+  String get providerAvailabilityTitle;
+
+  /// No description provided for @providerAvailabilityOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online — visible for new jobs'**
+  String get providerAvailabilityOnline;
+
+  /// No description provided for @providerAvailabilityOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline — not receiving offers'**
+  String get providerAvailabilityOffline;
+
+  /// No description provided for @providerAvailabilityHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Go online to be matched with nearby customers.'**
+  String get providerAvailabilityHelp;
+
+  /// No description provided for @providerAvailabilityUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability updated.'**
+  String get providerAvailabilityUpdated;
+
   /// No description provided for @applicationPending.
   ///
   /// In en, this message translates to:
@@ -976,6 +1006,18 @@ abstract class AppLocalizations {
   /// **'This booking was cancelled.'**
   String get bookingStatusCancelledHelp;
 
+  /// No description provided for @bookingStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'No provider found'**
+  String get bookingStatusExpired;
+
+  /// No description provided for @bookingStatusExpiredHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find an available provider in time. You can try requesting again.'**
+  String get bookingStatusExpiredHelp;
+
   /// No description provided for @bookingCancel.
   ///
   /// In en, this message translates to:
@@ -1053,6 +1095,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Job accepted.'**
   String get bookingAcceptedMessage;
+
+  /// No description provided for @bookingDeclineOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get bookingDeclineOffer;
+
+  /// No description provided for @bookingOfferDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer declined.'**
+  String get bookingOfferDeclined;
+
+  /// No description provided for @bookingOfferRespondBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond by {time}'**
+  String bookingOfferRespondBy(String time);
 
   /// No description provided for @bookingStartEnRoute.
   ///
@@ -1201,7 +1261,7 @@ abstract class AppLocalizations {
   /// No description provided for @providerJobsOpen.
   ///
   /// In en, this message translates to:
-  /// **'Open requests'**
+  /// **'Offers'**
   String get providerJobsOpen;
 
   /// No description provided for @providerJobsAssigned.
@@ -1213,7 +1273,7 @@ abstract class AppLocalizations {
   /// No description provided for @providerJobsOpenEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No open requests for your services right now.'**
+  /// **'No offers right now. Go online to start receiving them.'**
   String get providerJobsOpenEmpty;
 
   /// No description provided for @providerJobsAssignedEmpty.

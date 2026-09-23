@@ -3,12 +3,7 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildTestApp, type TestApp } from '../helpers/app.js';
 import { addKandy, createCatalogue, type Catalogue } from '../helpers/catalogue.js';
 import { createTestDatabase, resetDatabase } from '../helpers/database.js';
-import {
-  createApplication,
-  createApprovedProvider,
-  createProvider,
-  only,
-} from '../helpers/factories.js';
+import { createApprovedProvider, createProvider, only } from '../helpers/factories.js';
 import { apiFor, signInUser, type Api } from '../helpers/providers.js';
 import { errorOf, itemsOf } from '../helpers/bookings.js';
 
@@ -127,41 +122,37 @@ describe('GET /api/bookings/assigned', () => {
   });
 });
 
-describe('GET /api/bookings/open', () => {
-  it('lists searching bookings across every category/city the provider is approved for', async () => {
+describe('GET /api/bookings/open (my current dispatch offers)', () => {
+  it('lists bookings automatic matching has offered me', async () => {
+    const cleaning = await eligibleProvider(catalogue.cleaning);
     const alice = await customer();
-    const cleaningBooking = await bookingFor(alice, 'cleaning');
-    const plumbingBooking = await bookingFor(alice, 'plumbing');
+    const booking = await bookingFor(alice, 'cleaning');
+
+    const res = await cleaning.api.get('/api/bookings/open');
+
+    expect(itemsOf(res)).toHaveLength(1);
+    const item = only(itemsOf(res)) as { id: string; myOffer: { status: string; wave: number } };
+    expect(item.id).toBe(booking.id);
+    expect(item.myOffer.status).toBe('pending');
+    expect(item.myOffer.wave).toBe(1);
+  });
+
+  it('does not offer a category/city the provider is not approved for', async () => {
+    const cleaning = await eligibleProvider(catalogue.cleaning);
+    const alice = await customer();
     await bookingFor(alice, 'electrical'); // not approved for this one
 
-    const { user, profile: cleaningProfile } = await createApprovedProvider(
-      db,
-      catalogue.cleaning,
-      catalogue.colombo,
-    );
-    await createApplication(
-      db,
-      cleaningProfile.id,
-      catalogue.plumbing,
-      catalogue.colombo,
-      'approved',
-    );
-    const { api } = await signInUser(t.app, t.sms, user.phoneE164);
-
-    const res = await api.get('/api/bookings/open');
-
-    const ids = (itemsOf(res) as { id: string }[]).map((b) => b.id).sort();
-    expect(ids).toEqual([cleaningBooking.id, plumbingBooking.id].sort());
+    const res = await cleaning.api.get('/api/bookings/open');
+    expect(itemsOf(res)).toEqual([]);
   });
 
   it('excludes bookings that are no longer searching', async () => {
     const alice = await customer();
-    const booking = await bookingFor(alice, 'cleaning');
     const provider = await eligibleProvider(catalogue.cleaning);
+    const booking = await bookingFor(alice, 'cleaning');
     await provider.api.post(`/api/bookings/${booking.id}/accept`);
 
-    const other = await eligibleProvider(catalogue.cleaning);
-    const res = await other.api.get('/api/bookings/open');
+    const res = await provider.api.get('/api/bookings/open');
     expect(itemsOf(res)).toEqual([]);
   });
 
@@ -187,14 +178,14 @@ describe('GET /api/bookings/open', () => {
     expect(errorOf(res).code).toBe('PROVIDER_PROFILE_NOT_FOUND');
   });
 
-  it('is scoped by city: approval in one city does not leak requests from another', async () => {
+  it('is scoped by city: a provider approved in one city is not offered a request from another', async () => {
     const kandy = await addKandy(db, catalogue);
+    const kandyProvider = await eligibleProvider(catalogue.plumbing, kandy);
     const alice = await customer();
     await bookingFor(alice, 'plumbing', 'colombo');
     const kandyBooking = await bookingFor(alice, 'plumbing', 'kandy');
 
-    const provider = await eligibleProvider(catalogue.plumbing, kandy);
-    const res = await provider.api.get('/api/bookings/open');
+    const res = await kandyProvider.api.get('/api/bookings/open');
 
     expect(itemsOf(res)).toHaveLength(1);
     expect(only(itemsOf(res)).id).toBe(kandyBooking.id);

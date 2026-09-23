@@ -1,8 +1,9 @@
-import { and, asc, desc, eq, inArray, ne, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, inArray, lte, ne, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 
 import type { Queryable } from '../../db/client.js';
 import {
+  bookingOffers,
   bookingProviderReleases,
   bookingQuotes,
   bookings,
@@ -12,6 +13,7 @@ import {
   serviceCategories,
   serviceCategoryTranslations,
   type AppLanguage,
+  type BookingOfferStatus,
   type BookingQuoteStatus,
   type BookingStatus,
   type BookingType,
@@ -34,6 +36,9 @@ export interface BookingRow {
   scheduledAt: Date | null;
   serviceAddress: string;
   customerNotes: string | null;
+  customerLatitude: string | null;
+  customerLongitude: string | null;
+  matchingExpiresAt: Date | null;
   agreedAmount: string | null;
   customerId: string;
   customerName: string | null;
@@ -60,6 +65,9 @@ export interface BookingCore {
   serviceCategoryId: string;
   cityId: string;
   pricingModel: PricingModel;
+  customerLatitude: string | null;
+  customerLongitude: string | null;
+  matchingExpiresAt: Date | null;
 }
 
 export interface QuoteRow {
@@ -82,9 +90,12 @@ export interface QuoteCore {
   amount: string;
 }
 
-export interface CategoryCityPair {
-  serviceCategoryId: string;
-  cityId: string;
+/** A dispatch offer's shape as attached to a booking view, or listed for a provider. */
+export interface OfferSummary {
+  status: BookingOfferStatus;
+  wave: number;
+  respondsBy: Date;
+  distanceKm: string | null;
 }
 
 /** Statuses a provider may still release the job from (before work starts). */
@@ -119,6 +130,9 @@ export function createBookingsRepository(db: Queryable) {
         scheduledAt: bookings.scheduledAt,
         serviceAddress: bookings.serviceAddress,
         customerNotes: bookings.customerNotes,
+        customerLatitude: bookings.customerLatitude,
+        customerLongitude: bookings.customerLongitude,
+        matchingExpiresAt: bookings.matchingExpiresAt,
         agreedAmount: bookings.agreedAmount,
         customerId: bookings.customerId,
         customerName: customerProfile.fullName,
@@ -193,6 +207,9 @@ export function createBookingsRepository(db: Queryable) {
           serviceCategoryId: bookings.serviceCategoryId,
           cityId: bookings.cityId,
           pricingModel: bookings.pricingModel,
+          customerLatitude: bookings.customerLatitude,
+          customerLongitude: bookings.customerLongitude,
+          matchingExpiresAt: bookings.matchingExpiresAt,
         })
         .from(bookings)
         .where(eq(bookings.id, id));
@@ -227,26 +244,6 @@ export function createBookingsRepository(db: Queryable) {
           ),
         )
         .orderBy(desc(bookings.createdAt), asc(bookings.id));
-    },
-
-    /** Open (`searching`) bookings across any of the given category/city pairs. */
-    async listOpen(pairs: CategoryCityPair[], language: AppLanguage): Promise<BookingRow[]> {
-      if (pairs.length === 0) return [];
-      return selectBookings(language)
-        .where(
-          and(
-            eq(bookings.status, 'searching'),
-            or(
-              ...pairs.map((pair) =>
-                and(
-                  eq(bookings.serviceCategoryId, pair.serviceCategoryId),
-                  eq(bookings.cityId, pair.cityId),
-                ),
-              ),
-            ),
-          ),
-        )
-        .orderBy(asc(bookings.createdAt));
     },
 
     // ---- provider assignment ----------------------------------------------
@@ -356,6 +353,30 @@ export function createBookingsRepository(db: Queryable) {
       return updated.length === 1;
     },
 
+    /**
+     * Clears the releasing provider's own offer out of `accepted` (it would
+     * otherwise permanently block the `booking_offers_booking_accepted_uidx`
+     * guarantee, since a booking they no longer hold is about to be won by
+     * someone else). `superseded` fits: it is no longer live for reasons
+     * other than the provider's own answer.
+     */
+    async supersedeAcceptedOffer(
+      bookingId: string,
+      providerProfileId: string,
+      now: Date,
+    ): Promise<void> {
+      await db
+        .update(bookingOffers)
+        .set({ status: 'superseded', respondedAt: now })
+        .where(
+          and(
+            eq(bookingOffers.bookingId, bookingId),
+            eq(bookingOffers.providerProfileId, providerProfileId),
+            eq(bookingOffers.status, 'accepted'),
+          ),
+        );
+    },
+
     async insertProviderRelease(
       bookingId: string,
       providerProfileId: string,
@@ -365,6 +386,246 @@ export function createBookingsRepository(db: Queryable) {
       await db
         .insert(bookingProviderReleases)
         .values({ bookingId, providerProfileId, reason, releasedAt });
+    },
+
+    /** searching -> expired: matching gave up (no offer was ever accepted in time). */
+    async expireBooking(bookingId: string): Promise<boolean> {
+      const updated = await db
+        .update(bookings)
+        .set({ status: 'expired' })
+        .where(and(eq(bookings.id, bookingId), eq(bookings.status, 'searching')))
+        .returning({ id: bookings.id });
+      return updated.length === 1;
+    },
+
+    // ---- dispatch offers ---------------------------------------------------
+
+    /** The highest wave number offered so far for this booking, or 0 if none yet. */
+    async maxOfferWave(bookingId: string): Promise<number> {
+      const [row] = await db
+        .select({ maxWave: sql<number | null>`max(${bookingOffers.wave})` })
+        .from(bookingOffers)
+        .where(eq(bookingOffers.bookingId, bookingId));
+      return row?.maxWave ?? 0;
+    },
+
+    /** Creates one wave of offers. A no-op if there is nobody to offer to. */
+    async insertOfferWave(
+      bookingId: string,
+      wave: number,
+      candidates: readonly { providerProfileId: string; distanceKm: number | null }[],
+      offeredAt: Date,
+      respondsBy: Date,
+    ): Promise<void> {
+      if (candidates.length === 0) return;
+      await db.insert(bookingOffers).values(
+        candidates.map((c) => ({
+          bookingId,
+          providerProfileId: c.providerProfileId,
+          wave,
+          offeredAt,
+          respondsBy,
+          distanceKm: c.distanceKm === null ? null : c.distanceKm.toFixed(2),
+        })),
+      );
+    },
+
+    /**
+     * pending -> accepted, only if still within its response window. This is
+     * the row that decides who wins the booking: only one provider's update
+     * can match (the unique index on `(booking_id) where status = 'accepted'`
+     * backs this up even against a same-instant race), so callers run this
+     * before touching the booking itself, inside the same transaction.
+     */
+    async consumeOfferForAccept(
+      bookingId: string,
+      providerProfileId: string,
+      now: Date,
+    ): Promise<boolean> {
+      const updated = await db
+        .update(bookingOffers)
+        .set({ status: 'accepted', respondedAt: now })
+        .where(
+          and(
+            eq(bookingOffers.bookingId, bookingId),
+            eq(bookingOffers.providerProfileId, providerProfileId),
+            eq(bookingOffers.status, 'pending'),
+            gt(bookingOffers.respondsBy, now),
+          ),
+        )
+        .returning({ id: bookingOffers.id });
+      return updated.length === 1;
+    },
+
+    /** pending -> declined, scoped to the offered provider. */
+    async declineOffer(bookingId: string, providerProfileId: string, now: Date): Promise<boolean> {
+      const updated = await db
+        .update(bookingOffers)
+        .set({ status: 'declined', respondedAt: now })
+        .where(
+          and(
+            eq(bookingOffers.bookingId, bookingId),
+            eq(bookingOffers.providerProfileId, providerProfileId),
+            eq(bookingOffers.status, 'pending'),
+          ),
+        )
+        .returning({ id: bookingOffers.id });
+      return updated.length === 1;
+    },
+
+    /** Every other still-pending offer on this booking loses once one is accepted. */
+    async supersedeOtherPendingOffers(
+      bookingId: string,
+      exceptProviderProfileId: string,
+      now: Date,
+    ): Promise<void> {
+      await db
+        .update(bookingOffers)
+        .set({ status: 'superseded', respondedAt: now })
+        .where(
+          and(
+            eq(bookingOffers.bookingId, bookingId),
+            ne(bookingOffers.providerProfileId, exceptProviderProfileId),
+            eq(bookingOffers.status, 'pending'),
+          ),
+        );
+    },
+
+    /** Every pending offer on this booking loses, e.g. because the customer cancelled it. */
+    async supersedeAllPendingOffers(bookingId: string, now: Date): Promise<void> {
+      await db
+        .update(bookingOffers)
+        .set({ status: 'superseded', respondedAt: now })
+        .where(and(eq(bookingOffers.bookingId, bookingId), eq(bookingOffers.status, 'pending')));
+    },
+
+    /** Lazily settles offers nobody answered in time. Called before every wave decision. */
+    async expireDueOffers(bookingId: string, now: Date): Promise<void> {
+      await db
+        .update(bookingOffers)
+        .set({ status: 'expired', respondedAt: now })
+        .where(
+          and(
+            eq(bookingOffers.bookingId, bookingId),
+            eq(bookingOffers.status, 'pending'),
+            lte(bookingOffers.respondsBy, now),
+          ),
+        );
+    },
+
+    /** How many still-live offers this booking currently has out. Call {@link expireDueOffers} first. */
+    async countPendingOffers(bookingId: string): Promise<number> {
+      const [row] = await db
+        .select({ total: count() })
+        .from(bookingOffers)
+        .where(and(eq(bookingOffers.bookingId, bookingId), eq(bookingOffers.status, 'pending')));
+      return row?.total ?? 0;
+    },
+
+    /**
+     * Everyone who must not be offered this booking in the next wave: anyone
+     * with a live or resolved-non-favourably offer on it already (pending —
+     * would duplicate; accepted — already won; declined — said no; expired —
+     * had their chance and did not answer), plus anyone who accepted and
+     * later released it. Deliberately NOT anyone whose offer was merely
+     * `superseded`: they never actually got a fair answer window (someone
+     * else won the race first), so they stay eligible for a later wave —
+     * e.g. once the booking is re-dispatched after a release. Excluding
+     * `expired` here (unlike the other statuses) is what makes "expand the
+     * search" actually reach new candidates instead of re-asking whoever
+     * ranked highest and simply didn't answer in time.
+     */
+    async listExcludedProviderIds(bookingId: string): Promise<string[]> {
+      const [offered, released] = await Promise.all([
+        db
+          .select({ id: bookingOffers.providerProfileId })
+          .from(bookingOffers)
+          .where(
+            and(
+              eq(bookingOffers.bookingId, bookingId),
+              inArray(bookingOffers.status, ['pending', 'accepted', 'declined', 'expired']),
+            ),
+          ),
+        db
+          .select({ id: bookingProviderReleases.providerProfileId })
+          .from(bookingProviderReleases)
+          .where(eq(bookingProviderReleases.bookingId, bookingId)),
+      ]);
+      return [...new Set([...offered.map((r) => r.id), ...released.map((r) => r.id)])];
+    },
+
+    /** This provider's most recent offer on this booking, whatever it currently is (view authorization). */
+    async findOfferForProvider(
+      bookingId: string,
+      providerProfileId: string,
+    ): Promise<OfferSummary | undefined> {
+      const [row] = await db
+        .select({
+          status: bookingOffers.status,
+          wave: bookingOffers.wave,
+          respondsBy: bookingOffers.respondsBy,
+          distanceKm: bookingOffers.distanceKm,
+        })
+        .from(bookingOffers)
+        .where(
+          and(
+            eq(bookingOffers.bookingId, bookingId),
+            eq(bookingOffers.providerProfileId, providerProfileId),
+          ),
+        )
+        .orderBy(desc(bookingOffers.wave))
+        .limit(1);
+      return row;
+    },
+
+    /** This provider's currently live offers (booking + offer detail), most urgent first. */
+    async listMyOffers(
+      providerProfileId: string,
+      language: AppLanguage,
+      now: Date,
+    ): Promise<{ booking: BookingRow; offer: OfferSummary }[]> {
+      const offers = await db
+        .select({
+          bookingId: bookingOffers.bookingId,
+          status: bookingOffers.status,
+          wave: bookingOffers.wave,
+          respondsBy: bookingOffers.respondsBy,
+          distanceKm: bookingOffers.distanceKm,
+        })
+        .from(bookingOffers)
+        .where(
+          and(
+            eq(bookingOffers.providerProfileId, providerProfileId),
+            eq(bookingOffers.status, 'pending'),
+            gt(bookingOffers.respondsBy, now),
+          ),
+        )
+        .orderBy(asc(bookingOffers.respondsBy));
+      if (offers.length === 0) return [];
+
+      const rows = await selectBookings(language).where(
+        inArray(
+          bookings.id,
+          offers.map((o) => o.bookingId),
+        ),
+      );
+      const byId = new Map(rows.map((r) => [r.id, r]));
+
+      const result: { booking: BookingRow; offer: OfferSummary }[] = [];
+      for (const o of offers) {
+        const booking = byId.get(o.bookingId);
+        if (!booking) continue; // Vanishingly unlikely (booking deleted mid-request); skip rather than crash.
+        result.push({
+          booking,
+          offer: {
+            status: o.status,
+            wave: o.wave,
+            respondsBy: o.respondsBy,
+            distanceKm: o.distanceKm,
+          },
+        });
+      }
+      return result;
     },
 
     // ---- customer cancellation --------------------------------------------

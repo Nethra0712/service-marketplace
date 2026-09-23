@@ -103,6 +103,22 @@ void main() {
     expect(find.text(en.providerJobsAssignedEmpty), findsOneWidget);
   });
 
+  testWidgets('shows when a held offer must be answered by', (tester) async {
+    f.booking.bookings.add(
+      bookingOf(
+        id: 'open-1',
+        status: BookingStatus.searching,
+        myOffer: offerOf(respondsBy: DateTime.utc(2026, 1, 1, 9, 30)),
+      ),
+    );
+
+    await f.open(tester, AppRoutes.providerJobs.path);
+
+    // "Respond by" is the fixed part of `bookingOfferRespondBy`; the
+    // interpolated time itself depends on the test device's locale/timezone.
+    expect(find.textContaining('Respond by'), findsOneWidget);
+  });
+
   testWidgets('opens a job\'s detail on tap', (tester) async {
     f.booking.bookings.add(
       bookingOf(id: 'open-1', status: BookingStatus.searching),

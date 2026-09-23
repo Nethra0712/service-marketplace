@@ -16,6 +16,7 @@ import { createAuthModule, type AuthPolicy } from './modules/auth/index.js';
 import { createBookingsModule } from './modules/bookings/index.js';
 import { createCatalogueModule } from './modules/catalogue/index.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
+import { createMatchingModule } from './modules/matching/index.js';
 import { createProvidersModule } from './modules/providers/index.js';
 import type { SmsProvider } from './modules/sms/index.js';
 
@@ -104,6 +105,12 @@ export function createApp({
   });
   app.use('/api', catalogue.router);
 
+  // Automatic provider matching. Has no routes of its own: the bookings
+  // module drives it internally on create, decline, release and expiry.
+  const matching = createMatchingModule({
+    findDispatchCandidates: providers.service.listDispatchCandidates,
+  });
+
   const bookings = createBookingsModule({
     db,
     clock,
@@ -111,8 +118,7 @@ export function createApp({
     findOfferedCategory: catalogue.service.findOfferedCategory,
     findProviderProfileId: providers.service.findProviderProfileId,
     isBookable: providers.service.isBookable,
-    listEligibleOfferings: (providerProfileId) =>
-      providers.service.listBookableProviderServices({ providerProfileId }),
+    findNextWave: matching.service.findNextWave,
   });
   app.use('/api/bookings', bookings.router);
 

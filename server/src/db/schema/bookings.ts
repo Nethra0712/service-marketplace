@@ -17,12 +17,12 @@ const ASSIGNED_STATUSES = sql`('accepted', 'en_route', 'arrived', 'in_progress',
  * the booking must stay internally consistent even if the category's pricing
  * model changes later.
  *
- * No automatic matching yet (Sprint 6): a provider becomes assigned either by
- * directly accepting an open request (fixed/hourly) or by the customer
- * accepting their quote (quote-priced, see `booking_quotes`). Provider
- * cancellation after acceptance returns the booking to `searching` instead of
- * ending it — see `booking_provider_releases` — so Sprint 6's re-dispatch has
- * somewhere to pick it back up.
+ * A provider becomes assigned by accepting a dispatch offer (see
+ * `booking_offers`) for fixed/hourly work, or by the customer accepting their
+ * quote (quote-priced, see `booking_quotes`) after being offered the chance to
+ * quote. Provider cancellation after acceptance returns the booking to
+ * `searching` instead of ending it — see `booking_provider_releases` — so
+ * matching can re-dispatch it, excluding the releasing provider.
  */
 export const bookings = pgTable(
   'bookings',
@@ -46,6 +46,16 @@ export const bookings = pgTable(
     scheduledAt: timestamp({ withTimezone: true }),
     customerNotes: text(),
     serviceAddress: text().notNull(),
+    /** Optional job coordinates, used only as a matching input (distance ranking). */
+    customerLatitude: numeric({ precision: 9, scale: 6 }),
+    customerLongitude: numeric({ precision: 9, scale: 6 }),
+    /**
+     * When automatic matching gives up on this booking altogether, computed by
+     * the service at creation. Distinct from an individual offer's own
+     * `responds_by`: a booking can outlive several expired offers and move
+     * through several waves before this deadline is reached.
+     */
+    matchingExpiresAt: timestamp({ withTimezone: true }),
     /** Set once agreed: from an accepted quote today; a fixed/hourly rate later. */
     agreedAmount: numeric({ precision: 12, scale: 2 }),
     acceptedAt: timestamp({ withTimezone: true }),
@@ -89,6 +99,15 @@ export const bookings = pgTable(
     check(
       'bookings_agreed_amount_positive',
       sql`${t.agreedAmount} is null or ${t.agreedAmount} > 0`,
+    ),
+    check(
+      'bookings_customer_location_pair',
+      sql`(${t.customerLatitude} is null) = (${t.customerLongitude} is null)`,
+    ),
+    check(
+      'bookings_customer_location_range',
+      sql`${t.customerLatitude} is null or
+          (${t.customerLatitude} between -90 and 90 and ${t.customerLongitude} between -180 and 180)`,
     ),
 
     // A provider is assigned for exactly the statuses that need one.

@@ -7,7 +7,7 @@ import {
   createBookingsService,
   type BookingsService,
   type EligibilityCheck,
-  type EligibleOfferingsLookup,
+  type NextWaveLookup,
   type OfferedCategoryLookup,
   type ProviderProfileLookup,
 } from './bookings.service.js';
@@ -15,6 +15,7 @@ import {
 export type {
   BookingDetailView,
   BookingSummaryView,
+  OfferView,
   QuoteView,
   CreateBookingInput,
   SubmitQuoteInput,
@@ -30,7 +31,8 @@ export interface BookingsModuleDeps {
   /** From the providers module. */
   findProviderProfileId: ProviderProfileLookup;
   isBookable: EligibilityCheck;
-  listEligibleOfferings: EligibleOfferingsLookup;
+  /** From the matching module. */
+  findNextWave: NextWaveLookup;
 }
 
 export interface BookingsModule {
@@ -47,7 +49,7 @@ export function createBookingsModule({
   findOfferedCategory,
   findProviderProfileId,
   isBookable,
-  listEligibleOfferings,
+  findNextWave,
 }: BookingsModuleDeps): BookingsModule {
   const service = createBookingsService({
     db,
@@ -55,7 +57,7 @@ export function createBookingsModule({
     findOfferedCategory,
     findProviderProfileId,
     isBookable,
-    listEligibleOfferings,
+    findNextWave,
   });
   return { router: createBookingsRouter({ service, requireAuth }), service };
 }

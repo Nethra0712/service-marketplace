@@ -31,6 +31,9 @@ export const bookingsSchemas = {
         scheduledAt: z.iso.datetime({ offset: true }).optional(),
         serviceAddress: z.string().trim().min(1, 'Enter the service address.').max(500),
         customerNotes: z.string().trim().max(1000).nullish(),
+        // Optional job coordinates, used only as a matching input; both or neither.
+        latitude: z.number().min(-90).max(90).nullish(),
+        longitude: z.number().min(-180).max(180).nullish(),
       })
       .refine((v) => v.bookingType !== 'scheduled' || v.scheduledAt !== undefined, {
         message: 'Choose when you want the service.',
@@ -39,7 +42,13 @@ export const bookingsSchemas = {
       .refine((v) => v.bookingType !== 'on_demand' || v.scheduledAt === undefined, {
         message: 'An on-demand request cannot have a scheduled time.',
         path: ['scheduledAt'],
-      }),
+      })
+      .refine(
+        (v) =>
+          (v.latitude === undefined || v.latitude === null) ===
+          (v.longitude === undefined || v.longitude === null),
+        { message: 'Provide both latitude and longitude, or neither.', path: ['longitude'] },
+      ),
   }),
 
   list: z.object({

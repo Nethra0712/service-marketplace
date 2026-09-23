@@ -452,22 +452,83 @@ class _CandidateProviderActionsState
     }
   }
 
+  Future<void> _decline() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(bookingDetailProvider(widget.booking.id).notifier)
+          .decline();
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.bookingOfferDeclined)),
+      );
+    } on Object catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(errorMessage(l10n, error))),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final offer = widget.booking.myOffer;
+
+    final declineButton = OutlinedButton(
+      key: const Key('decline_offer_button'),
+      onPressed: _busy ? null : _decline,
+      child: Text(l10n.bookingDeclineOffer),
+    );
+
+    Widget buttons;
     if (widget.booking.isQuotePriced) {
       final alreadyQuoted = widget.booking.quotes.isNotEmpty;
-      if (alreadyQuoted) return const SizedBox.shrink();
-      return FilledButton(
-        key: const Key('submit_quote_button'),
-        onPressed: _busy ? null : _submitQuote,
-        child: Text(l10n.bookingSubmitQuote),
+      buttons = alreadyQuoted
+          ? const SizedBox.shrink()
+          : Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                FilledButton(
+                  key: const Key('submit_quote_button'),
+                  onPressed: _busy ? null : _submitQuote,
+                  child: Text(l10n.bookingSubmitQuote),
+                ),
+                declineButton,
+              ],
+            );
+    } else {
+      buttons = Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          FilledButton(
+            key: const Key('accept_booking_button'),
+            onPressed: _busy ? null : _accept,
+            child: Text(l10n.bookingAcceptJob),
+          ),
+          declineButton,
+        ],
       );
     }
-    return FilledButton(
-      key: const Key('accept_booking_button'),
-      onPressed: _busy ? null : _accept,
-      child: Text(l10n.bookingAcceptJob),
+
+    if (offer == null) return buttons;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.bookingOfferRespondBy(
+            MaterialLocalizations.of(context)
+                .formatTimeOfDay(TimeOfDay.fromDateTime(offer.respondsBy)),
+          ),
+          key: const Key('offer_respond_by'),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        buttons,
+      ],
     );
   }
 }

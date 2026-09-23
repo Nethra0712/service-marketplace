@@ -14,6 +14,7 @@ import {
   createProvidersRepository,
   type ApplicationRow,
   type BookableFilter,
+  type DispatchCandidate,
   type OfferedService,
   type ProviderProfileRow,
 } from './providers.repository.js';
@@ -277,6 +278,34 @@ export function createProvidersService({ db, clock }: ProvidersServiceDeps) {
       );
     },
 
+    /** The provider's own online/offline toggle. Requires an existing provider profile. */
+    async setAvailability(
+      userId: string,
+      availability: ProviderAvailability,
+    ): Promise<ProviderProfileView> {
+      await requireProfile(userId);
+      if (!(await repository.updateAvailability(userId, availability))) {
+        throw notFound('You have no provider profile yet.');
+      }
+      return toProfileView(await requireProfile(userId));
+    },
+
+    /**
+     * Reports the provider's current location, used only as a matching input
+     * (see the `matching` module). Overwrites the previous value; no history is
+     * kept. Requires an existing provider profile.
+     */
+    async setLocation(
+      userId: string,
+      location: { latitude: number; longitude: number },
+    ): Promise<ProviderProfileView> {
+      await requireProfile(userId);
+      if (!(await repository.updateLocation(userId, location, clock()))) {
+        throw notFound('You have no provider profile yet.');
+      }
+      return toProfileView(await requireProfile(userId));
+    },
+
     /**
      * The caller's provider profile id, or undefined if they have none. Unlike
      * {@link getProfile} this never throws: callers (the bookings module) use it
@@ -292,6 +321,11 @@ export function createProvidersService({ db, clock }: ProvidersServiceDeps) {
     countBookableProviders: (filter: BookableFilter) => repository.countBookableProviders(filter),
     isBookable: (providerProfileId: string, offering: OfferedService) =>
       repository.isBookable(providerProfileId, offering),
+    listDispatchCandidates: (
+      offering: OfferedService,
+      excludeProviderProfileIds: readonly string[],
+    ): Promise<DispatchCandidate[]> =>
+      repository.listDispatchCandidates(offering, excludeProviderProfileIds),
   };
 }
 

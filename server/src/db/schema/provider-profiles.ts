@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { check, pgTable, smallint, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  check,
+  numeric,
+  pgTable,
+  smallint,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 import { timestamps } from './columns.js';
 import { providerAvailability, providerVerificationStatus } from './enums.js';
@@ -39,6 +48,15 @@ export const providerProfiles = pgTable(
      * here; live presence and location are handled elsewhere in a later sprint.
      */
     availability: providerAvailability().notNull().default('offline'),
+    /**
+     * The provider's most recently reported location, used as a matching
+     * input (distance ranking). A snapshot, not a track: it is overwritten in
+     * place and never logged, so there is no location history to build a
+     * continuous tracking feature from later.
+     */
+    lastLatitude: numeric({ precision: 9, scale: 6 }),
+    lastLongitude: numeric({ precision: 9, scale: 6 }),
+    lastLocationAt: timestamp({ withTimezone: true }),
     ...timestamps,
   },
   (t) => [
@@ -51,6 +69,14 @@ export const providerProfiles = pgTable(
     check(
       'provider_profiles_experience_range',
       sql`${t.yearsOfExperience} is null or (${t.yearsOfExperience} between 0 and 60)`,
+    ),
+    check(
+      'provider_profiles_location_pair',
+      sql`(${t.lastLatitude} is null) = (${t.lastLongitude} is null) and (${t.lastLatitude} is null) = (${t.lastLocationAt} is null)`,
+    ),
+    check(
+      'provider_profiles_location_range',
+      sql`${t.lastLatitude} is null or (${t.lastLatitude} between -90 and 90 and ${t.lastLongitude} between -180 and 180)`,
     ),
     // Anything past draft has been submitted, so it must say when.
     check(

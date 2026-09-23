@@ -23,9 +23,10 @@ class CreateBookingInput {
 }
 
 /// The booking lifecycle: creating a request, tracking it, and the actions
-/// each side can take. There is deliberately no automatic matching here (a
-/// provider is assigned by directly accepting an open request, or by the
-/// customer accepting their quote) and no live location.
+/// each side can take. Automatic matching runs server-side: a provider is
+/// assigned by accepting a dispatch offer (directly, or by the customer
+/// accepting their quote) — the client never chooses which provider gets
+/// offered a booking. There is deliberately no live location yet.
 ///
 /// Every method takes the language to answer in (`en`, `si` or `ta`): a
 /// booking's category name is localized.
@@ -46,13 +47,18 @@ abstract interface class BookingRepository {
     BookingStatus? status,
   });
 
-  /// Open requests the signed-in provider could accept or quote on.
+  /// The signed-in provider's currently live dispatch offers: bookings
+  /// automatic matching has offered them, not a browsable list of every open
+  /// request.
   Future<List<Booking>> listOpen({required String language});
 
   // ---- provider actions ----------------------------------------------
 
-  /// Directly accepts an open fixed/hourly request.
+  /// Directly accepts a held offer on a fixed/hourly request.
   Future<Booking> accept(String bookingId, {required String language});
+
+  /// Turns down a held offer. Dispatch moves on to the next candidate.
+  Future<Booking> decline(String bookingId, {required String language});
 
   Future<Booking> startEnRoute(String bookingId, {required String language});
 

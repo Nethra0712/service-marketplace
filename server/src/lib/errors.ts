@@ -27,6 +27,8 @@ export const ErrorCode = {
   ProviderNotEligible: 'PROVIDER_NOT_ELIGIBLE',
   AlreadyQuoted: 'ALREADY_QUOTED',
   QuoteNotApplicable: 'QUOTE_NOT_APPLICABLE',
+  // Matching / dispatch
+  NoActiveOffer: 'NO_ACTIVE_OFFER',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

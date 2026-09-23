@@ -5,6 +5,7 @@ import 'package:mobile/app/router/app_routes.dart';
 import 'package:mobile/core/errors/app_exception.dart';
 import 'package:mobile/features/booking/domain/booking.dart';
 import 'package:mobile/features/booking/domain/booking_status.dart';
+import 'package:mobile/features/booking/domain/offer.dart';
 import 'package:mobile/features/provider/domain/provider_profile.dart';
 import 'package:mobile/features/services/domain/pricing_model.dart';
 
@@ -148,6 +149,19 @@ void main() {
         find.text(en.bookingCancelReason('Found someone else.')),
         findsOneWidget,
       );
+      expect(key('cancel_booking_button'), findsNothing);
+    });
+
+    testWidgets('shows "no provider found" once matching expires', (
+      tester,
+    ) async {
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.expired),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(find.text(en.bookingStatusExpired), findsOneWidget);
       expect(key('cancel_booking_button'), findsNothing);
     });
   });
@@ -399,6 +413,77 @@ void main() {
       await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
 
       expect(key('submit_quote_button'), findsNothing);
+      expect(key('decline_offer_button'), findsNothing);
+    });
+
+    testWidgets('can decline a fixed/hourly offer', (tester) async {
+      tallScreen(tester);
+      f.provider.profile = ProviderProfile(
+        id: 'p1',
+        verificationStatus: VerificationStatus.verified,
+      );
+      f.booking.bookings.add(
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.searching,
+          customer: otherCustomer,
+          pricingModel: PricingModel.hourly,
+          myOffer: offerOf(),
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('decline_offer_button'), findsOneWidget);
+      await tapKey(tester, 'decline_offer_button');
+
+      expect(f.booking.bookings.single.myOffer?.status, OfferStatus.declined);
+      expect(find.text(en.bookingOfferDeclined), findsOneWidget);
+    });
+
+    testWidgets('can decline a quote-priced offer before quoting', (
+      tester,
+    ) async {
+      tallScreen(tester);
+      f.provider.profile = ProviderProfile(
+        id: 'p1',
+        verificationStatus: VerificationStatus.verified,
+      );
+      f.booking.bookings.add(
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.searching,
+          customer: otherCustomer,
+          pricingModel: PricingModel.quote,
+          myOffer: offerOf(),
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      await tapKey(tester, 'decline_offer_button');
+
+      expect(f.booking.bookings.single.myOffer?.status, OfferStatus.declined);
+    });
+
+    testWidgets('shows when the offer must be answered by', (tester) async {
+      f.provider.profile = ProviderProfile(
+        id: 'p1',
+        verificationStatus: VerificationStatus.verified,
+      );
+      f.booking.bookings.add(
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.searching,
+          customer: otherCustomer,
+          pricingModel: PricingModel.hourly,
+          myOffer: offerOf(respondsBy: DateTime.utc(2026, 1, 1, 9, 30)),
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('offer_respond_by'), findsOneWidget);
     });
   });
 

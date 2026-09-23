@@ -13,6 +13,7 @@ extension BookingStatusLabels on BookingStatus {
     BookingStatus.inProgress => l10n.bookingStatusInProgress,
     BookingStatus.completed => l10n.bookingStatusCompleted,
     BookingStatus.cancelled => l10n.bookingStatusCancelled,
+    BookingStatus.expired => l10n.bookingStatusExpired,
   };
 
   String help(AppLocalizations l10n) => switch (this) {
@@ -23,6 +24,7 @@ extension BookingStatusLabels on BookingStatus {
     BookingStatus.inProgress => l10n.bookingStatusInProgressHelp,
     BookingStatus.completed => l10n.bookingStatusCompletedHelp,
     BookingStatus.cancelled => l10n.bookingStatusCancelledHelp,
+    BookingStatus.expired => l10n.bookingStatusExpiredHelp,
   };
 
   IconData get icon => switch (this) {
@@ -33,11 +35,12 @@ extension BookingStatusLabels on BookingStatus {
     BookingStatus.inProgress => Icons.build_outlined,
     BookingStatus.completed => Icons.check_circle,
     BookingStatus.cancelled => Icons.cancel_outlined,
+    BookingStatus.expired => Icons.timer_off_outlined,
   };
 
   StatusTone get tone => switch (this) {
     BookingStatus.completed => StatusTone.good,
-    BookingStatus.cancelled => StatusTone.bad,
+    BookingStatus.cancelled || BookingStatus.expired => StatusTone.bad,
     _ => StatusTone.neutral,
   };
 }

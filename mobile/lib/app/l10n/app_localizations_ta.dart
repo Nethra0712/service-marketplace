@@ -304,6 +304,24 @@ class AppLocalizationsTa extends AppLocalizations {
       'உங்கள் சுயவிவரம் சரிபார்க்கப்பட்ட பிறகே வாடிக்கையாளர்கள் உங்களைக் கண்டறிய முடியும்.';
 
   @override
+  String get providerAvailabilityTitle => 'கிடைக்கும் தன்மை';
+
+  @override
+  String get providerAvailabilityOnline =>
+      'ஆன்லைன் — புதிய வேலைகளுக்குத் தெரியும்';
+
+  @override
+  String get providerAvailabilityOffline => 'ஆஃப்லைன் — வாய்ப்புகள் கிடைக்காது';
+
+  @override
+  String get providerAvailabilityHelp =>
+      'அருகிலுள்ள வாடிக்கையாளர்களுடன் பொருத்தப்பட ஆன்லைனில் இருங்கள்.';
+
+  @override
+  String get providerAvailabilityUpdated =>
+      'கிடைக்கும் தன்மை புதுப்பிக்கப்பட்டது.';
+
+  @override
   String get applicationPending => 'மதிப்பாய்வுக்குக் காத்திருக்கிறது';
 
   @override
@@ -536,6 +554,13 @@ class AppLocalizationsTa extends AppLocalizations {
       'இந்த முன்பதிவு ரத்து செய்யப்பட்டது.';
 
   @override
+  String get bookingStatusExpired => 'சேவை வழங்குநர் கிடைக்கவில்லை';
+
+  @override
+  String get bookingStatusExpiredHelp =>
+      'குறித்த நேரத்தில் கிடைக்கக்கூடிய சேவை வழங்குநரை எங்களால் கண்டறிய முடியவில்லை. மீண்டும் கோரலாம்.';
+
+  @override
   String get bookingCancel => 'முன்பதிவை ரத்து செய்';
 
   @override
@@ -577,6 +602,17 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get bookingAcceptedMessage => 'வேலை ஏற்கப்பட்டது.';
+
+  @override
+  String get bookingDeclineOffer => 'நிராகரி';
+
+  @override
+  String get bookingOfferDeclined => 'வாய்ப்பு நிராகரிக்கப்பட்டது.';
+
+  @override
+  String bookingOfferRespondBy(String time) {
+    return '$time க்குள் பதிலளிக்கவும்';
+  }
 
   @override
   String get bookingStartEnRoute => 'நான் வழியில் இருக்கிறேன்';
@@ -652,14 +688,14 @@ class AppLocalizationsTa extends AppLocalizations {
   String get providerJobsTitle => 'வேலைகள்';
 
   @override
-  String get providerJobsOpen => 'திறந்த வேண்டுகோள்கள்';
+  String get providerJobsOpen => 'வாய்ப்புகள்';
 
   @override
   String get providerJobsAssigned => 'என் வேலைகள்';
 
   @override
   String get providerJobsOpenEmpty =>
-      'உங்கள் சேவைகளுக்கு தற்போது திறந்த வேண்டுகோள்கள் இல்லை.';
+      'தற்போது வாய்ப்புகள் இல்லை. அவற்றைப் பெற ஆன்லைனில் செல்லுங்கள்.';
 
   @override
   String get providerJobsAssignedEmpty =>

@@ -51,6 +51,20 @@ void main() {
     expect(key('booking_a'), findsNothing);
   });
 
+  testWidgets('an expired booking (no provider found) is in the past tab', (
+    tester,
+  ) async {
+    f.booking.bookings.add(bookingOf(id: 'e', status: BookingStatus.expired));
+
+    await f.open(tester, AppRoutes.bookings.path);
+    expect(key('booking_e'), findsNothing); // not active
+
+    await tester.tap(find.text(en.bookingHistoryPast));
+    await settle(tester);
+
+    expect(key('booking_e'), findsOneWidget);
+  });
+
   testWidgets('shows a message when a tab is empty', (tester) async {
     await f.open(tester, AppRoutes.bookings.path);
 

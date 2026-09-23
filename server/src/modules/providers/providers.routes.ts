@@ -22,6 +22,8 @@ const languageOf = (req: Request, queryLang: AppLanguage | undefined): AppLangua
  *   GET    /profile                  my provider profile (404 if I have none)
  *   PUT    /profile                  create or update it (becoming a provider)
  *   POST   /profile/submit           hand the profile in for review
+ *   PUT    /profile/availability     toggle online/offline (dispatch eligibility)
+ *   PUT    /profile/location         report my latest known location
  *   GET    /services                 my category applications and their status
  *   POST   /services                 apply for a category in a city
  *   GET    /services/:id             one application
@@ -54,6 +56,16 @@ export function createProvidersRouter({ service, requireAuth }: ProvidersRoutesD
   router.post('/profile/submit', async (req, res) => {
     parseRequest(providersSchemas.submitProfile, req);
     res.json(await service.submitProfile(getAuth(req).userId));
+  });
+
+  router.put('/profile/availability', async (req, res) => {
+    const { body } = parseRequest(providersSchemas.setAvailability, req);
+    res.json(await service.setAvailability(getAuth(req).userId, body.availability));
+  });
+
+  router.put('/profile/location', async (req, res) => {
+    const { body } = parseRequest(providersSchemas.setLocation, req);
+    res.json(await service.setLocation(getAuth(req).userId, body));
   });
 
   router.get('/services', async (req, res) => {

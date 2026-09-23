@@ -210,6 +210,7 @@ class FakeProviderRepository implements ProviderRepository {
       yearsOfExperience: input.yearsOfExperience,
       verificationStatus:
           current?.verificationStatus ?? VerificationStatus.draft,
+      availability: current?.availability ?? ProviderAvailability.offline,
       reviewNote: current?.reviewNote,
     );
     return profile!;
@@ -226,8 +227,50 @@ class FakeProviderRepository implements ProviderRepository {
       bio: current.bio,
       yearsOfExperience: current.yearsOfExperience,
       verificationStatus: VerificationStatus.submitted,
+      availability: current.availability,
     );
     return profile!;
+  }
+
+  @override
+  Future<ProviderProfile> setAvailability(
+    ProviderAvailability availability,
+  ) async {
+    _maybeFail('setAvailability');
+    final current = profile;
+    if (current == null) {
+      throw const NotFoundException('You have no provider profile yet.');
+    }
+    profile = ProviderProfile(
+      id: current.id,
+      fullName: current.fullName,
+      bio: current.bio,
+      yearsOfExperience: current.yearsOfExperience,
+      verificationStatus: current.verificationStatus,
+      availability: availability,
+      submittedAt: current.submittedAt,
+      reviewedAt: current.reviewedAt,
+      reviewNote: current.reviewNote,
+    );
+    return profile!;
+  }
+
+  double? lastReportedLatitude;
+  double? lastReportedLongitude;
+
+  @override
+  Future<ProviderProfile> setLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    _maybeFail('setLocation');
+    final current = profile;
+    if (current == null) {
+      throw const NotFoundException('You have no provider profile yet.');
+    }
+    lastReportedLatitude = latitude;
+    lastReportedLongitude = longitude;
+    return current;
   }
 
   @override
@@ -336,11 +379,13 @@ ProviderProfile profileOf(
   VerificationStatus status, {
   String name = 'Nimal Perera',
   String? note,
+  ProviderAvailability availability = ProviderAvailability.offline,
 }) => ProviderProfile(
   id: 'profile-1',
   fullName: name,
   bio: 'Fifteen years of plumbing.',
   yearsOfExperience: 15,
   verificationStatus: status,
+  availability: availability,
   reviewNote: note,
 );

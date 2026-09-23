@@ -42,12 +42,13 @@ export const bookingType = pgEnum('booking_type', ['on_demand', 'scheduled']);
 /**
  * A booking's stage. Transitions are explicit and one-directional except for
  * a provider cancelling after acceptance, which returns the booking to
- * `searching` rather than ending it, so it can be picked up again (automatic
- * re-dispatch is Sprint 6; this sprint only prepares the state for it).
+ * `searching` rather than ending it, so automatic re-dispatch (Sprint 6) has
+ * somewhere to pick it back up.
  *
  *   searching -> accepted -> en_route -> arrived -> in_progress -> completed
  *   searching/accepted/en_route/arrived -> cancelled   (customer, terminal)
  *   accepted/en_route/arrived -> searching             (provider releases)
+ *   searching -> expired                               (no provider accepted in time, terminal)
  */
 export const bookingStatus = pgEnum('booking_status', [
   'searching',
@@ -57,6 +58,7 @@ export const bookingStatus = pgEnum('booking_status', [
   'in_progress',
   'completed',
   'cancelled',
+  'expired',
 ]);
 
 /** A provider's proposed price for a quote-priced booking. */
@@ -64,6 +66,20 @@ export const bookingQuoteStatus = pgEnum('booking_quote_status', [
   'pending',
   'accepted',
   'rejected',
+]);
+
+/**
+ * One provider's dispatch offer for a booking. `superseded` covers two cases:
+ * another provider's offer was accepted first, or the customer/system cleared
+ * every outstanding offer (e.g. the booking was cancelled). A provider is
+ * offered a booking at most once, ever, regardless of wave or outcome.
+ */
+export const bookingOfferStatus = pgEnum('booking_offer_status', [
+  'pending',
+  'accepted',
+  'declined',
+  'expired',
+  'superseded',
 ]);
 
 export type UserStatus = (typeof userStatus.enumValues)[number];
@@ -75,3 +91,4 @@ export type ProviderVerificationStatus = (typeof providerVerificationStatus.enum
 export type BookingType = (typeof bookingType.enumValues)[number];
 export type BookingStatus = (typeof bookingStatus.enumValues)[number];
 export type BookingQuoteStatus = (typeof bookingQuoteStatus.enumValues)[number];
+export type BookingOfferStatus = (typeof bookingOfferStatus.enumValues)[number];

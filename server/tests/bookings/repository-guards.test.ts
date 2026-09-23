@@ -3,7 +3,12 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { createBookingsRepository } from '../../src/modules/bookings/bookings.repository.js';
 import { createCatalogue, type Catalogue } from '../helpers/catalogue.js';
 import { createTestDatabase, resetDatabase } from '../helpers/database.js';
-import { createApprovedProvider, createBooking, createUser } from '../helpers/factories.js';
+import {
+  createApprovedProvider,
+  createBooking,
+  createOffer,
+  createUser,
+} from '../helpers/factories.js';
 
 /**
  * The service layer pre-checks state before calling these, so an HTTP test can
@@ -217,6 +222,209 @@ describe('cancelByCustomer', () => {
     });
 
     expect(await repo.cancelByCustomer(booking.id, owner.id, 'x', new Date())).toBe(true);
+  });
+});
+
+describe('dispatch offer primitives', () => {
+  describe('consumeOfferForAccept', () => {
+    it('refuses an offer that has already been declined', async () => {
+      const owner = await createUser(db);
+      const { profile } = await createApprovedProvider(db, catalogue.cleaning, catalogue.colombo);
+      const booking = await createBooking(db, owner, catalogue.cleaning, catalogue.colombo, {
+        pricingModel: 'hourly',
+      });
+      await createOffer(db, booking, profile);
+      await repo.declineOffer(booking.id, profile.id, new Date());
+
+      expect(await repo.consumeOfferForAccept(booking.id, profile.id, new Date())).toBe(false);
+    });
+
+    it('refuses an offer whose response window has passed', async () => {
+      const owner = await createUser(db);
+      const { profile } = await createApprovedProvider(db, catalogue.cleaning, catalogue.colombo);
+      const booking = await createBooking(db, owner, catalogue.cleaning, catalogue.colombo, {
+        pricingModel: 'hourly',
+      });
+      const now = new Date();
+      await createOffer(db, booking, profile, {
+        offeredAt: new Date(now.getTime() - 60_000),
+        respondsBy: new Date(now.getTime() - 15_000), // already lapsed
+      });
+
+      expect(await repo.consumeOfferForAccept(booking.id, profile.id, now)).toBe(false);
+    });
+
+    it('succeeds for a pending offer still within its window', async () => {
+      const owner = await createUser(db);
+      const { profile } = await createApprovedProvider(db, catalogue.cleaning, catalogue.colombo);
+      const booking = await createBooking(db, owner, catalogue.cleaning, catalogue.colombo, {
+        pricingModel: 'hourly',
+      });
+      await createOffer(db, booking, profile);
+
+      expect(await repo.consumeOfferForAccept(booking.id, profile.id, new Date())).toBe(true);
+    });
+
+    it('a second acceptance attempt on the same offer fails (no double-win)', async () => {
+      const owner = await createUser(db);
+      const { profile } = await createApprovedProvider(db, catalogue.cleaning, catalogue.colombo);
+      const booking = await createBooking(db, owner, catalogue.cleaning, catalogue.colombo, {
+        pricingModel: 'hourly',
+      });
+      await createOffer(db, booking, profile);
+      const now = new Date();
+
+      expect(await repo.consumeOfferForAccept(booking.id, profile.id, now)).toBe(true);
+      expect(await repo.consumeOfferForAccept(booking.id, profile.id, now)).toBe(false);
+    });
+  });
+
+  describe('declineOffer', () => {
+    it('refuses an offer that is not pending', async () => {
+      const owner = await createUser(db);
+      const { profile } = await createApprovedProvider(db, catalogue.cleaning, catalogue.colombo);
+      const booking = await createBooking(db, owner, catalogue.cleaning, catalogue.colombo, {
+        pricingModel: 'hourly',
+      });
+      await createOffer(db, booking, profile);
+      await repo.consumeOfferForAccept(booking.id, profile.id, new Date());
+
+      expect(await repo.declineOffer(booking.id, profile.id, new Date())).toBe(false);
+    });
+
+    it('succeeds for a pending offer, even past its response window', async () => {
+      const owner = await createUser(db);
+      const { profile } = await createApprovedProvider(db, catalogue.cleaning, catalogue.colombo);
+      const booking = await createBooking(db, owner, catalogue.cleaning, catalogue.colombo, {
+        pricingModel: 'hourly',
+      });
+      const now = new Date();
+      await createOffer(db, booking, profile, {
+        offeredAt: new Date(now.getTime() - 60_000),
+        respondsBy: new Date(now.getTime() - 15_000),
+      });
+
+      expect(await repo.declineOffer(booking.id, profile.id, now)).toBe(true);
+    });
+  });
+
+  it('supersedeOtherPendingOffers leaves the winner and other bookings alone', async () => {
+    const owner = await createUser(db);
+    const booking = await createBooking(db, owner, catalogue.cleaning, catalogue.colombo, {
+      pricingModel: 'hourly',
+    });
+    const otherBooking = await createBooking(db, owner, catalogue.cleaning, catalogue.colombo, {
+      pricingModel: 'hourly',
+    });
+    const { profile: winner } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    const { profile: loser } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    const { profile: elsewhere } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    await createOffer(db, booking, winner);
+    await createOffer(db, booking, loser);
+    await createOffer(db, otherBooking, elsewhere);
+    await repo.consumeOfferForAccept(booking.id, winner.id, new Date());
+
+    await repo.supersedeOtherPendingOffers(booking.id, winner.id, new Date());
+
+    const winnerOffer = await repo.findOfferForProvider(booking.id, winner.id);
+    const loserOffer = await repo.findOfferForProvider(booking.id, loser.id);
+    const elsewhereOffer = await repo.findOfferForProvider(otherBooking.id, elsewhere.id);
+    expect(winnerOffer?.status).toBe('accepted');
+    expect(loserOffer?.status).toBe('superseded');
+    expect(elsewhereOffer?.status).toBe('pending'); // untouched: different booking
+  });
+
+  it('expireDueOffers only flips offers whose window has actually passed', async () => {
+    const owner = await createUser(db);
+    const booking = await createBooking(db, owner, catalogue.cleaning, catalogue.colombo, {
+      pricingModel: 'hourly',
+    });
+    const { profile: due } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    const { profile: notYetDue } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    const now = new Date();
+    await createOffer(db, booking, due, {
+      offeredAt: new Date(now.getTime() - 60_000),
+      respondsBy: new Date(now.getTime() - 1_000),
+    });
+    await createOffer(db, booking, notYetDue, {
+      offeredAt: now,
+      respondsBy: new Date(now.getTime() + 45_000),
+    });
+
+    await repo.expireDueOffers(booking.id, now);
+
+    expect((await repo.findOfferForProvider(booking.id, due.id))?.status).toBe('expired');
+    expect((await repo.findOfferForProvider(booking.id, notYetDue.id))?.status).toBe('pending');
+  });
+
+  it('listExcludedProviderIds excludes pending/accepted/declined/expired and released, not superseded', async () => {
+    const owner = await createUser(db);
+    const booking = await createBooking(db, owner, catalogue.cleaning, catalogue.colombo, {
+      pricingModel: 'hourly',
+    });
+    const { profile: pending } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    const { profile: accepted } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    const { profile: declined } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    const { profile: expired } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    const { profile: superseded } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    const { profile: released } = await createApprovedProvider(
+      db,
+      catalogue.cleaning,
+      catalogue.colombo,
+    );
+    await createOffer(db, booking, pending);
+    await createOffer(db, booking, accepted, { status: 'accepted', respondedAt: new Date() });
+    await createOffer(db, booking, declined, { status: 'declined', respondedAt: new Date() });
+    await createOffer(db, booking, expired, { status: 'expired', respondedAt: new Date() });
+    await createOffer(db, booking, superseded, { status: 'superseded', respondedAt: new Date() });
+    await repo.insertProviderRelease(booking.id, released.id, null, new Date());
+
+    const excluded = await repo.listExcludedProviderIds(booking.id);
+
+    expect(new Set(excluded)).toEqual(
+      new Set([pending.id, accepted.id, declined.id, expired.id, released.id]),
+    );
+    expect(excluded).not.toContain(superseded.id);
   });
 });
 

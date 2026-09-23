@@ -31,4 +31,15 @@ export const providersSchemas = {
   }),
 
   application: z.object({ params: idParams, query: langQuery }),
+
+  setAvailability: z.object({
+    body: z.strictObject({ availability: z.enum(['offline', 'online']) }),
+  }),
+
+  setLocation: z.object({
+    body: z.strictObject({
+      latitude: z.number().min(-90).max(90),
+      longitude: z.number().min(-180).max(180),
+    }),
+  }),
 };

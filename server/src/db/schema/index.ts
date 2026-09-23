@@ -1,4 +1,5 @@
 export * from './auth-sessions.js';
+export * from './booking-offers.js';
 export * from './booking-provider-releases.js';
 export * from './booking-quotes.js';
 export * from './bookings.js';

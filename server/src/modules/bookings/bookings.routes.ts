@@ -18,21 +18,25 @@ const languageOf = (req: Request, queryLang: AppLanguage | undefined): AppLangua
 /**
  * Bookings. Mounted at /api/bookings. Every route requires a signed-in user.
  *
- *   POST   /                            create a booking (customer)
+ *   POST   /                            create a booking (customer) — triggers automatic dispatch
  *   GET    /mine                        my bookings, as a customer
  *   GET    /assigned                    my bookings, as a provider
- *   GET    /open                        open requests I could accept or quote on
- *   GET    /:id                         one booking (its customer or its assigned provider)
- *   POST   /:id/accept                  provider accepts directly (fixed/hourly only)
+ *   GET    /open                        my current dispatch offers (automatic matching, not a browse list)
+ *   GET    /:id                         one booking (its customer, its assigned provider, or an offered provider)
+ *   POST   /:id/accept                  provider accepts their offer directly (fixed/hourly only)
+ *   POST   /:id/decline                 provider turns down their offer; dispatch moves on
  *   POST   /:id/en-route                provider: accepted -> en_route
  *   POST   /:id/arrived                 provider: en_route -> arrived
  *   POST   /:id/start                   provider: arrived -> in_progress
  *   POST   /:id/complete                provider: in_progress -> completed
- *   POST   /:id/release                 provider backs out (returns to searching)
+ *   POST   /:id/release                 provider backs out (returns to searching; re-dispatches)
  *   POST   /:id/cancel                  customer cancels
- *   POST   /:id/quotes                  provider submits a quote (quote-priced only)
+ *   POST   /:id/quotes                  provider submits a quote (quote-priced, requires an offer)
  *   POST   /:id/quotes/:quoteId/accept  customer accepts a quote
  *   POST   /:id/quotes/:quoteId/reject  customer rejects a quote
+ *
+ * A provider can only act on a booking they currently hold (or have held) a
+ * dispatch offer on: nobody browses and picks an arbitrary open request.
  *
  * Literal routes (`/mine`, `/assigned`, `/open`) are declared before `/:id` so
  * they are never swallowed by the parameter route.
@@ -72,7 +76,7 @@ export function createBookingsRouter({ service, requireAuth }: BookingsRoutesDep
     const { query } = parseRequest(bookingsSchemas.list, req);
     const language = languageOf(req, query.lang);
     res.vary('Accept-Language');
-    res.json({ items: await service.listOpenForProvider(getAuth(req).userId, language) });
+    res.json({ items: await service.listOffersForProvider(getAuth(req).userId, language) });
   });
 
   router.get('/:id', async (req, res) => {
@@ -87,6 +91,13 @@ export function createBookingsRouter({ service, requireAuth }: BookingsRoutesDep
     const language = languageOf(req, query.lang);
     res.vary('Accept-Language');
     res.json(await service.accept(getAuth(req).userId, params.id, language));
+  });
+
+  router.post('/:id/decline', async (req, res) => {
+    const { params, query } = parseRequest(bookingsSchemas.action, req);
+    const language = languageOf(req, query.lang);
+    res.vary('Accept-Language');
+    res.json(await service.decline(getAuth(req).userId, params.id, language));
   });
 
   router.post('/:id/en-route', async (req, res) => {

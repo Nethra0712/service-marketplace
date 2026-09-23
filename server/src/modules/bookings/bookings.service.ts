@@ -1,5 +1,6 @@
 import type {
   AppLanguage,
+  BookingOfferStatus,
   BookingQuoteStatus,
   BookingStatus,
   BookingType,
@@ -16,8 +17,14 @@ import {
   CANCELLABLE_STATUSES,
   type BookingCore,
   type BookingRow,
+  type OfferSummary,
   type QuoteRow,
 } from './bookings.repository.js';
+
+/** How long each dispatch offer stays open before lapsing to the next wave. */
+export const OFFER_RESPONSE_WINDOW_MS = 45_000;
+/** How long a booking stays in matching altogether before it gives up. */
+export const MATCHING_WINDOW_MS = 30 * 60_000;
 
 export interface QuoteView {
   id: string;
@@ -27,6 +34,13 @@ export interface QuoteView {
   provider: { id: string; fullName: string | null };
   createdAt: string;
   respondedAt: string | null;
+}
+
+export interface OfferView {
+  status: BookingOfferStatus;
+  wave: number;
+  respondsBy: string;
+  distanceKm: string | null;
 }
 
 export interface BookingSummaryView {
@@ -52,6 +66,8 @@ export interface BookingSummaryView {
     completedAt: string | null;
   };
   cancellation: { at: string; byUserId: string; reason: string | null } | null;
+  /** The viewing provider's own dispatch offer on this booking, if any. Always null for a customer. */
+  myOffer: OfferView | null;
 }
 
 /**
@@ -71,6 +87,9 @@ export interface CreateBookingInput {
   scheduledAt?: string | undefined;
   serviceAddress: string;
   customerNotes?: string | null | undefined;
+  /** Optional job coordinates, used only as a matching input (distance ranking). */
+  latitude?: number | null | undefined;
+  longitude?: number | null | undefined;
 }
 
 export interface SubmitQuoteInput {
@@ -93,10 +112,15 @@ export type EligibilityCheck = (
   offering: { serviceCategoryId: string; cityId: string },
 ) => Promise<boolean>;
 
-/** Every category/city the given provider is currently eligible for. Supplied by the providers module. */
-export type EligibleOfferingsLookup = (
-  providerProfileId: string,
-) => Promise<{ serviceCategoryId: string; cityId: string }[]>;
+/**
+ * The next dispatch wave for a booking: the best still-eligible candidates,
+ * excluding anyone already offered it. Supplied by the matching module.
+ */
+export type NextWaveLookup = (
+  offering: { serviceCategoryId: string; cityId: string },
+  excludeProviderProfileIds: readonly string[],
+  jobLocation: { latitude: number; longitude: number } | null,
+) => Promise<{ providerProfileId: string; distanceKm: number | null }[]>;
 
 export interface BookingsServiceDeps {
   db: Database;
@@ -104,7 +128,7 @@ export interface BookingsServiceDeps {
   findOfferedCategory: OfferedCategoryLookup;
   findProviderProfileId: ProviderProfileLookup;
   isBookable: EligibilityCheck;
-  listEligibleOfferings: EligibleOfferingsLookup;
+  findNextWave: NextWaveLookup;
 }
 
 const iso = (date: Date | null): string | null => (date ? date.toISOString() : null);
@@ -142,6 +166,7 @@ const toSummaryView = (row: BookingRow): BookingSummaryView => ({
           byUserId: row.cancelledByUserId,
           reason: row.cancellationReason,
         },
+  myOffer: null,
 });
 
 const toQuoteView = (row: QuoteRow): QuoteView => ({
@@ -152,6 +177,13 @@ const toQuoteView = (row: QuoteRow): QuoteView => ({
   provider: { id: row.providerProfileId, fullName: row.providerName },
   createdAt: row.createdAt.toISOString(),
   respondedAt: iso(row.respondedAt),
+});
+
+const toOfferView = (row: OfferSummary): OfferView => ({
+  status: row.status,
+  wave: row.wave,
+  respondsBy: row.respondsBy.toISOString(),
+  distanceKm: row.distanceKm,
 });
 
 const notFound = (message: string) => new AppError(404, ErrorCode.NotFound, message);
@@ -170,14 +202,27 @@ const notEligible = () =>
     ErrorCode.ProviderNotEligible,
     'You are not approved for this service in this city.',
   );
+const noActiveOffer = () =>
+  new AppError(
+    409,
+    ErrorCode.NoActiveOffer,
+    'You do not have an active offer on this booking right now.',
+  );
+
+/** Thrown (never surfaced) to force a transaction rollback when an offer-side write loses a race. */
+class OfferLostRace extends Error {}
+const OFFER_LOST_RACE = new OfferLostRace();
 
 /**
- * Booking self-service for customers and providers. Every method authorizes
- * against the caller (never a supplied id), and every state change goes
- * through a guarded conditional update so a lost race becomes a clean 409
- * instead of a corrupted booking. No automatic matching: a provider is
- * assigned either by directly accepting an open fixed/hourly request or by
- * the customer accepting their quote.
+ * Booking self-service for customers and providers, plus the automatic
+ * matching/dispatch that assigns a provider without the client choosing one.
+ * Every method authorizes against the caller (never a supplied id), and
+ * every state change goes through a guarded conditional update so a lost
+ * race becomes a clean 409 instead of a corrupted booking.
+ *
+ * Matching has no scheduler: there is no background job anywhere in this
+ * codebase, so offer/booking expiry is settled lazily, at the start of
+ * whichever request next touches the booking (see {@link settle}).
  */
 export function createBookingsService({
   db,
@@ -185,7 +230,7 @@ export function createBookingsService({
   findOfferedCategory,
   findProviderProfileId,
   isBookable,
-  listEligibleOfferings,
+  findNextWave,
 }: BookingsServiceDeps) {
   const repository = createBookingsRepository(db);
 
@@ -214,13 +259,89 @@ export function createBookingsService({
   }
 
   /**
-   * Loads a booking for whoever is allowed to see it: its customer, or its
-   * assigned provider, a provider who has quoted on it (so they can see how
-   * their quote was decided even once it is no longer open), or a provider
-   * currently eligible to accept or quote it while it is still open (so they
-   * can view its detail before deciding). Anyone else gets the same 404 a
-   * missing booking would (existence is not revealed to the wrong person).
-   * Quotes are attached per the viewer's role, never both sides' at once.
+   * Creates and stores one dispatch wave, if anyone is currently eligible. A
+   * no-op otherwise. There is no lock around "decide the next wave number,
+   * then insert it": two concurrent requests settling the same idle booking
+   * at the same instant could both attempt it. That is rare (settlement only
+   * runs when the previous wave is already fully resolved) and harmless — the
+   * losing attempt's insert hits `booking_offers_booking_provider_wave_uidx`
+   * or `..._pending_uidx` and is treated as "someone else already dispatched
+   * this wave," not an error.
+   */
+  async function dispatchWave(
+    bookingId: string,
+    target: { serviceCategoryId: string; cityId: string },
+    jobLocation: { latitude: number; longitude: number } | null,
+    now: Date,
+  ): Promise<void> {
+    const excluded = await repository.listExcludedProviderIds(bookingId);
+    const nextWave = (await repository.maxOfferWave(bookingId)) + 1;
+    const candidates = await findNextWave(target, excluded, jobLocation);
+    if (candidates.length === 0) return; // Nobody eligible right now; stays searching until it expires.
+    try {
+      await repository.insertOfferWave(
+        bookingId,
+        nextWave,
+        candidates,
+        now,
+        new Date(now.getTime() + OFFER_RESPONSE_WINDOW_MS),
+      );
+    } catch (error) {
+      if (
+        !isUniqueViolation(error, 'booking_offers_booking_provider_wave_uidx') &&
+        !isUniqueViolation(error, 'booking_offers_booking_provider_pending_uidx')
+      ) {
+        throw error;
+      }
+    }
+  }
+
+  const jobLocationOf = (core: {
+    customerLatitude: string | null;
+    customerLongitude: string | null;
+  }): { latitude: number; longitude: number } | null =>
+    core.customerLatitude !== null && core.customerLongitude !== null
+      ? { latitude: Number(core.customerLatitude), longitude: Number(core.customerLongitude) }
+      : null;
+
+  /**
+   * Brings a `searching` booking's dispatch state up to date before anything
+   * reads or acts on it: expires offers nobody answered in time, expires the
+   * booking itself once its matching window has passed, and starts the next
+   * wave if the current one is fully resolved and the booking is still open.
+   * A no-op for any booking that is not `searching`.
+   */
+  async function settle(bookingId: string, now: Date): Promise<void> {
+    const core = await repository.findCore(bookingId);
+    if (core?.status !== 'searching') return;
+
+    if (core.matchingExpiresAt !== null && core.matchingExpiresAt.getTime() <= now.getTime()) {
+      await db.transaction(async (tx) => {
+        const repo = createBookingsRepository(tx);
+        await repo.expireDueOffers(bookingId, now);
+        await repo.expireBooking(bookingId);
+      });
+      return;
+    }
+
+    await repository.expireDueOffers(bookingId, now);
+    if ((await repository.countPendingOffers(bookingId)) === 0) {
+      await dispatchWave(
+        bookingId,
+        { serviceCategoryId: core.serviceCategoryId, cityId: core.cityId },
+        jobLocationOf(core),
+        now,
+      );
+    }
+  }
+
+  /**
+   * Loads a booking for whoever is allowed to see it: its customer, its
+   * assigned provider, or a provider who currently holds (or has ever held)
+   * a dispatch offer on it. A provider who was never offered this booking
+   * gets the same 404 a missing booking would — matching decides who can see
+   * an open booking, not the client. Quotes are attached per the viewer's
+   * role, never both sides' at once.
    */
   async function loadForViewer(
     bookingId: string,
@@ -231,21 +352,15 @@ export function createBookingsService({
     if (!row) throw notFound('Booking not found.');
 
     const isCustomer = row.customerId === userId;
-    const callerProviderProfileId = await findProviderProfileId(userId);
+    const callerProviderProfileId = isCustomer ? undefined : await findProviderProfileId(userId);
     const isAssignedProvider =
       row.providerProfileId !== null && row.providerProfileId === callerProviderProfileId;
 
-    let myQuotes: QuoteRow[] = [];
+    let myOffer: OfferSummary | undefined;
     let canView = isCustomer || isAssignedProvider;
-    if (!canView && callerProviderProfileId) {
-      myQuotes = await repository.listMyQuotes(bookingId, callerProviderProfileId);
-      canView = myQuotes.length > 0;
-      if (!canView && row.status === 'searching') {
-        canView = await isBookable(callerProviderProfileId, {
-          serviceCategoryId: row.categoryId,
-          cityId: row.cityId,
-        });
-      }
+    if (callerProviderProfileId) {
+      myOffer = await repository.findOfferForProvider(bookingId, callerProviderProfileId);
+      if (!canView) canView = myOffer !== undefined;
     }
     if (!canView) throw notFound('Booking not found.');
 
@@ -253,11 +368,17 @@ export function createBookingsService({
     if (row.pricingModel === 'quote') {
       if (isCustomer) {
         quotes = (await repository.listQuotesForBooking(bookingId)).map(toQuoteView);
-      } else {
-        quotes = myQuotes.map(toQuoteView);
+      } else if (callerProviderProfileId) {
+        quotes = (await repository.listMyQuotes(bookingId, callerProviderProfileId)).map(
+          toQuoteView,
+        );
       }
     }
-    return { ...toSummaryView(row), quotes };
+    return {
+      ...toSummaryView(row),
+      myOffer: myOffer ? toOfferView(myOffer) : null,
+      quotes,
+    };
   }
 
   /** Shared shape for the four single-step provider actions (en-route, arrived, start, complete). */
@@ -289,7 +410,8 @@ export function createBookingsService({
       if (!offered) throw notFound('That service is not available in this city.');
 
       const scheduledAt = input.scheduledAt ? new Date(input.scheduledAt) : null;
-      if (scheduledAt !== null && scheduledAt.getTime() <= clock().getTime()) {
+      const now = clock();
+      if (scheduledAt !== null && scheduledAt.getTime() <= now.getTime()) {
         throw new AppError(
           400,
           ErrorCode.ValidationError,
@@ -300,6 +422,14 @@ export function createBookingsService({
         );
       }
 
+      const customerLatitude =
+        input.latitude === undefined || input.latitude === null ? null : input.latitude.toFixed(6);
+      const customerLongitude =
+        input.longitude === undefined || input.longitude === null
+          ? null
+          : input.longitude.toFixed(6);
+      const matchingExpiresAt = new Date(now.getTime() + MATCHING_WINDOW_MS);
+
       const { id } = await repository.insert({
         customerId,
         serviceCategoryId: offered.serviceCategoryId,
@@ -309,7 +439,19 @@ export function createBookingsService({
         scheduledAt,
         customerNotes: blankToNull(input.customerNotes),
         serviceAddress: input.serviceAddress.trim(),
+        customerLatitude,
+        customerLongitude,
+        matchingExpiresAt,
       });
+
+      await dispatchWave(
+        id,
+        { serviceCategoryId: offered.serviceCategoryId, cityId: offered.cityId },
+        customerLatitude !== null && customerLongitude !== null
+          ? { latitude: Number(customerLatitude), longitude: Number(customerLongitude) }
+          : null,
+        now,
+      );
       return loadForViewer(id, customerId, language);
     },
 
@@ -318,6 +460,7 @@ export function createBookingsService({
       bookingId: string,
       language: AppLanguage,
     ): Promise<BookingDetailView> {
+      await settle(bookingId, clock());
       return loadForViewer(bookingId, userId, language);
     },
 
@@ -334,16 +477,22 @@ export function createBookingsService({
       );
     },
 
-    /** Open requests across every category/city the caller is currently approved and verified for. */
-    async listOpenForProvider(userId: string, language: AppLanguage) {
+    /** The caller's currently live dispatch offers — bookings automatic matching has offered them. */
+    async listOffersForProvider(userId: string, language: AppLanguage) {
       const providerProfileId = await findProviderProfileId(userId);
       if (!providerProfileId) throw profileNotFound();
-      const offerings = await listEligibleOfferings(providerProfileId);
-      return (await repository.listOpen(offerings, language)).map(toSummaryView);
+      const rows = await repository.listMyOffers(providerProfileId, language, clock());
+      return rows.map(({ booking, offer }) => ({
+        ...toSummaryView(booking),
+        myOffer: toOfferView(offer),
+      }));
     },
 
-    /** A provider directly accepts an open fixed/hourly request. Quote-priced bookings must go through a quote. */
+    /** A provider directly accepts an open fixed/hourly request they currently hold an offer on. */
     async accept(userId: string, bookingId: string, language: AppLanguage) {
+      const now = clock();
+      await settle(bookingId, now);
+
       const providerProfileId = await requireProviderProfileId(userId);
       const core = await requireCore(bookingId);
 
@@ -357,10 +506,62 @@ export function createBookingsService({
       if (core.status !== 'searching' || core.providerProfileId !== null) {
         throw invalidState('This booking has already been taken.');
       }
-      if (!(await isBookable(providerProfileId, core))) throw notEligible();
 
-      if (!(await repository.acceptDirect(bookingId, providerProfileId, clock()))) {
-        throw invalidState('This booking has already been taken.');
+      const offer = await repository.findOfferForProvider(bookingId, providerProfileId);
+      if (offer?.status !== 'pending' || offer.respondsBy.getTime() <= now.getTime()) {
+        if (!(await isBookable(providerProfileId, core))) throw notEligible();
+        throw noActiveOffer();
+      }
+
+      // `acceptDirect`'s booking-level guard (`status = 'searching'`) is the
+      // primary race-resolver: only one of several concurrent accept
+      // attempts can ever succeed at it. It runs BEFORE `consumeOfferForAccept`
+      // on purpose — that call writes to the `(booking_id) WHERE status =
+      // 'accepted'` unique index, and if two transactions both reached it
+      // concurrently (as they would if this ran first), the loser would fail
+      // with a raw unique-violation instead of the clean 409 below. If
+      // `consumeOfferForAccept` somehow still fails after `acceptDirect`
+      // already succeeded (e.g. the offer was declined in a separate, racing
+      // request), throwing — not returning false — rolls the whole attempt
+      // back, so `acceptDirect`'s write is never left committed on its own.
+      const accepted = await db
+        .transaction(async (tx) => {
+          const repo = createBookingsRepository(tx);
+          if (!(await repo.acceptDirect(bookingId, providerProfileId, now))) return false;
+          if (!(await repo.consumeOfferForAccept(bookingId, providerProfileId, now))) {
+            throw OFFER_LOST_RACE;
+          }
+          await repo.supersedeOtherPendingOffers(bookingId, providerProfileId, now);
+          return true;
+        })
+        .catch((error: unknown) => {
+          if (error instanceof OfferLostRace) return false;
+          throw error;
+        });
+      if (!accepted) throw invalidState('This booking has already been taken.');
+      return loadForViewer(bookingId, userId, language);
+    },
+
+    /** A provider turns down their current offer. If it was the last one out, dispatch moves on immediately. */
+    async decline(userId: string, bookingId: string, language: AppLanguage) {
+      const now = clock();
+      await settle(bookingId, now);
+
+      const providerProfileId = await requireProviderProfileId(userId);
+      await requireCore(bookingId);
+
+      if (!(await repository.declineOffer(bookingId, providerProfileId, now))) {
+        throw noActiveOffer();
+      }
+
+      const core = await repository.findCore(bookingId);
+      if (core?.status === 'searching' && (await repository.countPendingOffers(bookingId)) === 0) {
+        await dispatchWave(
+          bookingId,
+          { serviceCategoryId: core.serviceCategoryId, cityId: core.cityId },
+          jobLocationOf(core),
+          now,
+        );
       }
       return loadForViewer(bookingId, userId, language);
     },
@@ -389,8 +590,15 @@ export function createBookingsService({
       );
     },
 
-    /** The assigned provider backs out. The booking returns to `searching`, not a terminal state. */
+    /**
+     * The assigned provider backs out. The booking returns to `searching` and
+     * matching re-dispatches immediately, excluding the releasing provider
+     * (see `listExcludedProviderIds`).
+     */
     async release(userId: string, bookingId: string, reason: string, language: AppLanguage) {
+      const now = clock();
+      await settle(bookingId, now);
+
       const providerProfileId = await requireProviderProfileId(userId);
       const core = await requireOwnCore(
         bookingId,
@@ -400,25 +608,42 @@ export function createBookingsService({
         throw invalidState('This booking can no longer be released.');
       }
 
-      const now = clock();
       const released = await db.transaction(async (tx) => {
         const repo = createBookingsRepository(tx);
         const ok = await repo.releaseAssignment(bookingId, providerProfileId);
         if (!ok) return false;
         await repo.insertProviderRelease(bookingId, providerProfileId, reason, now);
+        await repo.supersedeAcceptedOffer(bookingId, providerProfileId, now);
         return true;
       });
       if (!released) throw invalidState('This booking can no longer be released.');
+
+      const freshCore = await repository.findCore(bookingId);
+      if (freshCore) {
+        await dispatchWave(
+          bookingId,
+          { serviceCategoryId: freshCore.serviceCategoryId, cityId: freshCore.cityId },
+          jobLocationOf(freshCore),
+          now,
+        );
+      }
       return loadForViewer(bookingId, userId, language);
     },
 
     async cancel(userId: string, bookingId: string, reason: string, language: AppLanguage) {
+      const now = clock();
+      await settle(bookingId, now);
+
       const core = await requireOwnCore(bookingId, (c) => c.customerId === userId);
       if (!CANCELLABLE_STATUSES.includes(core.status)) {
         throw invalidState('This booking can no longer be cancelled.');
       }
-      if (!(await repository.cancelByCustomer(bookingId, userId, reason, clock()))) {
+      if (!(await repository.cancelByCustomer(bookingId, userId, reason, now))) {
         throw invalidState('This booking can no longer be cancelled.');
+      }
+      await repository.supersedeAllPendingOffers(bookingId, now);
+      if (core.providerProfileId) {
+        await repository.supersedeAcceptedOffer(bookingId, core.providerProfileId, now);
       }
       return loadForViewer(bookingId, userId, language);
     },
@@ -431,6 +656,9 @@ export function createBookingsService({
       input: SubmitQuoteInput,
       language: AppLanguage,
     ) {
+      const now = clock();
+      await settle(bookingId, now);
+
       const providerProfileId = await requireProviderProfileId(userId);
       const core = await requireCore(bookingId);
 
@@ -440,7 +668,12 @@ export function createBookingsService({
       if (core.status !== 'searching') {
         throw invalidState('This booking is no longer open for quotes.');
       }
-      if (!(await isBookable(providerProfileId, core))) throw notEligible();
+
+      const offer = await repository.findOfferForProvider(bookingId, providerProfileId);
+      if (offer?.status !== 'pending' || offer.respondsBy.getTime() <= now.getTime()) {
+        if (!(await isBookable(providerProfileId, core))) throw notEligible();
+        throw noActiveOffer();
+      }
 
       try {
         await repository.insertQuote(
@@ -463,6 +696,9 @@ export function createBookingsService({
     },
 
     async acceptQuote(userId: string, bookingId: string, quoteId: string, language: AppLanguage) {
+      const now = clock();
+      await settle(bookingId, now);
+
       const core = await requireOwnCore(bookingId, (c) => c.customerId === userId);
       if (core.status !== 'searching') {
         throw invalidState('This booking is no longer open.');
@@ -474,7 +710,6 @@ export function createBookingsService({
         throw invalidState('This quote has already been responded to.');
       }
 
-      const now = clock();
       const accepted = await db.transaction(async (tx) => {
         const repo = createBookingsRepository(tx);
         const bookingOk = await repo.acceptQuoteOnBooking(
@@ -487,6 +722,14 @@ export function createBookingsService({
         const quoteOk = await repo.markQuoteAccepted(quoteId, now);
         if (!quoteOk) return false;
         await repo.rejectOtherPendingQuotes(bookingId, quoteId, now);
+        // Keep the offer rows honest: the quote is what actually decided the
+        // winner here (a customer can only accept one quote at a time, so
+        // there is no accept/accept race to guard against the way there is
+        // for a direct accept), but the winning provider's offer should read
+        // "accepted" rather than sitting "pending" forever, and everyone
+        // else's should stop showing as a live offer.
+        await repo.consumeOfferForAccept(bookingId, quote.providerProfileId, now);
+        await repo.supersedeOtherPendingOffers(bookingId, quote.providerProfileId, now);
         return true;
       });
       if (!accepted) throw invalidState('This booking is no longer open.');
@@ -494,6 +737,9 @@ export function createBookingsService({
     },
 
     async rejectQuote(userId: string, bookingId: string, quoteId: string, language: AppLanguage) {
+      const now = clock();
+      await settle(bookingId, now);
+
       const core = await requireOwnCore(bookingId, (c) => c.customerId === userId);
       if (core.status !== 'searching') {
         throw invalidState('This booking is no longer open.');
@@ -502,7 +748,7 @@ export function createBookingsService({
       const quote = await repository.findQuoteCore(quoteId);
       if (quote?.bookingId !== bookingId) throw notFound('Quote not found.');
 
-      if (!(await repository.rejectQuote(quoteId, clock()))) {
+      if (!(await repository.rejectQuote(quoteId, now))) {
         throw invalidState('This quote has already been responded to.');
       }
       return loadForViewer(bookingId, userId, language);

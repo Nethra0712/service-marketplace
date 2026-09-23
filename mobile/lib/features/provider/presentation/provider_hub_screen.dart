@@ -164,6 +164,8 @@ class _ProviderOverviewState extends ConsumerState<_ProviderOverview> {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
+        _AvailabilityCard(profile: profile),
+        const SizedBox(height: AppSpacing.md),
         Card(
           child: Padding(
             padding: AppSpacing.screen,
@@ -207,6 +209,92 @@ class _ProviderOverviewState extends ConsumerState<_ProviderOverview> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The provider's own online/offline toggle: whether automatic matching can
+/// currently dispatch them a new job.
+class _AvailabilityCard extends ConsumerStatefulWidget {
+  const _AvailabilityCard({required this.profile});
+
+  final ProviderProfile profile;
+
+  @override
+  ConsumerState<_AvailabilityCard> createState() => _AvailabilityCardState();
+}
+
+class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
+  bool _busy = false;
+
+  Future<void> _toggle(bool goOnline) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(providerProfileProvider.notifier)
+          .setAvailability(
+            goOnline
+                ? ProviderAvailability.online
+                : ProviderAvailability.offline,
+          );
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.providerAvailabilityUpdated)),
+      );
+    } on Object catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(errorMessage(l10n, error))),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final isOnline = widget.profile.availability.isOnline;
+
+    return Card(
+      child: Padding(
+        padding: AppSpacing.screen,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.providerAvailabilityTitle,
+                    style: textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    isOnline
+                        ? l10n.providerAvailabilityOnline
+                        : l10n.providerAvailabilityOffline,
+                    key: const Key('availability_status'),
+                  ),
+                  if (!isOnline) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      l10n.providerAvailabilityHelp,
+                      style: textTheme.bodySmall,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Switch(
+              key: const Key('availability_switch'),
+              value: isOnline,
+              onChanged: _busy ? null : _toggle,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

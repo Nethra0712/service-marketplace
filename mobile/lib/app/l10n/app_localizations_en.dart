@@ -303,6 +303,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Customers can only find you once your profile is verified.';
 
   @override
+  String get providerAvailabilityTitle => 'Availability';
+
+  @override
+  String get providerAvailabilityOnline => 'Online — visible for new jobs';
+
+  @override
+  String get providerAvailabilityOffline => 'Offline — not receiving offers';
+
+  @override
+  String get providerAvailabilityHelp =>
+      'Go online to be matched with nearby customers.';
+
+  @override
+  String get providerAvailabilityUpdated => 'Availability updated.';
+
+  @override
   String get applicationPending => 'Pending review';
 
   @override
@@ -527,6 +543,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingStatusCancelledHelp => 'This booking was cancelled.';
 
   @override
+  String get bookingStatusExpired => 'No provider found';
+
+  @override
+  String get bookingStatusExpiredHelp =>
+      'We couldn\'t find an available provider in time. You can try requesting again.';
+
+  @override
   String get bookingCancel => 'Cancel booking';
 
   @override
@@ -567,6 +590,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingAcceptedMessage => 'Job accepted.';
+
+  @override
+  String get bookingDeclineOffer => 'Decline';
+
+  @override
+  String get bookingOfferDeclined => 'Offer declined.';
+
+  @override
+  String bookingOfferRespondBy(String time) {
+    return 'Respond by $time';
+  }
 
   @override
   String get bookingStartEnRoute => 'I\'m on my way';
@@ -641,14 +675,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerJobsTitle => 'Jobs';
 
   @override
-  String get providerJobsOpen => 'Open requests';
+  String get providerJobsOpen => 'Offers';
 
   @override
   String get providerJobsAssigned => 'My jobs';
 
   @override
   String get providerJobsOpenEmpty =>
-      'No open requests for your services right now.';
+      'No offers right now. Go online to start receiving them.';
 
   @override
   String get providerJobsAssignedEmpty => 'You have no assigned jobs yet.';

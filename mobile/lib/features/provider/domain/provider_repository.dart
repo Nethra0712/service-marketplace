@@ -15,6 +15,17 @@ abstract interface class ProviderRepository {
   /// Hands the profile in for review.
   Future<ProviderProfile> submitProfile();
 
+  /// The provider's own online/offline toggle, i.e. whether they can
+  /// currently be dispatched a new job.
+  Future<ProviderProfile> setAvailability(ProviderAvailability availability);
+
+  /// Reports the provider's current location, used only as a matching input
+  /// (distance ranking). Overwrites the previous value; no history is kept.
+  Future<ProviderProfile> setLocation({
+    required double latitude,
+    required double longitude,
+  });
+
   Future<List<ProviderApplication>> listApplications({
     required String language,
   });

@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 
 import type { Database } from '../../src/db/client.js';
 import {
+  bookingOffers,
   bookings,
   cities,
   cityCategories,
@@ -12,6 +13,7 @@ import {
   users,
   type AppLanguage,
   type NewBooking,
+  type NewBookingOffer,
   type NewCity,
   type NewServiceCategory,
 } from '../../src/db/schema/index.js';
@@ -109,9 +111,11 @@ export async function createOfferedCategory(
 }
 
 /**
- * A provider who can actually be booked: verified profile, approved
- * application, active account. Used across the booking tests wherever a
- * scenario needs a provider who satisfies every eligibility rule.
+ * A provider who can actually be booked AND dispatched to: verified profile,
+ * approved application, active account, online availability. Used across the
+ * booking tests wherever a scenario needs a provider who satisfies every
+ * eligibility rule (including matching's dispatch-specific ones — see
+ * `providers.repository.ts#listDispatchCandidates`).
  */
 export async function createApprovedProvider(
   db: Database,
@@ -121,10 +125,32 @@ export async function createApprovedProvider(
   const { user, profile } = await createProvider(db);
   await db
     .update(providerProfiles)
-    .set({ verificationStatus: 'verified', submittedAt: new Date(), reviewedAt: new Date() })
+    .set({
+      verificationStatus: 'verified',
+      submittedAt: new Date(),
+      reviewedAt: new Date(),
+      availability: 'online',
+    })
     .where(eq(providerProfiles.id, profile.id));
   const application = await createApplication(db, profile.id, category, city, 'approved');
   return { user, profile, application };
+}
+
+/** Sets a provider's latest known location directly, for distance-ranking tests. */
+export async function setProviderLocation(
+  db: Database,
+  profile: { id: string },
+  latitude: number,
+  longitude: number,
+) {
+  await db
+    .update(providerProfiles)
+    .set({
+      lastLatitude: latitude.toFixed(6),
+      lastLongitude: longitude.toFixed(6),
+      lastLocationAt: new Date(),
+    })
+    .where(eq(providerProfiles.id, profile.id));
 }
 
 /**
@@ -149,6 +175,29 @@ export async function createBooking(
         bookingType: 'on_demand',
         pricingModel: (category.pricingModel ?? 'quote') as NewBooking['pricingModel'],
         serviceAddress: '12 Galle Road, Colombo 03',
+        ...overrides,
+      })
+      .returning(),
+  );
+}
+
+/** A dispatch offer, inserted directly. Used by repository-level guard tests. */
+export async function createOffer(
+  db: Database,
+  booking: { id: string },
+  provider: { id: string },
+  overrides: Partial<NewBookingOffer> = {},
+) {
+  const offeredAt = overrides.offeredAt ?? new Date();
+  return only(
+    await db
+      .insert(bookingOffers)
+      .values({
+        bookingId: booking.id,
+        providerProfileId: provider.id,
+        wave: 1,
+        offeredAt,
+        respondsBy: new Date(offeredAt.getTime() + 45_000),
         ...overrides,
       })
       .returning(),

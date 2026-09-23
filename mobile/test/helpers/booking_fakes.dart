@@ -2,6 +2,7 @@ import 'package:mobile/core/errors/app_exception.dart';
 import 'package:mobile/features/booking/domain/booking.dart';
 import 'package:mobile/features/booking/domain/booking_repository.dart';
 import 'package:mobile/features/booking/domain/booking_status.dart';
+import 'package:mobile/features/booking/domain/offer.dart';
 import 'package:mobile/features/booking/domain/quote.dart';
 import 'package:mobile/features/services/domain/pricing_model.dart';
 
@@ -30,6 +31,7 @@ Booking bookingOf({
   ),
   BookingParty? provider,
   Cancellation? cancellation,
+  Offer? myOffer,
   List<Quote> quotes = const [],
   DateTime? acceptedAt,
   DateTime? enRouteAt,
@@ -53,6 +55,7 @@ Booking bookingOf({
   customer: customer,
   provider: provider,
   cancellation: cancellation,
+  myOffer: myOffer,
   quotes: quotes,
   timestamps: BookingTimestamps(
     createdAt: DateTime.utc(2026, 1, 1, 9),
@@ -63,6 +66,18 @@ Booking bookingOf({
     workStartedAt: workStartedAt,
     completedAt: completedAt,
   ),
+);
+
+Offer offerOf({
+  OfferStatus status = OfferStatus.pending,
+  int wave = 1,
+  DateTime? respondsBy,
+  String? distanceKm,
+}) => Offer(
+  status: status,
+  wave: wave,
+  respondsBy: respondsBy ?? DateTime.utc(2026, 1, 1, 9, 1),
+  distanceKm: distanceKm,
 );
 
 Quote quoteOf({
@@ -215,6 +230,37 @@ class FakeBookingRepository implements BookingRepository {
         fullName: 'Kamal Silva',
       ),
       acceptedAt: DateTime.utc(2026, 1, 1, 10),
+    );
+    _replace(updated);
+    return updated;
+  }
+
+  @override
+  Future<Booking> decline(String bookingId, {required String language}) async {
+    _maybeFail('decline');
+    final current = _require(bookingId);
+    final updated = bookingOf(
+      id: current.id,
+      status: current.status,
+      bookingType: current.bookingType,
+      pricingModel: current.pricingModel,
+      categorySlug: current.categorySlug,
+      categoryName: current.categoryName,
+      citySlug: current.citySlug,
+      cityName: current.cityName,
+      serviceAddress: current.serviceAddress,
+      customerNotes: current.customerNotes,
+      scheduledAt: current.scheduledAt,
+      customer: current.customer,
+      quotes: current.quotes,
+      myOffer: current.myOffer == null
+          ? null
+          : Offer(
+              status: OfferStatus.declined,
+              wave: current.myOffer!.wave,
+              respondsBy: current.myOffer!.respondsBy,
+              distanceKm: current.myOffer!.distanceKm,
+            ),
     );
     _replace(updated);
     return updated;

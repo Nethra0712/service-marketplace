@@ -98,6 +98,11 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "providerVerifyFirst": "ඔබේ පැතිකඩ තහවුරු කළ පසු පමණක් පාරිභෝගිකයන්ට ඔබව සොයාගත හැක.",
+  "providerAvailabilityTitle": "ලබා ගත හැකි බව",
+  "providerAvailabilityOnline": "සබැඳිව — නව රැකියා සඳහා දෘශ්‍යමානයි",
+  "providerAvailabilityOffline": "නොබැඳිව — දීමනා ලැබෙන්නේ නැත",
+  "providerAvailabilityHelp": "ආසන්න පාරිභෝගිකයන් සමඟ ගැළපීමට සබැඳි වන්න.",
+  "providerAvailabilityUpdated": "ලබා ගත හැකි බව යාවත්කාලීන කරන ලදී.",
   "applicationPending": "සමාලෝචනය බලාපොරොත්තුවෙන්",
   "applicationApproved": "අනුමතයි",
   "applicationRejected": "ප්‍රතික්ෂේප කළා",
@@ -180,6 +185,8 @@
   "bookingStatusCompletedHelp": "මෙම කාර්යය අවසන් වී ඇත.",
   "bookingStatusCancelled": "අවලංගු කරන ලදී",
   "bookingStatusCancelledHelp": "මෙම වෙන්කිරීම අවලංගු කරන ලදී.",
+  "bookingStatusExpired": "සේවා සපයන්නෙකු හමු නොවීය",
+  "bookingStatusExpiredHelp": "නියමිත වේලාවට ලබා ගත හැකි සේවා සපයන්නෙකු අපට හමු නොවීය. ඔබට නැවත ඉල්ලීමක් කළ හැක.",
 
   "bookingCancel": "වෙන්කිරීම අවලංගු කරන්න",
   "bookingCancelTitle": "මෙම වෙන්කිරීම අවලංගු කරන්නද?",
@@ -199,6 +206,12 @@
 
   "bookingAcceptJob": "මෙම කාර්යය පිළිගන්න",
   "bookingAcceptedMessage": "කාර්යය පිළිගන්නා ලදී.",
+  "bookingDeclineOffer": "ප්‍රතික්ෂේප කරන්න",
+  "bookingOfferDeclined": "දීමනාව ප්‍රතික්ෂේප කරන ලදී.",
+  "bookingOfferRespondBy": "{time} වන විට පිළිතුරු දෙන්න",
+  "@bookingOfferRespondBy": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "bookingStartEnRoute": "මම මාර්ගයේ සිටිමි",
   "bookingEnRouteStarted": "මාර්ගයේ ලෙස සලකුණු කරන ලදී.",
   "bookingMarkArrived": "මම පැමිණ ඇත්තෙමි",
@@ -226,9 +239,9 @@
   "quoteStatusRejected": "ප්‍රතික්ෂේප කරන ලදී",
 
   "providerJobsTitle": "රැකියා",
-  "providerJobsOpen": "විවෘත ඉල්ලීම්",
+  "providerJobsOpen": "දීමනා",
   "providerJobsAssigned": "මගේ රැකියා",
-  "providerJobsOpenEmpty": "දැනට ඔබේ සේවා සඳහා විවෘත ඉල්ලීම් නොමැත.",
+  "providerJobsOpenEmpty": "දැනට දීමනා නොමැත. ඒවා ලැබීමට සබැඳි වන්න.",
   "providerJobsAssignedEmpty": "ඔබට තවම පවරන ලද රැකියා නොමැත.",
 
   "serviceRequestTitle": "මෙම සේවාව ඉල්ලන්න",

@@ -65,7 +65,8 @@ final assignedBookingsProvider =
       List<Booking>
     >(AssignedBookingsController.new, retry: noAutomaticRetry);
 
-/// Open requests the signed-in provider could accept or quote on.
+/// The signed-in provider's currently live dispatch offers (automatic
+/// matching, not a browsable list of every open request).
 class OpenBookingsController extends AsyncNotifier<List<Booking>> {
   @override
   Future<List<Booking>> build() {
@@ -114,6 +115,9 @@ class BookingDetailController extends AsyncNotifier<Booking> {
 
   Future<void> accept() async =>
       _apply(await _repo.accept(bookingId, language: _language));
+
+  Future<void> decline() async =>
+      _apply(await _repo.decline(bookingId, language: _language));
 
   Future<void> startEnRoute() async =>
       _apply(await _repo.startEnRoute(bookingId, language: _language));

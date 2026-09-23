@@ -108,16 +108,18 @@ class _JobList extends StatelessWidget {
               separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, index) {
                 final booking = items[index];
+                final offer = booking.myOffer;
+                final subtitle = showCustomer
+                    ? '${booking.customer.fullName ?? l10n.bookingNameUnknown} · ${booking.status.label(l10n)}'
+                    : offer == null
+                    ? '${booking.cityName} · ${booking.pricingModel.label(l10n)}'
+                    : '${booking.cityName} · ${booking.pricingModel.label(l10n)} · ${l10n.bookingOfferRespondBy(MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(offer.respondsBy)))}';
                 return Card(
                   margin: EdgeInsets.zero,
                   child: ListTile(
                     key: Key('job_${booking.id}'),
                     title: Text(booking.categoryName),
-                    subtitle: Text(
-                      showCustomer
-                          ? '${booking.customer.fullName ?? l10n.bookingNameUnknown} · ${booking.status.label(l10n)}'
-                          : '${booking.cityName} · ${booking.pricingModel.label(l10n)}',
-                    ),
+                    subtitle: Text(subtitle),
                     onTap: () => context.push(
                       AppRoutes.bookingDetailLocation(booking.id),
                     ),

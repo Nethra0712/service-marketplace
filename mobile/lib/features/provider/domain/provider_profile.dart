@@ -5,6 +5,15 @@ import 'package:mobile/core/network/json_helpers.dart';
 /// provider must be verified *and* approved for a service to be bookable.
 enum VerificationStatus { draft, submitted, verified, rejected }
 
+/// The provider's own online/offline toggle. Mirrors the backend's
+/// `provider_availability`. Only online providers are dispatched new offers.
+enum ProviderAvailability {
+  offline,
+  online;
+
+  bool get isOnline => this == ProviderAvailability.online;
+}
+
 /// What a provider entered about themselves. Only the fields the provider is
 /// allowed to set; review status is decided by the platform.
 class ProviderProfileInput {
@@ -24,6 +33,7 @@ class ProviderProfile {
   const ProviderProfile({
     required this.id,
     required this.verificationStatus,
+    this.availability = ProviderAvailability.offline,
     this.fullName,
     this.bio,
     this.yearsOfExperience,
@@ -43,6 +53,11 @@ class ProviderProfile {
           json,
           'verificationStatus',
         ),
+        availability: readEnum(
+          ProviderAvailability.values,
+          json,
+          'availability',
+        ),
         submittedAt: readDateTimeOrNull(json, 'submittedAt'),
         reviewedAt: readDateTimeOrNull(json, 'reviewedAt'),
         reviewNote: readStringOrNull(json, 'reviewNote'),
@@ -53,6 +68,7 @@ class ProviderProfile {
   final String? bio;
   final int? yearsOfExperience;
   final VerificationStatus verificationStatus;
+  final ProviderAvailability availability;
   final DateTime? submittedAt;
   final DateTime? reviewedAt;
 
