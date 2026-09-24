@@ -12,6 +12,7 @@ import type { Logger } from './lib/logger.js';
 import type { RateLimitPolicy } from './middleware/ip-rate-limit.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { notFoundHandler } from './middleware/not-found.js';
+import { createAdminModule } from './modules/admin/index.js';
 import { createAuthModule, type AuthPolicy, type Authenticator } from './modules/auth/index.js';
 import { createBookingsModule } from './modules/bookings/index.js';
 import { createCatalogueModule } from './modules/catalogue/index.js';
@@ -45,6 +46,7 @@ export interface AppDependencies {
     | 'payhere'
     | 'pushProvider'
     | 'fcm'
+    | 'adminJwtSecret'
   >;
   logger: Logger;
   db: Database;
@@ -115,7 +117,16 @@ export function createApp({
     }),
   );
   app.use(helmet()); // also removes the X-Powered-By header
-  app.use(cors({ origin: config.corsOrigins.length > 0 ? config.corsOrigins : false }));
+  app.use(
+    cors({
+      origin: config.corsOrigins.length > 0 ? config.corsOrigins : false,
+      // The admin dashboard authenticates with a cookie (see modules/admin),
+      // which a browser only attaches to a cross-origin request when the
+      // server explicitly allows credentials — the mobile app's Bearer
+      // tokens need no such thing, so this is harmless for it.
+      credentials: true,
+    }),
+  );
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
 
   app.use('/api/health', createHealthRouter({ pingDatabase }));
@@ -189,9 +200,22 @@ export function createApp({
 
   // Review routes nested under a booking (submit, view) — a third router at
   // the same prefix, on paths neither of the above uses.
-  const reviews = createReviewsModule({ db, requireAuth: auth.requireAuth });
+  const reviews = createReviewsModule({ db, clock, requireAuth: auth.requireAuth });
   app.use('/api/bookings', reviews.bookingRouter);
   app.use('/api/reviews', reviews.providerRouter);
+
+  // The admin dashboard. Owns its own authentication (a cookie session, not
+  // the mobile app's Bearer tokens) and every route under it is
+  // authorization-gated server-side — see modules/admin's own doc comment.
+  const admin = createAdminModule({
+    db,
+    clock,
+    config,
+    providerReview: providers.review,
+    payments: payments.service,
+    reviews: reviews.service,
+  });
+  app.use('/api/admin', admin.router);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

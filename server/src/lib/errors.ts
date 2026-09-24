@@ -40,6 +40,9 @@ export const ErrorCode = {
   NotBookingParticipant: 'NOT_BOOKING_PARTICIPANT',
   BookingNotCompleted: 'BOOKING_NOT_COMPLETED',
   AlreadyReviewed: 'ALREADY_REVIEWED',
+  // Admin
+  InvalidAdminCredentials: 'INVALID_ADMIN_CREDENTIALS',
+  CsrfTokenInvalid: 'CSRF_TOKEN_INVALID',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

@@ -357,18 +357,22 @@ describe('a provider can never approve themselves', () => {
     expect(appOf(await api.get(`/api/provider/services/${created.id}`)).status).toBe('pending');
   });
 
-  it('exposes no reviewer endpoints under any prefix', async () => {
+  it('exposes no customer/provider-facing reviewer endpoints, and the real admin ones reject a non-admin caller', async () => {
     const ctx = buildTestApp({ db });
     const { api } = await newProvider(ctx);
 
-    for (const path of [
-      '/api/admin/providers',
-      '/api/admin/provider-services',
-      '/api/providers/review',
-      '/api/provider/review',
-    ]) {
+    // Not real paths anywhere in the app.
+    for (const path of ['/api/providers/review', '/api/provider/review']) {
       expect((await api.get(path)).status, path).toBe(404);
       expect((await api.post(path, { status: 'approved' })).status, path).toBe(404);
+    }
+
+    // Real admin paths, correctly unreachable with a mobile session
+    // (no admin cookie): the mobile app's own Bearer token carries no
+    // weight here — see `require-admin-auth.ts`.
+    for (const path of ['/api/admin/providers', '/api/admin/provider-services']) {
+      expect((await api.get(path)).status, path).toBe(401);
+      expect((await api.post(path, { status: 'approved' })).status, path).toBe(401);
     }
   });
 });

@@ -8,11 +8,13 @@ import { EnvValidationError, loadDatabaseEnv, loadEnv } from '../../src/config/e
 
 const JWT_SECRET = 'jwt-secret-for-tests-0123456789-abcdefghijklmnop';
 const OTP_SECRET = 'otp-secret-for-tests-9876543210-ponmlkjihgfedcba';
+const ADMIN_SECRET = 'admin-secret-for-tests-1122334455-qrstuvwxyzab';
 
 const validEnv = {
   DATABASE_URL: 'postgresql://user:secret-pw@localhost:5432/app',
   JWT_ACCESS_SECRET: JWT_SECRET,
   OTP_HMAC_SECRET: OTP_SECRET,
+  ADMIN_JWT_SECRET: ADMIN_SECRET,
 };
 
 function problemsFor(env: NodeJS.ProcessEnv): string {
@@ -44,6 +46,7 @@ describe('loadEnv', () => {
       payhere: undefined,
       pushProvider: 'mock',
       fcm: undefined,
+      adminJwtSecret: ADMIN_SECRET,
     });
   });
 
@@ -118,11 +121,14 @@ describe('loadEnv', () => {
 });
 
 describe('loadEnv: authentication settings', () => {
-  it.each(['JWT_ACCESS_SECRET', 'OTP_HMAC_SECRET'] as const)('requires %s', (name) => {
-    expect(problemsFor({ ...validEnv, [name]: undefined })).toContain(name);
-  });
+  it.each(['JWT_ACCESS_SECRET', 'OTP_HMAC_SECRET', 'ADMIN_JWT_SECRET'] as const)(
+    'requires %s',
+    (name) => {
+      expect(problemsFor({ ...validEnv, [name]: undefined })).toContain(name);
+    },
+  );
 
-  it.each(['JWT_ACCESS_SECRET', 'OTP_HMAC_SECRET'] as const)(
+  it.each(['JWT_ACCESS_SECRET', 'OTP_HMAC_SECRET', 'ADMIN_JWT_SECRET'] as const)(
     'rejects a %s shorter than 32 characters',
     (name) => {
       const message = problemsFor({ ...validEnv, [name]: 'short' });
@@ -135,6 +141,14 @@ describe('loadEnv: authentication settings', () => {
     const message = problemsFor({ ...validEnv, OTP_HMAC_SECRET: JWT_SECRET });
     expect(message).toContain('OTP_HMAC_SECRET must differ');
   });
+
+  it.each(['JWT_ACCESS_SECRET', 'OTP_HMAC_SECRET'] as const)(
+    'rejects reusing %s as ADMIN_JWT_SECRET',
+    (name) => {
+      const message = problemsFor({ ...validEnv, ADMIN_JWT_SECRET: validEnv[name] });
+      expect(message).toContain('ADMIN_JWT_SECRET must differ');
+    },
+  );
 
   it('rejects an unknown SMS provider', () => {
     expect(problemsFor({ ...validEnv, SMS_PROVIDER: 'carrier-pigeon' })).toContain('SMS_PROVIDER');
@@ -247,9 +261,11 @@ describe('loadEnv: authentication settings', () => {
         ...production,
         JWT_ACCESS_SECRET: 'replace-with-a-random-secret-from-openssl-rand-base64-48',
         OTP_HMAC_SECRET: 'replace-with-a-different-random-secret-from-openssl-rand',
+        ADMIN_JWT_SECRET: 'replace-with-yet-another-random-secret-from-openssl-rand-base64',
       });
       expect(message).toContain('JWT_ACCESS_SECRET');
       expect(message).toContain('OTP_HMAC_SECRET');
+      expect(message).toContain('ADMIN_JWT_SECRET');
       expect(message).toContain('placeholder');
     });
   });

@@ -30,6 +30,8 @@ export interface AppConfig {
   pushProvider: 'mock' | 'fcm';
   /** Firebase Admin SDK service-account credentials. Present only when `pushProvider` is `fcm`. */
   fcm: { projectId: string; clientEmail: string; privateKey: string } | undefined;
+  /** Signs the admin dashboard's session cookie. Independent from every other secret here — see `admin-token.service.ts`. At least 32 characters. */
+  adminJwtSecret: string;
 }
 
 const isPostgresUrl = (value: string): boolean => {
@@ -121,6 +123,7 @@ const envShape = {
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   JWT_ACCESS_SECRET: secretSchema,
   OTP_HMAC_SECRET: secretSchema,
+  ADMIN_JWT_SECRET: secretSchema,
   SMS_PROVIDER: z.enum(['mock']).default('mock'),
   ALLOWED_PHONE_COUNTRY_CODES: callingCodesSchema,
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),
@@ -155,6 +158,16 @@ const envSchema = z.object(envShape).check((ctx) => {
       input: env.OTP_HMAC_SECRET,
     });
   }
+  for (const name of ['JWT_ACCESS_SECRET', 'OTP_HMAC_SECRET'] as const) {
+    if (env.ADMIN_JWT_SECRET === env[name] && env.ADMIN_JWT_SECRET.length >= 32) {
+      ctx.issues.push({
+        code: 'custom',
+        message: `ADMIN_JWT_SECRET must differ from ${name}`,
+        path: ['ADMIN_JWT_SECRET'],
+        input: env.ADMIN_JWT_SECRET,
+      });
+    }
+  }
   if (env.NODE_ENV === 'production') {
     if (DEVELOPMENT_ONLY_SMS_PROVIDERS.includes(env.SMS_PROVIDER)) {
       ctx.issues.push({
@@ -180,7 +193,7 @@ const envSchema = z.object(envShape).check((ctx) => {
         input: env.PUSH_PROVIDER,
       });
     }
-    for (const name of ['JWT_ACCESS_SECRET', 'OTP_HMAC_SECRET'] as const) {
+    for (const name of ['JWT_ACCESS_SECRET', 'OTP_HMAC_SECRET', 'ADMIN_JWT_SECRET'] as const) {
       if (env[name].includes('replace-with')) {
         ctx.issues.push({
           code: 'custom',
@@ -284,6 +297,7 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): AppConfig {
             privateKey: env.FCM_PRIVATE_KEY.replace(/\\n/g, '\n'),
           }
         : undefined,
+    adminJwtSecret: env.ADMIN_JWT_SECRET,
   };
 }
 

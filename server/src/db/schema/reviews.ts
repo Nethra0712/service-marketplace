@@ -1,6 +1,16 @@
 import { sql } from 'drizzle-orm';
-import { check, index, pgTable, smallint, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  check,
+  index,
+  pgTable,
+  smallint,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
+import { adminUsers } from './admin-users.js';
 import { bookings } from './bookings.js';
 import { timestamps } from './columns.js';
 import { users } from './users.js';
@@ -33,6 +43,15 @@ export const reviews = pgTable(
       .references(() => users.id, { onDelete: 'restrict' }),
     rating: smallint().notNull(),
     comment: text(),
+    /**
+     * Admin moderation: hides a review from aggregates and display without
+     * ever touching `rating` or `comment` themselves — see
+     * `reviews.service.ts`'s `hideReview` doc comment on why the rating a
+     * participant actually gave is never silently altered.
+     */
+    hiddenAt: timestamp({ withTimezone: true }),
+    hiddenByAdminId: uuid().references(() => adminUsers.id, { onDelete: 'restrict' }),
+    hiddenReason: text(),
     ...timestamps,
   },
   (t) => [
@@ -46,6 +65,14 @@ export const reviews = pgTable(
       sql`${t.comment} is null or (btrim(${t.comment}) <> '' and char_length(${t.comment}) <= 1000)`,
     ),
     check('reviews_author_not_target', sql`${t.authorUserId} <> ${t.targetUserId}`),
+    check(
+      'reviews_hidden_consistent',
+      sql`(${t.hiddenAt} is null) = (${t.hiddenByAdminId} is null)`,
+    ),
+    check(
+      'reviews_hidden_reason_valid',
+      sql`${t.hiddenReason} is null or ${t.hiddenAt} is not null`,
+    ),
   ],
 );
 

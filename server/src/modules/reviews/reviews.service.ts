@@ -1,9 +1,15 @@
 import type { Database } from '../../db/client.js';
 import type { Review } from '../../db/schema/index.js';
+import type { Clock } from '../../lib/clock.js';
 import { isUniqueViolation } from '../../lib/db-errors.js';
 import { AppError, ErrorCode } from '../../lib/errors.js';
 import { blankToNull } from '../../lib/text.js';
-import { createReviewsRepository, type RatingSummary } from './reviews.repository.js';
+import {
+  createReviewsRepository,
+  type AdminReviewFilter,
+  type AdminReviewRow,
+  type RatingSummary,
+} from './reviews.repository.js';
 
 export interface ReviewView {
   id: string;
@@ -21,6 +27,7 @@ export interface SubmitReviewInput {
 
 export interface ReviewsServiceDeps {
   db: Database;
+  clock: Clock;
 }
 
 const MAX_COMMENT_LENGTH = 1000;
@@ -58,7 +65,7 @@ const toView = (row: Review, viewerUserId: string): ReviewView => ({
  * booking, rating range, no self-review) this service relies on rather than
  * re-checking by hand.
  */
-export function createReviewsService({ db }: ReviewsServiceDeps) {
+export function createReviewsService({ db, clock }: ReviewsServiceDeps) {
   const repository = createReviewsRepository(db);
 
   /** Resolves the caller's role on `bookingId` and who they may review. Throws if they are not a participant. */
@@ -121,6 +128,32 @@ export function createReviewsService({ db }: ReviewsServiceDeps) {
       const summary = await repository.getRatingSummaryForProviderProfile(providerProfileId);
       if (!summary) throw notFound('Provider not found.');
       return summary;
+    },
+
+    // ---- admin (not reachable except through /api/admin — see `admin/admin-reviews.ts`) ----
+
+    listForAdmin: (filter: AdminReviewFilter): Promise<AdminReviewRow[]> =>
+      repository.listForAdmin(filter),
+
+    /**
+     * Hides a review from the public aggregate (see `getRatingSummaryForProviderProfile`)
+     * without ever touching `rating` or `comment`: moderation removes a
+     * review from counting, it never rewrites what a participant actually
+     * said — see `reviews.ts`'s doc comment on `hiddenAt`. Idempotent:
+     * hiding an already-hidden review is a no-op, not an error.
+     */
+    async hideReview(id: string, adminUserId: string, reason: string | null): Promise<Review> {
+      const hidden = await repository.hide(
+        id,
+        adminUserId,
+        blankToNull(reason ?? undefined),
+        clock(),
+      );
+      if (hidden) return hidden;
+
+      const existing = await repository.findById(id);
+      if (!existing) throw notFound('Review not found.');
+      return existing; // Already hidden: return it as-is.
     },
   };
 }

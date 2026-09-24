@@ -397,20 +397,21 @@ describe('POST /api/provider/profile/submit', () => {
     });
   });
 
-  it('cannot be used to verify yourself: there is no endpoint that does', async () => {
+  it('cannot be used to verify yourself: there is no self-service endpoint that does, and the real admin one rejects a non-admin caller', async () => {
     const { app, sms } = buildTestApp({ db });
     const { api } = await signInUser(app, sms);
     await api.put('/api/provider/profile', validProfile);
 
-    // Signed in, so these reach routing: none of them exists.
-    for (const path of [
-      '/api/provider/profile/verify',
-      '/api/provider/profile/approve',
-      '/api/admin/providers/verify',
-    ]) {
+    // Signed in, so these reach routing: neither exists anywhere in the app.
+    for (const path of ['/api/provider/profile/verify', '/api/provider/profile/approve']) {
       const res = await api.post(path, { status: 'verified' });
       expect(res.status, `POST ${path}`).toBe(404);
     }
+    // The real admin path exists, but correctly rejects a mobile session
+    // with no admin cookie — see `require-admin-auth.ts`.
+    expect((await api.post('/api/admin/providers/verify', { status: 'verified' })).status).toBe(
+      401,
+    );
     expect(
       (await api.patch('/api/provider/profile', { verificationStatus: 'verified' })).status,
     ).toBe(404);

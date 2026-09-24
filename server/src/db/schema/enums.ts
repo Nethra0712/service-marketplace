@@ -161,3 +161,22 @@ export type PayoutStatus = (typeof payoutStatus.enumValues)[number];
 export type PushProviderName = (typeof pushProviderName.enumValues)[number];
 export type DevicePlatform = (typeof devicePlatform.enumValues)[number];
 export type NotificationKind = (typeof notificationKind.enumValues)[number];
+
+/**
+ * Every sensitive admin action worth an audit trail entry. A closed set: the
+ * app never trusts a caller-supplied action name (see `admin_audit_log`'s
+ * doc comment).
+ */
+export const adminAuditAction = pgEnum('admin_audit_action', [
+  'provider_application_reviewed',
+  'provider_profile_reviewed',
+  'user_suspended',
+  'user_reactivated',
+  'category_created',
+  'category_updated',
+  'payment_refunded',
+  'payout_marked_paid',
+  'review_hidden',
+]);
+
+export type AdminAuditAction = (typeof adminAuditAction.enumValues)[number];

@@ -23,11 +23,13 @@ export type TestConfig = Pick<
   | 'payhere'
   | 'pushProvider'
   | 'fcm'
+  | 'adminJwtSecret'
 >;
 
 // Fixed, obviously fake secrets. They exist only in the test suite.
 export const TEST_JWT_SECRET = 'test-only-jwt-secret-0123456789-abcdefghijklmnop';
 export const TEST_OTP_SECRET = 'test-only-otp-secret-9876543210-ponmlkjihgfedcba';
+export const TEST_ADMIN_JWT_SECRET = 'test-only-admin-secret-1122334455-qrstuvwxyzab';
 
 export const testConfig: TestConfig = {
   corsOrigins: [],
@@ -42,6 +44,7 @@ export const testConfig: TestConfig = {
   payhere: undefined,
   pushProvider: 'mock',
   fcm: undefined,
+  adminJwtSecret: TEST_ADMIN_JWT_SECRET,
 };
 
 /** A clock tests can move forward, so expiry is tested without sleeping. */

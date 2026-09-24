@@ -8,7 +8,12 @@ import { createReviewService, type ReviewService } from './review.service.js';
 
 export type { ApplicationView, ProviderProfileView } from './providers.service.js';
 export type { DispatchCandidate, OfferedService } from './providers.repository.js';
-export { createReviewService, type ReviewService } from './review.service.js';
+export {
+  createReviewService,
+  type ApplicationDecision,
+  type ProfileDecision,
+  type ReviewService,
+} from './review.service.js';
 
 export interface ProvidersModuleDeps {
   db: Database;

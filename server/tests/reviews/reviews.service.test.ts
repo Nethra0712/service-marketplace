@@ -4,6 +4,7 @@ import {
   createReviewsService,
   type ReviewsService,
 } from '../../src/modules/reviews/reviews.service.js';
+import { FakeClock } from '../helpers/app.js';
 import { createTestDatabase, resetDatabase } from '../helpers/database.js';
 import {
   createApprovedProvider,
@@ -21,7 +22,7 @@ let service: ReviewsService;
 
 beforeEach(async () => {
   await resetDatabase(db);
-  service = createReviewsService({ db });
+  service = createReviewsService({ db, clock: new FakeClock().now });
 });
 
 /** A booking in `status`, with an assigned provider and every timestamp `completed` needs. */

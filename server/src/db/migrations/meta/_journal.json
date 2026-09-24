@@ -113,6 +113,20 @@
       "when": 1790249373036,
       "tag": "0015_notifications_reviews_updated_at_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790261836704,
+      "tag": "0016_mixed_jetstream",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790261844849,
+      "tag": "0017_admin_updated_at_triggers",
+      "breakpoints": true
     }
   ]
 }
