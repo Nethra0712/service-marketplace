@@ -1,4 +1,5 @@
 import 'package:mobile/core/errors/app_exception.dart';
+import 'package:mobile/core/maps/map_point.dart';
 import 'package:mobile/features/booking/domain/booking.dart';
 import 'package:mobile/features/booking/domain/booking_repository.dart';
 import 'package:mobile/features/booking/domain/booking_status.dart';
@@ -32,6 +33,7 @@ Booking bookingOf({
   BookingParty? provider,
   Cancellation? cancellation,
   Offer? myOffer,
+  MapPoint? serviceLocation,
   List<Quote> quotes = const [],
   DateTime? acceptedAt,
   DateTime? enRouteAt,
@@ -56,6 +58,7 @@ Booking bookingOf({
   provider: provider,
   cancellation: cancellation,
   myOffer: myOffer,
+  serviceLocation: serviceLocation,
   quotes: quotes,
   timestamps: BookingTimestamps(
     createdAt: DateTime.utc(2026, 1, 1, 9),
@@ -157,6 +160,7 @@ class FakeBookingRepository implements BookingRepository {
       serviceAddress: input.serviceAddress,
       customerNotes: input.customerNotes,
       scheduledAt: input.scheduledAt,
+      serviceLocation: input.serviceLocation,
     );
     bookings.add(created);
     return created;

@@ -734,6 +734,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serviceRequestSent => 'Request sent.';
 
   @override
+  String get serviceRequestUseMyLocation => 'Use my current location';
+
+  @override
+  String get serviceRequestLocationSet => 'Precise location added.';
+
+  @override
+  String get serviceRequestClearLocation => 'Remove precise location';
+
+  @override
+  String get locationPermissionDenied => 'Location access was not granted.';
+
+  @override
+  String get locationRetry => 'Try again';
+
+  @override
+  String get locationPermissionDeniedForever =>
+      'Location access is turned off for this app. Turn it on in Settings to use this.';
+
+  @override
+  String get locationOpenSettings => 'Open settings';
+
+  @override
+  String get locationServiceDisabled =>
+      'Location (GPS) is turned off on this device.';
+
+  @override
+  String get locationEnableGps => 'Turn on location';
+
+  @override
+  String get trackingCustomerLocationTitle => 'Customer location';
+
+  @override
+  String get trackingProviderLocationTitle => 'Provider location';
+
+  @override
+  String get trackingSharingLocation =>
+      'Sharing your location with the customer.';
+
+  @override
+  String get trackingNotSharing => 'Not sharing your location right now.';
+
+  @override
+  String get trackingWaitingForLocation => 'Waiting for a location update.';
+
+  @override
+  String get trackingNavigate => 'Navigate';
+
+  @override
+  String trackingDistanceAndEta(String distanceKm, String minutes) {
+    return '$distanceKm km away · about $minutes min';
+  }
+
+  @override
+  String get trackingLive => 'Live';
+
+  @override
+  String get trackingConnecting => 'Connecting…';
+
+  @override
+  String get trackingDisconnected => 'Reconnecting…';
+
+  @override
   String get errorQuoteNotApplicable =>
       'That\'s not available for this kind of service.';
 

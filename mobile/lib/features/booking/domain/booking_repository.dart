@@ -1,3 +1,4 @@
+import 'package:mobile/core/maps/map_point.dart';
 import 'package:mobile/features/booking/domain/booking.dart';
 import 'package:mobile/features/booking/domain/booking_status.dart';
 
@@ -10,6 +11,7 @@ class CreateBookingInput {
     required this.serviceAddress,
     this.scheduledAt,
     this.customerNotes,
+    this.serviceLocation,
   });
 
   final String categorySlug;
@@ -20,13 +22,18 @@ class CreateBookingInput {
   final DateTime? scheduledAt;
   final String serviceAddress;
   final String? customerNotes;
+
+  /// Optional precise job location, used only as a matching input and for the
+  /// map. Never required: booking works the same without it.
+  final MapPoint? serviceLocation;
 }
 
 /// The booking lifecycle: creating a request, tracking it, and the actions
 /// each side can take. Automatic matching runs server-side: a provider is
 /// assigned by accepting a dispatch offer (directly, or by the customer
 /// accepting their quote) — the client never chooses which provider gets
-/// offered a booking. There is deliberately no live location yet.
+/// offered a booking. Live provider location, once a booking is under way, is
+/// a separate realtime channel — see `features/tracking`.
 ///
 /// Every method takes the language to answer in (`en`, `si` or `ta`): a
 /// booking's category name is localized.

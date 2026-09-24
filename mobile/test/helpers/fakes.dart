@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:mobile/core/config/app_config.dart';
 import 'package:mobile/core/config/app_environment.dart';
 import 'package:mobile/core/errors/app_exception.dart';
+import 'package:mobile/core/maps/app_map.dart';
 import 'package:mobile/core/storage/secure_storage.dart';
 import 'package:mobile/core/utils/clock.dart';
 import 'package:mobile/features/auth/application/auth_providers.dart';
@@ -10,6 +11,8 @@ import 'package:mobile/features/auth/domain/auth_repository.dart';
 import 'package:mobile/features/auth/domain/auth_session.dart';
 import 'package:mobile/features/auth/domain/current_user.dart';
 import 'package:mobile/features/auth/domain/otp_challenge.dart';
+
+import 'fake_tile_provider.dart';
 
 /// Secure storage that lives in memory, so tests never touch a platform channel.
 class InMemorySecureStorage implements SecureStorage {
@@ -184,6 +187,8 @@ class AuthHarness {
     authRepositoryProvider.overrideWithValue(auth),
     currentUserRepositoryProvider.overrideWithValue(users),
     clockProvider.overrideWithValue(clock.call),
+    // Never let a widget test render a real map tile over the network.
+    appMapTileProviderOverrideProvider.overrideWithValue(FakeTileProvider()),
     ...extraOverrides,
   ];
 

@@ -1,3 +1,4 @@
+import 'package:mobile/core/maps/map_point.dart';
 import 'package:mobile/core/network/json_helpers.dart';
 import 'package:mobile/features/booking/domain/booking_status.dart';
 import 'package:mobile/features/booking/domain/offer.dart';
@@ -91,6 +92,7 @@ class Booking {
     this.provider,
     this.cancellation,
     this.myOffer,
+    this.serviceLocation,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -99,6 +101,7 @@ class Booking {
     final provider = json['provider'];
     final cancellation = json['cancellation'];
     final myOffer = json['myOffer'];
+    final serviceLocation = json['serviceLocation'];
     return Booking(
       id: readString(json, 'id'),
       status: readBookingStatus(json, 'status'),
@@ -122,12 +125,20 @@ class Booking {
           ? null
           : Cancellation.fromJson(asJsonObject(cancellation)),
       myOffer: myOffer == null ? null : Offer.fromJson(asJsonObject(myOffer)),
+      serviceLocation: serviceLocation == null
+          ? null
+          : _pointOf(asJsonObject(serviceLocation)),
       quotes: readObjects(
         json,
         'quotes',
       ).map(Quote.fromJson).toList(growable: false),
     );
   }
+
+  static MapPoint _pointOf(Map<String, dynamic> json) => MapPoint(
+    latitude: double.parse(readString(json, 'latitude')),
+    longitude: double.parse(readString(json, 'longitude')),
+  );
 
   final String id;
   final BookingStatus status;
@@ -141,6 +152,10 @@ class Booking {
   final DateTime? scheduledAt;
   final String serviceAddress;
   final String? customerNotes;
+
+  /// Where the job is, if the customer shared it. Optional: used only as a
+  /// map/matching input, never required to book.
+  final MapPoint? serviceLocation;
 
   /// A decimal string, e.g. `"3500.00"`, LKR. Set once agreed (today, only
   /// from an accepted quote).

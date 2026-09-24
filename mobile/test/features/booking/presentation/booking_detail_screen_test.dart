@@ -3,11 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/app/l10n/app_localizations.dart';
 import 'package:mobile/app/router/app_routes.dart';
 import 'package:mobile/core/errors/app_exception.dart';
+import 'package:mobile/core/location/location_permission_status.dart';
+import 'package:mobile/core/location/location_reading.dart';
+import 'package:mobile/core/maps/map_point.dart';
 import 'package:mobile/features/booking/domain/booking.dart';
 import 'package:mobile/features/booking/domain/booking_status.dart';
 import 'package:mobile/features/booking/domain/offer.dart';
 import 'package:mobile/features/provider/domain/provider_profile.dart';
 import 'package:mobile/features/services/domain/pricing_model.dart';
+import 'package:mobile/features/tracking/domain/tracking_socket.dart';
 
 import '../../../helpers/booking_fakes.dart';
 import '../../../helpers/feature_harness.dart';
@@ -299,6 +303,7 @@ void main() {
     });
 
     testWidgets('cannot release once work has started', (tester) async {
+      tallScreen(tester);
       await asProvider(
         tester,
         bookingOf(
@@ -484,6 +489,246 @@ void main() {
       await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
 
       expect(key('offer_respond_by'), findsOneWidget);
+    });
+  });
+
+  group('live tracking, customer view', () {
+    const serviceLocation = MapPoint(latitude: 6.9271, longitude: 79.8612);
+
+    testWidgets('is not shown for a non-trackable booking', (tester) async {
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.searching),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('connection_badge'), findsNothing);
+    });
+
+    testWidgets('shows a waiting message before any location is known', (
+      tester,
+    ) async {
+      f.booking.bookings.add(
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          provider: const BookingParty(id: 'p1'),
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('waiting_for_location'), findsOneWidget);
+    });
+
+    testWidgets("shows the provider's last known location on join", (
+      tester,
+    ) async {
+      f.booking.bookings.add(
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          provider: const BookingParty(id: 'p1'),
+        ),
+      );
+      f.tracking.joinResults['b1'] = BookingRoomInfo(
+        role: BookingRoomRole.customer,
+        lastLocation: TrackedLocation(
+          latitude: 6.9019,
+          longitude: 79.8607,
+          at: DateTime.utc(2026, 1, 1, 9),
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('map_marker_provider'), findsOneWidget);
+    });
+
+    testWidgets('shows distance and ETA once both locations are known', (
+      tester,
+    ) async {
+      f.booking.bookings.add(
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          provider: const BookingParty(id: 'p1'),
+          serviceLocation: serviceLocation,
+        ),
+      );
+      f.tracking.joinResults['b1'] = BookingRoomInfo(
+        role: BookingRoomRole.customer,
+        lastLocation: TrackedLocation(
+          latitude: 6.9019,
+          longitude: 79.8607,
+          at: DateTime.utc(2026, 1, 1, 9),
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('distance_eta'), findsOneWidget);
+    });
+
+    testWidgets('updates live as a new reading arrives over the socket', (
+      tester,
+    ) async {
+      f.booking.bookings.add(
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          provider: const BookingParty(id: 'p1'),
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+      expect(key('map_marker_provider'), findsNothing);
+
+      f.tracking.emitLocation(
+        'b1',
+        TrackedLocation(
+          latitude: 6.9019,
+          longitude: 79.8607,
+          at: DateTime.utc(2026, 1, 1, 9),
+        ),
+      );
+      await settle(tester);
+
+      expect(key('map_marker_provider'), findsOneWidget);
+    });
+
+    testWidgets('shows the connection state', (tester) async {
+      f.booking.bookings.add(
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          provider: const BookingParty(id: 'p1'),
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+      f.tracking.emitConnectionState(TrackingConnectionState.connected);
+      await settle(tester);
+
+      expect(find.text(en.trackingLive), findsOneWidget);
+    });
+  });
+
+  group('live tracking, provider view', () {
+    Future<void> asOnlineProvider(
+      WidgetTester tester,
+      Booking booking, {
+      LocationPermissionStatus locationStatus =
+          LocationPermissionStatus.granted,
+    }) async {
+      f.provider.profile = ProviderProfile(
+        id: booking.provider!.id,
+        verificationStatus: VerificationStatus.verified,
+        availability: ProviderAvailability.online,
+      );
+      f.locationService.status = locationStatus;
+      f.booking.bookings.add(booking);
+      await f.open(tester, AppRoutes.bookingDetailLocation(booking.id));
+    }
+
+    testWidgets('shares location while online and the booking is trackable', (
+      tester,
+    ) async {
+      await asOnlineProvider(
+        tester,
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          customer: otherCustomer,
+          provider: const BookingParty(id: 'p1'),
+        ),
+      );
+
+      expect(key('sharing_location_indicator'), findsOneWidget);
+      expect(key('not_sharing_location_indicator'), findsNothing);
+    });
+
+    testWidgets('does not share location while offline', (tester) async {
+      f.provider.profile = ProviderProfile(
+        id: 'p1',
+        verificationStatus: VerificationStatus.verified,
+        // availability defaults to offline.
+      );
+      f.booking.bookings.add(
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          customer: otherCustomer,
+          provider: const BookingParty(id: 'p1'),
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('not_sharing_location_indicator'), findsOneWidget);
+      expect(key('sharing_location_indicator'), findsNothing);
+    });
+
+    testWidgets('shows a permission-denied view when location is denied', (
+      tester,
+    ) async {
+      await asOnlineProvider(
+        tester,
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          customer: otherCustomer,
+          provider: const BookingParty(id: 'p1'),
+        ),
+        locationStatus: LocationPermissionStatus.denied,
+      );
+
+      expect(key('location_permission_message'), findsOneWidget);
+      expect(key('location_retry_button'), findsOneWidget);
+    });
+
+    testWidgets('sends readings to the socket while sharing', (tester) async {
+      await asOnlineProvider(
+        tester,
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          customer: otherCustomer,
+          provider: const BookingParty(id: 'p1'),
+        ),
+      );
+
+      f.locationService.emit(
+        const LocationReading(latitude: 6.9019, longitude: 79.8607),
+      );
+      await settle(tester);
+
+      expect(f.tracking.sentUpdates, hasLength(1));
+      expect(f.tracking.sentUpdates.single.bookingId, 'b1');
+    });
+
+    testWidgets('shows a navigate button that opens the maps handoff', (
+      tester,
+    ) async {
+      tallScreen(tester);
+      await asOnlineProvider(
+        tester,
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          customer: otherCustomer,
+          provider: const BookingParty(id: 'p1'),
+          serviceLocation: const MapPoint(latitude: 6.9271, longitude: 79.8612),
+        ),
+      );
+
+      await tapKey(tester, 'navigate_button');
+
+      expect(f.urlLauncher.launchedUrls, hasLength(1));
+      expect(
+        f.urlLauncher.launchedUrls.single.queryParameters['destination'],
+        '6.9271,79.8612',
+      );
     });
   });
 

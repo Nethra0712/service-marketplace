@@ -14,6 +14,7 @@ import 'package:mobile/features/booking/domain/quote.dart';
 import 'package:mobile/features/booking/presentation/booking_status_labels.dart';
 import 'package:mobile/features/provider/application/provider_providers.dart';
 import 'package:mobile/features/services/presentation/pricing_model_labels.dart';
+import 'package:mobile/features/tracking/presentation/booking_tracking_section.dart';
 
 /// One booking: what it is, its status, and every action either side can
 /// take from here. Adapts to whoever is looking: the customer, the assigned
@@ -132,6 +133,10 @@ class _BookingBody extends ConsumerWidget {
         Text(l10n.bookingTimelineLabel, style: textTheme.titleMedium),
         const SizedBox(height: AppSpacing.xs),
         _Timeline(booking: booking),
+        if (isCustomer || isAssignedProvider) ...[
+          const SizedBox(height: AppSpacing.lg),
+          BookingTrackingSection(booking: booking, isCustomer: isCustomer),
+        ],
         if (isCustomer) ...[
           const SizedBox(height: AppSpacing.lg),
           _CustomerActions(booking: booking),

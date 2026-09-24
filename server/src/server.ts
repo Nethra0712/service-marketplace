@@ -1,9 +1,13 @@
 import './config/dotenv.js';
 
+import http from 'node:http';
+
 import { createApp } from './app.js';
 import { EnvValidationError, loadEnv, type AppConfig } from './config/env.js';
 import { createDatabase } from './db/client.js';
+import { systemClock } from './lib/clock.js';
 import { createLogger } from './lib/logger.js';
+import { createRealtimeModule } from './modules/realtime/index.js';
 import { createSmsProvider } from './modules/sms/index.js';
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -21,15 +25,29 @@ try {
 
 const logger = createLogger(config);
 const database = createDatabase(config.databaseUrl, { logger });
-const app = createApp({
+const { app, realtime: realtimeDeps } = createApp({
   config,
   logger,
   db: database.db,
   pingDatabase: database.ping,
   sms: createSmsProvider(config, logger),
+  clock: systemClock,
 });
 
-const server = app.listen(config.port, () => {
+// Socket.IO attaches to the raw HTTP server, not to Express itself, so the
+// server is created explicitly here instead of via `app.listen(...)`.
+const server = http.createServer(app);
+createRealtimeModule({
+  httpServer: server,
+  authenticate: realtimeDeps.authenticate,
+  findBookingAccess: realtimeDeps.findBookingAccess,
+  findProviderProfileId: realtimeDeps.findProviderProfileId,
+  clock: systemClock,
+  logger,
+  corsOrigins: config.corsOrigins,
+});
+
+server.listen(config.port, () => {
   logger.info({ port: config.port, env: config.nodeEnv }, 'API server listening');
 
   // Report database reachability at startup without blocking or crashing:

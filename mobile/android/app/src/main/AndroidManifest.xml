@@ -2,6 +2,10 @@
     <!-- The app talks to the platform API, so every build (not just debug)
          needs network access. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Requested at runtime, never assumed: see LocationService. Coarse is
+         requested alongside fine because Android may grant only coarse. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
         android:label="mobile"

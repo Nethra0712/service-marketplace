@@ -8,6 +8,9 @@ import 'package:mobile/app/router/app_routes.dart';
 import 'package:mobile/app/theme/app_spacing.dart';
 import 'package:mobile/core/errors/app_exception.dart';
 import 'package:mobile/core/errors/error_message.dart';
+import 'package:mobile/core/location/location_permission_status.dart';
+import 'package:mobile/core/location/location_providers.dart';
+import 'package:mobile/core/maps/map_point.dart';
 import 'package:mobile/core/utils/clock.dart';
 import 'package:mobile/core/widgets/async_states.dart';
 import 'package:mobile/features/booking/application/booking_providers.dart';
@@ -79,6 +82,8 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
   bool _scheduledTimeTouched = false;
   bool _submitting = false;
   Object? _error;
+  MapPoint? _serviceLocation;
+  bool _locating = false;
 
   @override
   void dispose() {
@@ -135,6 +140,59 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
     });
   }
 
+  void _showPermissionSnackbar(LocationPermissionStatus status) {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final locationService = ref.read(locationServiceProvider);
+    final (message, actionLabel, VoidCallback action) = switch (status) {
+      LocationPermissionStatus.deniedForever => (
+        l10n.locationPermissionDeniedForever,
+        l10n.locationOpenSettings,
+        () => unawaited(locationService.openAppSettings()),
+      ),
+      LocationPermissionStatus.serviceDisabled => (
+        l10n.locationServiceDisabled,
+        l10n.locationEnableGps,
+        () => unawaited(locationService.openLocationSettings()),
+      ),
+      LocationPermissionStatus.denied || LocationPermissionStatus.granted => (
+        l10n.locationPermissionDenied,
+        l10n.locationRetry,
+        () => unawaited(_useCurrentLocation()),
+      ),
+    };
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        action: SnackBarAction(label: actionLabel, onPressed: action),
+      ),
+    );
+  }
+
+  Future<void> _useCurrentLocation() async {
+    final locationService = ref.read(locationServiceProvider);
+    setState(() => _locating = true);
+    try {
+      final status = await locationService.requestPermission();
+      if (!status.isGranted) {
+        if (mounted) _showPermissionSnackbar(status);
+        return;
+      }
+      final reading = await locationService.getCurrentLocation();
+      if (reading == null || !mounted) return;
+      // The confirmation row that replaces this button once set is feedback
+      // enough; no snackbar needed on top of it.
+      setState(
+        () => _serviceLocation = MapPoint(
+          latitude: reading.latitude,
+          longitude: reading.longitude,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context);
     setState(() => _scheduledTimeTouched = true);
@@ -161,6 +219,7 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
                   : null,
               serviceAddress: _address.text,
               customerNotes: _notes.text,
+              serviceLocation: _serviceLocation,
             ),
             language: language,
           );
@@ -286,6 +345,35 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
             ),
             validator: (v) => _validateNotes(l10n, v),
           ),
+          const SizedBox(height: AppSpacing.md),
+          if (_serviceLocation == null)
+            OutlinedButton.icon(
+              key: const Key('use_my_location_button'),
+              onPressed: _locating
+                  ? null
+                  : () => unawaited(_useCurrentLocation()),
+              icon: _locating
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.my_location),
+              label: Text(l10n.serviceRequestUseMyLocation),
+            )
+          else
+            Row(
+              key: const Key('service_location_set_row'),
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(child: Text(l10n.serviceRequestLocationSet)),
+                TextButton(
+                  key: const Key('clear_location_button'),
+                  onPressed: () => setState(() => _serviceLocation = null),
+                  child: Text(l10n.serviceRequestClearLocation),
+                ),
+              ],
+            ),
           if (error != null) ...[
             const SizedBox(height: AppSpacing.md),
             Text(

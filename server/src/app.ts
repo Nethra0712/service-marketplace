@@ -12,12 +12,13 @@ import type { Logger } from './lib/logger.js';
 import type { RateLimitPolicy } from './middleware/ip-rate-limit.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { notFoundHandler } from './middleware/not-found.js';
-import { createAuthModule, type AuthPolicy } from './modules/auth/index.js';
+import { createAuthModule, type AuthPolicy, type Authenticator } from './modules/auth/index.js';
 import { createBookingsModule } from './modules/bookings/index.js';
 import { createCatalogueModule } from './modules/catalogue/index.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
 import { createMatchingModule } from './modules/matching/index.js';
 import { createProvidersModule } from './modules/providers/index.js';
+import type { BookingAccessLookup } from './modules/realtime/index.js';
 import type { SmsProvider } from './modules/sms/index.js';
 
 /** Largest JSON request body accepted. Raise per-route later if a feature needs it. */
@@ -48,6 +49,24 @@ export interface AppDependencies {
 }
 
 /**
+ * The cross-module functions the realtime module needs, handed back
+ * alongside the Express app rather than built into it: Socket.IO attaches to
+ * the `http.Server` that wraps this app, which does not exist until the
+ * caller creates one (see `server.ts`), so the realtime module itself is
+ * created a level up, not in here.
+ */
+export interface RealtimeDependencies {
+  authenticate: Authenticator;
+  findBookingAccess: BookingAccessLookup;
+  findProviderProfileId: (userId: string) => Promise<string | undefined>;
+}
+
+export interface CreateAppResult {
+  app: Express;
+  realtime: RealtimeDependencies;
+}
+
+/**
  * Builds the Express app. It takes its dependencies as arguments, with no
  * globals or side effects, so tests can create as many isolated instances as
  * they need.
@@ -61,7 +80,7 @@ export function createApp({
   clock = systemClock,
   authPolicy,
   catalogueRateLimit,
-}: AppDependencies): Express {
+}: AppDependencies): CreateAppResult {
   const app = express();
 
   // Behind a load balancer the client address comes from X-Forwarded-For. Trust
@@ -125,5 +144,12 @@ export function createApp({
   app.use(notFoundHandler);
   app.use(errorHandler);
 
-  return app;
+  return {
+    app,
+    realtime: {
+      authenticate: auth.authenticate,
+      findBookingAccess: bookings.service.findAccess,
+      findProviderProfileId: providers.service.findProviderProfileId,
+    },
+  };
 }

@@ -27,6 +27,7 @@ class BookingApiRepository implements BookingRepository {
     required String language,
   }) async {
     final notes = input.customerNotes?.trim();
+    final point = input.serviceLocation;
     final data = await _api.post(
       '/api/bookings',
       queryParameters: {'lang': language},
@@ -37,6 +38,8 @@ class BookingApiRepository implements BookingRepository {
         'scheduledAt': input.scheduledAt?.toUtc().toIso8601String(),
         'serviceAddress': input.serviceAddress.trim(),
         'customerNotes': notes == null || notes.isEmpty ? null : notes,
+        if (point != null) 'latitude': point.latitude,
+        if (point != null) 'longitude': point.longitude,
       },
     );
     return _booking(data);

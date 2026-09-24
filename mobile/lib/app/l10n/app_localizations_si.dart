@@ -735,6 +735,69 @@ class AppLocalizationsSi extends AppLocalizations {
   String get serviceRequestSent => 'ඉල්ලීම යවන ලදී.';
 
   @override
+  String get serviceRequestUseMyLocation => 'මගේ වත්මන් ස්ථානය භාවිතා කරන්න';
+
+  @override
+  String get serviceRequestLocationSet => 'නිශ්චිත ස්ථානය එකතු කරන ලදී.';
+
+  @override
+  String get serviceRequestClearLocation => 'නිශ්චිත ස්ථානය ඉවත් කරන්න';
+
+  @override
+  String get locationPermissionDenied => 'ස්ථාන ප්‍රවේශයට අවසර දී නොමැත.';
+
+  @override
+  String get locationRetry => 'නැවත උත්සාහ කරන්න';
+
+  @override
+  String get locationPermissionDeniedForever =>
+      'මෙම යෙදුම සඳහා ස්ථාන ප්‍රවේශය ක්‍රියාවිරහිත කර ඇත. එය භාවිතා කිරීමට සැකසුම් තුළින් සක්‍රිය කරන්න.';
+
+  @override
+  String get locationOpenSettings => 'සැකසුම් විවෘත කරන්න';
+
+  @override
+  String get locationServiceDisabled =>
+      'මෙම උපාංගයේ ස්ථානය (GPS) ක්‍රියාවිරහිතයි.';
+
+  @override
+  String get locationEnableGps => 'ස්ථානය සක්‍රිය කරන්න';
+
+  @override
+  String get trackingCustomerLocationTitle => 'පාරිභෝගික ස්ථානය';
+
+  @override
+  String get trackingProviderLocationTitle => 'සේවා සපයන්නාගේ ස්ථානය';
+
+  @override
+  String get trackingSharingLocation =>
+      'ඔබේ ස්ථානය පාරිභෝගිකයා සමඟ බෙදාගනිමින්.';
+
+  @override
+  String get trackingNotSharing => 'දැනට ඔබේ ස්ථානය බෙදා නොගනී.';
+
+  @override
+  String get trackingWaitingForLocation =>
+      'ස්ථාන යාවත්කාලීනයක් සඳහා රැඳී සිටී.';
+
+  @override
+  String get trackingNavigate => 'මාර්ග උපදෙස්';
+
+  @override
+  String trackingDistanceAndEta(String distanceKm, String minutes) {
+    return 'කි.මී. $distanceKm ක් දුරින් · මිනිත්තු $minutes ක් පමණ';
+  }
+
+  @override
+  String get trackingLive => 'සජීවී';
+
+  @override
+  String get trackingConnecting => 'සම්බන්ධ වෙමින්…';
+
+  @override
+  String get trackingDisconnected => 'නැවත සම්බන්ධ වෙමින්…';
+
+  @override
   String get errorQuoteNotApplicable =>
       'මෙම වර්ගයේ සේවාව සඳහා එය ලබා ගත නොහැක.';
 

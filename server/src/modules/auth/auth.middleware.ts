@@ -41,19 +41,21 @@ export interface RequireAuthDeps {
   sessions: SessionService;
 }
 
+/** Turns a bare access token string into who it belongs to. Used by anything that is not an HTTP request. */
+export type Authenticator = (token: string) => Promise<AuthContext>;
+
 /**
- * Protects a route. It accepts only a valid access token whose session is
- * still active in the database and whose user is allowed to sign in, and on
- * success sets `req.auth`.
+ * The actual rule behind `requireAuth`, without the Express plumbing: only a
+ * valid access token whose session is still active in the database and whose
+ * user is allowed to sign in resolves. Shared by HTTP (`createRequireAuth`)
+ * and anything else that authenticates a caller from a bare token (the
+ * realtime module's socket handshake), so the rule is never re-implemented.
  *
  * Why the database check: a signed token cannot be recalled, so without it a
  * logged-out or revoked session would keep working until the token expired.
  */
-export function createRequireAuth({ accessTokens, sessions }: RequireAuthDeps): RequestHandler {
-  return async (req, _res, next) => {
-    const token = BEARER_PATTERN.exec(req.headers.authorization ?? '')?.[1];
-    if (!token) throw unauthenticated();
-
+export function createAuthenticate({ accessTokens, sessions }: RequireAuthDeps): Authenticator {
+  return async (token) => {
     let claims;
     try {
       claims = await accessTokens.verify(token);
@@ -70,7 +72,21 @@ export function createRequireAuth({ accessTokens, sessions }: RequireAuthDeps): 
       throw unauthenticated();
     }
 
-    req.auth = { userId: claims.userId, sessionId: claims.sessionId };
+    return { userId: claims.userId, sessionId: claims.sessionId };
+  };
+}
+
+/**
+ * Protects a route. It accepts only a valid access token whose session is
+ * still active in the database and whose user is allowed to sign in, and on
+ * success sets `req.auth`.
+ */
+export function createRequireAuth(deps: RequireAuthDeps): RequestHandler {
+  const authenticate = createAuthenticate(deps);
+  return async (req, _res, next) => {
+    const token = BEARER_PATTERN.exec(req.headers.authorization ?? '')?.[1];
+    if (!token) throw unauthenticated();
+    req.auth = await authenticate(token);
     next();
   };
 }

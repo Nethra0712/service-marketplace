@@ -750,6 +750,71 @@ class AppLocalizationsTa extends AppLocalizations {
   String get serviceRequestSent => 'வேண்டுகோள் அனுப்பப்பட்டது.';
 
   @override
+  String get serviceRequestUseMyLocation =>
+      'எனது தற்போதைய இருப்பிடத்தைப் பயன்படுத்து';
+
+  @override
+  String get serviceRequestLocationSet =>
+      'துல்லியமான இருப்பிடம் சேர்க்கப்பட்டது.';
+
+  @override
+  String get serviceRequestClearLocation => 'துல்லியமான இருப்பிடத்தை அகற்று';
+
+  @override
+  String get locationPermissionDenied => 'இருப்பிட அணுகல் வழங்கப்படவில்லை.';
+
+  @override
+  String get locationRetry => 'மீண்டும் முயற்சிக்கவும்';
+
+  @override
+  String get locationPermissionDeniedForever =>
+      'இந்த ஆப்பிற்கான இருப்பிட அணுகல் முடக்கப்பட்டுள்ளது. இதைப் பயன்படுத்த அமைப்புகளில் இயக்கவும்.';
+
+  @override
+  String get locationOpenSettings => 'அமைப்புகளைத் திற';
+
+  @override
+  String get locationServiceDisabled =>
+      'இந்த சாதனத்தில் இருப்பிடம் (GPS) முடக்கப்பட்டுள்ளது.';
+
+  @override
+  String get locationEnableGps => 'இருப்பிடத்தை இயக்கு';
+
+  @override
+  String get trackingCustomerLocationTitle => 'வாடிக்கையாளர் இருப்பிடம்';
+
+  @override
+  String get trackingProviderLocationTitle => 'சேவை வழங்குநர் இருப்பிடம்';
+
+  @override
+  String get trackingSharingLocation =>
+      'உங்கள் இருப்பிடத்தை வாடிக்கையாளருடன் பகிர்கிறது.';
+
+  @override
+  String get trackingNotSharing => 'தற்போது உங்கள் இருப்பிடத்தைப் பகிரவில்லை.';
+
+  @override
+  String get trackingWaitingForLocation =>
+      'இருப்பிட புதுப்பிப்புக்காக காத்திருக்கிறது.';
+
+  @override
+  String get trackingNavigate => 'வழிசெலுத்து';
+
+  @override
+  String trackingDistanceAndEta(String distanceKm, String minutes) {
+    return '$distanceKm கி.மீ தொலைவில் · சுமார் $minutes நிமிடங்கள்';
+  }
+
+  @override
+  String get trackingLive => 'நேரலை';
+
+  @override
+  String get trackingConnecting => 'இணைக்கிறது…';
+
+  @override
+  String get trackingDisconnected => 'மீண்டும் இணைக்கிறது…';
+
+  @override
   String get errorQuoteNotApplicable => 'இந்த வகை சேவைக்கு அது கிடைக்காது.';
 
   @override

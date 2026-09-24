@@ -1366,6 +1366,120 @@ abstract class AppLocalizations {
   /// **'Request sent.'**
   String get serviceRequestSent;
 
+  /// No description provided for @serviceRequestUseMyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my current location'**
+  String get serviceRequestUseMyLocation;
+
+  /// No description provided for @serviceRequestLocationSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Precise location added.'**
+  String get serviceRequestLocationSet;
+
+  /// No description provided for @serviceRequestClearLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove precise location'**
+  String get serviceRequestClearLocation;
+
+  /// No description provided for @locationPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location access was not granted.'**
+  String get locationPermissionDenied;
+
+  /// No description provided for @locationRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get locationRetry;
+
+  /// No description provided for @locationPermissionDeniedForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Location access is turned off for this app. Turn it on in Settings to use this.'**
+  String get locationPermissionDeniedForever;
+
+  /// No description provided for @locationOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get locationOpenSettings;
+
+  /// No description provided for @locationServiceDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Location (GPS) is turned off on this device.'**
+  String get locationServiceDisabled;
+
+  /// No description provided for @locationEnableGps.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on location'**
+  String get locationEnableGps;
+
+  /// No description provided for @trackingCustomerLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer location'**
+  String get trackingCustomerLocationTitle;
+
+  /// No description provided for @trackingProviderLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider location'**
+  String get trackingProviderLocationTitle;
+
+  /// No description provided for @trackingSharingLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing your location with the customer.'**
+  String get trackingSharingLocation;
+
+  /// No description provided for @trackingNotSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sharing your location right now.'**
+  String get trackingNotSharing;
+
+  /// No description provided for @trackingWaitingForLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a location update.'**
+  String get trackingWaitingForLocation;
+
+  /// No description provided for @trackingNavigate.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate'**
+  String get trackingNavigate;
+
+  /// No description provided for @trackingDistanceAndEta.
+  ///
+  /// In en, this message translates to:
+  /// **'{distanceKm} km away · about {minutes} min'**
+  String trackingDistanceAndEta(String distanceKm, String minutes);
+
+  /// No description provided for @trackingLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get trackingLive;
+
+  /// No description provided for @trackingConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get trackingConnecting;
+
+  /// No description provided for @trackingDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting…'**
+  String get trackingDisconnected;
+
   /// No description provided for @errorQuoteNotApplicable.
   ///
   /// In en, this message translates to:

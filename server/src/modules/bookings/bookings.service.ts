@@ -53,6 +53,8 @@ export interface BookingSummaryView {
   scheduledAt: string | null;
   serviceAddress: string;
   customerNotes: string | null;
+  /** Optional job coordinates, for the map and matching's distance ranking. Not every booking has one. */
+  serviceLocation: { latitude: string; longitude: string } | null;
   agreedAmount: string | null;
   customer: { id: string; fullName: string | null };
   provider: { id: string; fullName: string | null } | null;
@@ -143,6 +145,10 @@ const toSummaryView = (row: BookingRow): BookingSummaryView => ({
   scheduledAt: iso(row.scheduledAt),
   serviceAddress: row.serviceAddress,
   customerNotes: row.customerNotes,
+  serviceLocation:
+    row.customerLatitude === null || row.customerLongitude === null
+      ? null
+      : { latitude: row.customerLatitude, longitude: row.customerLongitude },
   agreedAmount: row.agreedAmount,
   customer: { id: row.customerId, fullName: row.customerName },
   provider:
@@ -753,6 +759,15 @@ export function createBookingsService({
       }
       return loadForViewer(bookingId, userId, language);
     },
+
+    /**
+     * Who a booking belongs to and its current stage, with no view-building or
+     * authorization of its own. For a caller that is not an HTTP request and
+     * does its own authorization against the result (the realtime module,
+     * deciding who may join a booking's location room).
+     */
+    findAccess: (bookingId: string): Promise<BookingCore | undefined> =>
+      repository.findCore(bookingId),
   };
 }
 

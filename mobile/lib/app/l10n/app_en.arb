@@ -270,6 +270,33 @@
   "serviceRequestNotesTooLong": "Keep this to 1000 characters or fewer.",
   "serviceRequestSubmit": "Request service",
   "serviceRequestSent": "Request sent.",
+  "serviceRequestUseMyLocation": "Use my current location",
+  "serviceRequestLocationSet": "Precise location added.",
+  "serviceRequestClearLocation": "Remove precise location",
+
+  "locationPermissionDenied": "Location access was not granted.",
+  "locationRetry": "Try again",
+  "locationPermissionDeniedForever": "Location access is turned off for this app. Turn it on in Settings to use this.",
+  "locationOpenSettings": "Open settings",
+  "locationServiceDisabled": "Location (GPS) is turned off on this device.",
+  "locationEnableGps": "Turn on location",
+
+  "trackingCustomerLocationTitle": "Customer location",
+  "trackingProviderLocationTitle": "Provider location",
+  "trackingSharingLocation": "Sharing your location with the customer.",
+  "trackingNotSharing": "Not sharing your location right now.",
+  "trackingWaitingForLocation": "Waiting for a location update.",
+  "trackingNavigate": "Navigate",
+  "trackingDistanceAndEta": "{distanceKm} km away · about {minutes} min",
+  "@trackingDistanceAndEta": {
+    "placeholders": {
+      "distanceKm": { "type": "String" },
+      "minutes": { "type": "String" }
+    }
+  },
+  "trackingLive": "Live",
+  "trackingConnecting": "Connecting…",
+  "trackingDisconnected": "Reconnecting…",
 
   "errorQuoteNotApplicable": "That's not available for this kind of service.",
   "errorProviderNotEligible": "You're not approved for this service in this city.",

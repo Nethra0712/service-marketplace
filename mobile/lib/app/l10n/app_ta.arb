@@ -258,6 +258,33 @@
   "serviceRequestNotesTooLong": "1000 எழுத்துகளுக்குள் வைத்திருங்கள்.",
   "serviceRequestSubmit": "சேவையைக் கோரவும்",
   "serviceRequestSent": "வேண்டுகோள் அனுப்பப்பட்டது.",
+  "serviceRequestUseMyLocation": "எனது தற்போதைய இருப்பிடத்தைப் பயன்படுத்து",
+  "serviceRequestLocationSet": "துல்லியமான இருப்பிடம் சேர்க்கப்பட்டது.",
+  "serviceRequestClearLocation": "துல்லியமான இருப்பிடத்தை அகற்று",
+
+  "locationPermissionDenied": "இருப்பிட அணுகல் வழங்கப்படவில்லை.",
+  "locationRetry": "மீண்டும் முயற்சிக்கவும்",
+  "locationPermissionDeniedForever": "இந்த ஆப்பிற்கான இருப்பிட அணுகல் முடக்கப்பட்டுள்ளது. இதைப் பயன்படுத்த அமைப்புகளில் இயக்கவும்.",
+  "locationOpenSettings": "அமைப்புகளைத் திற",
+  "locationServiceDisabled": "இந்த சாதனத்தில் இருப்பிடம் (GPS) முடக்கப்பட்டுள்ளது.",
+  "locationEnableGps": "இருப்பிடத்தை இயக்கு",
+
+  "trackingCustomerLocationTitle": "வாடிக்கையாளர் இருப்பிடம்",
+  "trackingProviderLocationTitle": "சேவை வழங்குநர் இருப்பிடம்",
+  "trackingSharingLocation": "உங்கள் இருப்பிடத்தை வாடிக்கையாளருடன் பகிர்கிறது.",
+  "trackingNotSharing": "தற்போது உங்கள் இருப்பிடத்தைப் பகிரவில்லை.",
+  "trackingWaitingForLocation": "இருப்பிட புதுப்பிப்புக்காக காத்திருக்கிறது.",
+  "trackingNavigate": "வழிசெலுத்து",
+  "trackingDistanceAndEta": "{distanceKm} கி.மீ தொலைவில் · சுமார் {minutes} நிமிடங்கள்",
+  "@trackingDistanceAndEta": {
+    "placeholders": {
+      "distanceKm": { "type": "String" },
+      "minutes": { "type": "String" }
+    }
+  },
+  "trackingLive": "நேரலை",
+  "trackingConnecting": "இணைக்கிறது…",
+  "trackingDisconnected": "மீண்டும் இணைக்கிறது…",
 
   "errorQuoteNotApplicable": "இந்த வகை சேவைக்கு அது கிடைக்காது.",
   "errorProviderNotEligible": "இந்த நகரத்தில் இந்தச் சேவைக்கு நீங்கள் அங்கீகரிக்கப்படவில்லை.",

@@ -258,6 +258,33 @@
   "serviceRequestNotesTooLong": "අක්ෂර 1000ක් හෝ ඊට අඩු කරන්න.",
   "serviceRequestSubmit": "සේවාව ඉල්ලන්න",
   "serviceRequestSent": "ඉල්ලීම යවන ලදී.",
+  "serviceRequestUseMyLocation": "මගේ වත්මන් ස්ථානය භාවිතා කරන්න",
+  "serviceRequestLocationSet": "නිශ්චිත ස්ථානය එකතු කරන ලදී.",
+  "serviceRequestClearLocation": "නිශ්චිත ස්ථානය ඉවත් කරන්න",
+
+  "locationPermissionDenied": "ස්ථාන ප්‍රවේශයට අවසර දී නොමැත.",
+  "locationRetry": "නැවත උත්සාහ කරන්න",
+  "locationPermissionDeniedForever": "මෙම යෙදුම සඳහා ස්ථාන ප්‍රවේශය ක්‍රියාවිරහිත කර ඇත. එය භාවිතා කිරීමට සැකසුම් තුළින් සක්‍රිය කරන්න.",
+  "locationOpenSettings": "සැකසුම් විවෘත කරන්න",
+  "locationServiceDisabled": "මෙම උපාංගයේ ස්ථානය (GPS) ක්‍රියාවිරහිතයි.",
+  "locationEnableGps": "ස්ථානය සක්‍රිය කරන්න",
+
+  "trackingCustomerLocationTitle": "පාරිභෝගික ස්ථානය",
+  "trackingProviderLocationTitle": "සේවා සපයන්නාගේ ස්ථානය",
+  "trackingSharingLocation": "ඔබේ ස්ථානය පාරිභෝගිකයා සමඟ බෙදාගනිමින්.",
+  "trackingNotSharing": "දැනට ඔබේ ස්ථානය බෙදා නොගනී.",
+  "trackingWaitingForLocation": "ස්ථාන යාවත්කාලීනයක් සඳහා රැඳී සිටී.",
+  "trackingNavigate": "මාර්ග උපදෙස්",
+  "trackingDistanceAndEta": "කි.මී. {distanceKm} ක් දුරින් · මිනිත්තු {minutes} ක් පමණ",
+  "@trackingDistanceAndEta": {
+    "placeholders": {
+      "distanceKm": { "type": "String" },
+      "minutes": { "type": "String" }
+    }
+  },
+  "trackingLive": "සජීවී",
+  "trackingConnecting": "සම්බන්ධ වෙමින්…",
+  "trackingDisconnected": "නැවත සම්බන්ධ වෙමින්…",
 
   "errorQuoteNotApplicable": "මෙම වර්ගයේ සේවාව සඳහා එය ලබා ගත නොහැක.",
   "errorProviderNotEligible": "මෙම නගරයේ මෙම සේවාව සඳහා ඔබ අනුමත කර නැත.",

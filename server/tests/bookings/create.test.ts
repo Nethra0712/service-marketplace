@@ -44,6 +44,42 @@ describe('POST /api/bookings', () => {
     });
     expect(bookingOf(res).id).toBeTypeOf('string');
     expect(bookingOf(res).timestamps.createdAt).toBeTypeOf('string');
+    expect(bookingOf(res).serviceLocation).toBeNull();
+  });
+
+  it('records and returns the optional job location, for the map and matching', async () => {
+    const { app, sms } = buildTestApp({ db });
+    const { api } = await signInUser(app, sms);
+
+    const res = await api.post('/api/bookings', {
+      categorySlug: 'cleaning',
+      citySlug: 'colombo',
+      bookingType: 'on_demand',
+      serviceAddress: '1 Test Road',
+      latitude: 6.9271,
+      longitude: 79.8612,
+    });
+
+    expect(res.status).toBe(201);
+    expect(bookingOf(res).serviceLocation).toEqual({
+      latitude: '6.927100',
+      longitude: '79.861200',
+    });
+  });
+
+  it('rejects a latitude without a longitude', async () => {
+    const { app, sms } = buildTestApp({ db });
+    const { api } = await signInUser(app, sms);
+
+    const res = await api.post('/api/bookings', {
+      categorySlug: 'cleaning',
+      citySlug: 'colombo',
+      bookingType: 'on_demand',
+      serviceAddress: '1 Test Road',
+      latitude: 6.9271,
+    });
+
+    expect(res.status).toBe(400);
   });
 
   it('creates a scheduled booking with a future time', async () => {

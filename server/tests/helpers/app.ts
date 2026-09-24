@@ -1,6 +1,6 @@
 import type { Express } from 'express';
 
-import { createApp } from '../../src/app.js';
+import { createApp, type RealtimeDependencies } from '../../src/app.js';
 import type { AppConfig } from '../../src/config/env.js';
 import type { Database } from '../../src/db/client.js';
 import type { Clock } from '../../src/lib/clock.js';
@@ -57,6 +57,8 @@ export interface TestApp {
   /** Records every SMS the default provider was asked to send. */
   sms: MockSmsProvider;
   clock: FakeClock;
+  /** What the realtime module needs from this app instance, for tests that build one on top of it. */
+  realtime: RealtimeDependencies;
 }
 
 export function buildTestApp({
@@ -70,7 +72,7 @@ export function buildTestApp({
 }: TestAppOptions): TestApp {
   const sms = new MockSmsProvider();
   const clock = new FakeClock();
-  const app = createApp({
+  const { app, realtime } = createApp({
     config: { ...testConfig, ...config },
     logger,
     db,
@@ -80,5 +82,5 @@ export function buildTestApp({
     authPolicy,
     catalogueRateLimit,
   });
-  return { app, sms, clock };
+  return { app, sms, clock, realtime };
 }

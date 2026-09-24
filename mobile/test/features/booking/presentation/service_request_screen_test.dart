@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/app/l10n/app_localizations.dart';
 import 'package:mobile/app/router/app_routes.dart';
 import 'package:mobile/core/errors/app_exception.dart';
+import 'package:mobile/core/location/location_permission_status.dart';
+import 'package:mobile/core/location/location_reading.dart';
 import 'package:mobile/features/booking/domain/booking_status.dart';
 
 import '../../../helpers/catalogue_fakes.dart';
@@ -150,5 +152,95 @@ void main() {
 
     expect(find.text(en.serviceRequestAddressRequired), findsOneWidget);
     expect(f.booking.createCalls, isEmpty);
+  });
+
+  group('precise location', () {
+    testWidgets('captures and sends the current location', (tester) async {
+      f.locationService.status = LocationPermissionStatus.granted;
+      f.locationService.currentLocation = const LocationReading(
+        latitude: 6.9271,
+        longitude: 79.8612,
+      );
+      await f.open(tester, AppRoutes.serviceRequestLocation('cleaning'));
+
+      await tapKey(tester, 'use_my_location_button');
+
+      expect(find.text(en.serviceRequestLocationSet), findsOneWidget);
+      expect(key('use_my_location_button'), findsNothing);
+      expect(key('clear_location_button'), findsOneWidget);
+
+      await tester.enterText(key('address_field'), '1 Test Road');
+      await tapKey(tester, 'submit_request_button');
+
+      final sent = f.booking.createCalls.single.serviceLocation;
+      expect(sent?.latitude, 6.9271);
+      expect(sent?.longitude, 79.8612);
+    });
+
+    testWidgets('can be cleared after being set', (tester) async {
+      f.locationService.status = LocationPermissionStatus.granted;
+      f.locationService.currentLocation = const LocationReading(
+        latitude: 6.9271,
+        longitude: 79.8612,
+      );
+      await f.open(tester, AppRoutes.serviceRequestLocation('cleaning'));
+      await tapKey(tester, 'use_my_location_button');
+
+      await tapKey(tester, 'clear_location_button');
+
+      expect(key('use_my_location_button'), findsOneWidget);
+      await tester.enterText(key('address_field'), '1 Test Road');
+      await tapKey(tester, 'submit_request_button');
+      expect(f.booking.createCalls.single.serviceLocation, isNull);
+    });
+
+    testWidgets('offers to retry when permission is merely denied', (
+      tester,
+    ) async {
+      f.locationService.status = LocationPermissionStatus.denied;
+      await f.open(tester, AppRoutes.serviceRequestLocation('cleaning'));
+
+      await tapKey(tester, 'use_my_location_button');
+
+      expect(find.text(en.locationPermissionDenied), findsOneWidget);
+      expect(find.text(en.locationRetry), findsOneWidget);
+    });
+
+    testWidgets('offers to open settings when permission is denied forever', (
+      tester,
+    ) async {
+      f.locationService.status = LocationPermissionStatus.deniedForever;
+      await f.open(tester, AppRoutes.serviceRequestLocation('cleaning'));
+
+      await tapKey(tester, 'use_my_location_button');
+
+      expect(find.text(en.locationPermissionDeniedForever), findsOneWidget);
+      await tester.tap(find.text(en.locationOpenSettings));
+      await settle(tester);
+      expect(f.locationService.openAppSettingsCalls, 1);
+    });
+
+    testWidgets('offers to enable GPS when the location service is off', (
+      tester,
+    ) async {
+      f.locationService.status = LocationPermissionStatus.serviceDisabled;
+      await f.open(tester, AppRoutes.serviceRequestLocation('cleaning'));
+
+      await tapKey(tester, 'use_my_location_button');
+
+      expect(find.text(en.locationServiceDisabled), findsOneWidget);
+      await tester.tap(find.text(en.locationEnableGps));
+      await settle(tester);
+      expect(f.locationService.openLocationSettingsCalls, 1);
+    });
+
+    testWidgets('is not required to submit the request', (tester) async {
+      await f.open(tester, AppRoutes.serviceRequestLocation('cleaning'));
+
+      await tester.enterText(key('address_field'), '1 Test Road');
+      await tapKey(tester, 'submit_request_button');
+
+      expect(f.booking.createCalls.single.serviceLocation, isNull);
+    });
   });
 }

@@ -6,7 +6,7 @@ import type { Clock } from '../../lib/clock.js';
 import type { Logger } from '../../lib/logger.js';
 import type { SmsProvider } from '../sms/index.js';
 import { defaultAuthPolicy, type AuthPolicy } from './auth.policy.js';
-import { createRequireAuth } from './auth.middleware.js';
+import { createAuthenticate, createRequireAuth, type Authenticator } from './auth.middleware.js';
 import { createAuthRouter } from './auth.routes.js';
 import { createAuthSchemas } from './auth.schemas.js';
 import { createAuthService, type AuthService } from './auth.service.js';
@@ -15,7 +15,7 @@ import { createSessionService } from './session.service.js';
 import { createAccessTokenService } from './token.service.js';
 
 export { defaultAuthPolicy, type AuthPolicy } from './auth.policy.js';
-export { getAuth, type AuthContext } from './auth.middleware.js';
+export { getAuth, type AuthContext, type Authenticator } from './auth.middleware.js';
 export { purgeExpiredAuthData } from './cleanup.service.js';
 
 export interface AuthModuleDeps {
@@ -33,6 +33,8 @@ export interface AuthModule {
   router: Router;
   /** Protects any route: rejects unauthenticated callers and sets the auth context. */
   requireAuth: RequestHandler;
+  /** The same rule as `requireAuth`, for callers that are not an HTTP request (the realtime module's socket handshake). */
+  authenticate: Authenticator;
   service: AuthService;
 }
 
@@ -68,6 +70,7 @@ export function createAuthModule({
   });
   const service = createAuthService({ db, otp, sessions, logger });
   const requireAuth = createRequireAuth({ accessTokens, sessions });
+  const authenticate = createAuthenticate({ accessTokens, sessions });
 
   const router = createAuthRouter({
     otp,
@@ -78,5 +81,5 @@ export function createAuthModule({
     requireAuth,
   });
 
-  return { router, requireAuth, service };
+  return { router, requireAuth, authenticate, service };
 }
