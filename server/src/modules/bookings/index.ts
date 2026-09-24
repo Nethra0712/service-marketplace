@@ -2,15 +2,19 @@ import type { RequestHandler, Router } from 'express';
 
 import type { Database } from '../../db/client.js';
 import type { Clock } from '../../lib/clock.js';
+import type { Logger } from '../../lib/logger.js';
 import { createBookingsRouter } from './bookings.routes.js';
 import {
   createBookingsService,
+  type BookingCompletedHook,
   type BookingsService,
   type EligibilityCheck,
   type NextWaveLookup,
   type OfferedCategoryLookup,
   type ProviderProfileLookup,
 } from './bookings.service.js';
+
+export type { BookingCompletedHook } from './bookings.service.js';
 
 export type {
   BookingDetailView,
@@ -33,6 +37,9 @@ export interface BookingsModuleDeps {
   isBookable: EligibilityCheck;
   /** From the matching module. */
   findNextWave: NextWaveLookup;
+  /** From the payments module. Runs after a booking completes; failures are logged, never fatal to completion. */
+  onBookingCompleted?: BookingCompletedHook;
+  logger?: Logger;
 }
 
 export interface BookingsModule {
@@ -50,6 +57,8 @@ export function createBookingsModule({
   findProviderProfileId,
   isBookable,
   findNextWave,
+  onBookingCompleted,
+  logger,
 }: BookingsModuleDeps): BookingsModule {
   const service = createBookingsService({
     db,
@@ -58,6 +67,8 @@ export function createBookingsModule({
     findProviderProfileId,
     isBookable,
     findNextWave,
+    onBookingCompleted,
+    logger,
   });
   return { router: createBookingsRouter({ service, requireAuth }), service };
 }

@@ -1,0 +1,2 @@
+ALTER TABLE "payments" DROP CONSTRAINT "payments_succeeded_at_matches_status";--> statement-breakpoint
+ALTER TABLE "payments" ADD CONSTRAINT "payments_succeeded_at_matches_status" CHECK (("payments"."status" in ('succeeded', 'refunded')) = ("payments"."succeeded_at" is not null));

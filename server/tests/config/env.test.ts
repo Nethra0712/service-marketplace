@@ -38,6 +38,10 @@ describe('loadEnv', () => {
       smsProvider: 'mock',
       allowedPhoneCountryCodes: ['94'],
       trustProxyHops: 0,
+      paymentProvider: 'mock',
+      platformCommissionBasisPoints: 1500,
+      publicApiBaseUrl: undefined,
+      payhere: undefined,
     });
   });
 
@@ -147,6 +151,30 @@ describe('loadEnv: authentication settings', () => {
     expect(problemsFor({ ...validEnv, TRUST_PROXY_HOPS: value })).toContain('TRUST_PROXY_HOPS');
   });
 
+  it('rejects an unknown payment provider', () => {
+    expect(problemsFor({ ...validEnv, PAYMENT_PROVIDER: 'stripe' })).toContain('PAYMENT_PROVIDER');
+  });
+
+  it.each(['-1', '10001', 'many'])(
+    'rejects PLATFORM_COMMISSION_BASIS_POINTS=%s (must be 0-10000)',
+    (value) => {
+      expect(problemsFor({ ...validEnv, PLATFORM_COMMISSION_BASIS_POINTS: value })).toContain(
+        'PLATFORM_COMMISSION_BASIS_POINTS',
+      );
+    },
+  );
+
+  it('applies the 1500 (15.00%) default commission when unset', () => {
+    expect(loadEnv(validEnv).platformCommissionBasisPoints).toBe(1500);
+  });
+
+  it('is configurable to a different commission rate', () => {
+    expect(
+      loadEnv({ ...validEnv, PLATFORM_COMMISSION_BASIS_POINTS: '2000' })
+        .platformCommissionBasisPoints,
+    ).toBe(2000);
+  });
+
   describe('in production', () => {
     const production = { ...validEnv, NODE_ENV: 'production' };
 
@@ -158,6 +186,48 @@ describe('loadEnv: authentication settings', () => {
 
     it('refuses the mock provider even when SMS_PROVIDER is left unset (its default)', () => {
       expect(problemsFor(production)).toContain('SMS_PROVIDER');
+    });
+
+    it('refuses the mock payment provider, so real money is never processed by a fake gateway', () => {
+      const message = problemsFor({ ...production, PAYMENT_PROVIDER: 'mock' });
+      expect(message).toContain('PAYMENT_PROVIDER');
+    });
+
+    it('refuses the mock payment provider even when PAYMENT_PROVIDER is left unset (its default)', () => {
+      expect(problemsFor(production)).toContain('PAYMENT_PROVIDER');
+    });
+
+    it('raises no PayHere-related problem in production once properly configured', () => {
+      // SMS_PROVIDER has no production-ready option yet (a separate, pre-existing
+      // gap), so this checks that PAYHERE_* specifically is satisfied, not that
+      // loadEnv succeeds outright.
+      const message = problemsFor({
+        ...production,
+        PAYMENT_PROVIDER: 'payhere',
+        PAYHERE_MERCHANT_ID: 'M12345',
+        PAYHERE_MERCHANT_SECRET: 'shh',
+        PUBLIC_API_BASE_URL: 'https://api.servicemarketplace.lk',
+      });
+      expect(message).not.toContain('PAYHERE_MERCHANT_ID');
+      expect(message).not.toContain('PAYHERE_MERCHANT_SECRET');
+      expect(message).not.toContain('PUBLIC_API_BASE_URL');
+      expect(message).not.toContain('PAYMENT_PROVIDER');
+    });
+
+    it('accepts payhere in development/test once properly configured (production-shaped config, non-production env)', () => {
+      const config = loadEnv({
+        ...validEnv,
+        PAYMENT_PROVIDER: 'payhere',
+        PAYHERE_MERCHANT_ID: 'M12345',
+        PAYHERE_MERCHANT_SECRET: 'shh',
+        PUBLIC_API_BASE_URL: 'https://api.servicemarketplace.lk',
+      });
+      expect(config.paymentProvider).toBe('payhere');
+      expect(config.payhere).toEqual({
+        merchantId: 'M12345',
+        merchantSecret: 'shh',
+        mode: 'sandbox',
+      });
     });
 
     it('refuses secrets that are still the .env.example placeholders', () => {
@@ -172,9 +242,28 @@ describe('loadEnv: authentication settings', () => {
     });
   });
 
+  describe('PAYMENT_PROVIDER=payhere', () => {
+    it('requires merchant credentials and a public base URL, even outside production', () => {
+      const message = problemsFor({ ...validEnv, PAYMENT_PROVIDER: 'payhere' });
+      expect(message).toContain('PAYHERE_MERCHANT_ID');
+      expect(message).toContain('PAYHERE_MERCHANT_SECRET');
+      expect(message).toContain('PUBLIC_API_BASE_URL');
+    });
+
+    it('never includes the merchant secret value itself in the error message', () => {
+      const message = problemsFor({
+        ...validEnv,
+        PAYMENT_PROVIDER: 'payhere',
+        PAYHERE_MERCHANT_SECRET: 'a-real-looking-secret-value',
+      });
+      expect(message).not.toContain('a-real-looking-secret-value');
+    });
+  });
+
   it('allows the same relaxed values in test and development', () => {
     for (const nodeEnv of ['development', 'test']) {
       expect(loadEnv({ ...validEnv, NODE_ENV: nodeEnv }).smsProvider).toBe('mock');
+      expect(loadEnv({ ...validEnv, NODE_ENV: nodeEnv }).paymentProvider).toBe('mock');
     }
   });
 });

@@ -12,6 +12,7 @@ import 'package:mobile/features/booking/domain/booking.dart';
 import 'package:mobile/features/booking/domain/booking_status.dart';
 import 'package:mobile/features/booking/domain/quote.dart';
 import 'package:mobile/features/booking/presentation/booking_status_labels.dart';
+import 'package:mobile/features/payments/presentation/payment_section.dart';
 import 'package:mobile/features/provider/application/provider_providers.dart';
 import 'package:mobile/features/services/presentation/pricing_model_labels.dart';
 import 'package:mobile/features/tracking/presentation/booking_tracking_section.dart';
@@ -136,6 +137,10 @@ class _BookingBody extends ConsumerWidget {
         if (isCustomer || isAssignedProvider) ...[
           const SizedBox(height: AppSpacing.lg),
           BookingTrackingSection(booking: booking, isCustomer: isCustomer),
+        ],
+        if (isCustomer || isAssignedProvider) ...[
+          const SizedBox(height: AppSpacing.lg),
+          PaymentSection(booking: booking, isCustomer: isCustomer),
         ],
         if (isCustomer) ...[
           const SizedBox(height: AppSpacing.lg),

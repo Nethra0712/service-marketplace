@@ -1,5 +1,7 @@
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
+import { bookings } from '../../src/db/schema/index.js';
 import { createBookingsRepository } from '../../src/modules/bookings/bookings.repository.js';
 import { createCatalogue, type Catalogue } from '../helpers/catalogue.js';
 import { createTestDatabase, resetDatabase } from '../helpers/database.js';
@@ -37,7 +39,7 @@ describe('acceptDirect', () => {
     });
     const { profile } = await createApprovedProvider(db, catalogue.plumbing, catalogue.colombo);
 
-    expect(await repo.acceptDirect(booking.id, profile.id, new Date())).toBe(false);
+    expect(await repo.acceptDirect(booking.id, profile.id, new Date(), null)).toBe(false);
   });
 
   it('refuses a booking that is not searching', async () => {
@@ -50,7 +52,7 @@ describe('acceptDirect', () => {
     });
     const { profile } = await createApprovedProvider(db, catalogue.cleaning, catalogue.colombo);
 
-    expect(await repo.acceptDirect(booking.id, profile.id, new Date())).toBe(false);
+    expect(await repo.acceptDirect(booking.id, profile.id, new Date(), null)).toBe(false);
   });
 
   it('refuses a booking that already has a provider', async () => {
@@ -72,7 +74,7 @@ describe('acceptDirect', () => {
       catalogue.colombo,
     );
 
-    expect(await repo.acceptDirect(booking.id, rival.id, new Date())).toBe(false);
+    expect(await repo.acceptDirect(booking.id, rival.id, new Date(), null)).toBe(false);
   });
 
   it('succeeds for a searching, unassigned, non-quote booking', async () => {
@@ -82,7 +84,19 @@ describe('acceptDirect', () => {
     });
     const { profile } = await createApprovedProvider(db, catalogue.cleaning, catalogue.colombo);
 
-    expect(await repo.acceptDirect(booking.id, profile.id, new Date())).toBe(true);
+    expect(await repo.acceptDirect(booking.id, profile.id, new Date(), null)).toBe(true);
+  });
+
+  it('sets agreedAmount when given one (fixed pricing)', async () => {
+    const customer = await createUser(db);
+    const booking = await createBooking(db, customer, catalogue.painting, catalogue.colombo, {
+      pricingModel: 'fixed',
+    });
+    const { profile } = await createApprovedProvider(db, catalogue.painting, catalogue.colombo);
+
+    expect(await repo.acceptDirect(booking.id, profile.id, new Date(), '5000.00')).toBe(true);
+    const [row] = await db.select().from(bookings).where(eq(bookings.id, booking.id));
+    expect(row?.agreedAmount).toBe('5000.00');
   });
 });
 
@@ -111,7 +125,6 @@ describe('the provider progression steps are scoped to the assigned provider AND
     ['startEnRoute', 'accepted'],
     ['markArrived', 'en_route'],
     ['startWork', 'arrived'],
-    ['complete', 'in_progress'],
   ] as const)(
     '%s refuses a provider who is not assigned to the booking',
     async (method, status) => {
@@ -119,6 +132,11 @@ describe('the provider progression steps are scoped to the assigned provider AND
       expect(await repo[method](booking.id, stranger.id, new Date())).toBe(false);
     },
   );
+
+  it('complete refuses a provider who is not assigned to the booking', async () => {
+    const { booking, stranger } = await assignedBooking('in_progress');
+    expect(await repo.complete(booking.id, stranger.id, new Date(), null)).toBe(false);
+  });
 
   it.each([
     ['startEnRoute', 'en_route'], // already past `accepted`
@@ -134,7 +152,14 @@ describe('the provider progression steps are scoped to the assigned provider AND
 
   it('complete refuses the assigned provider from "accepted" (too early)', async () => {
     const { booking, profile } = await assignedBooking('accepted');
-    expect(await repo.complete(booking.id, profile.id, new Date())).toBe(false);
+    expect(await repo.complete(booking.id, profile.id, new Date(), null)).toBe(false);
+  });
+
+  it('complete succeeds for the assigned provider from "in_progress", optionally setting agreedAmount', async () => {
+    const { booking, profile } = await assignedBooking('in_progress');
+    expect(await repo.complete(booking.id, profile.id, new Date(), '3000.00')).toBe(true);
+    const [row] = await db.select().from(bookings).where(eq(bookings.id, booking.id));
+    expect(row?.agreedAmount).toBe('3000.00');
   });
 });
 

@@ -28,6 +28,10 @@ String errorMessage(AppLocalizations l10n, Object error) {
       return l10n.errorProviderNotEligible;
     case 'ALREADY_QUOTED':
       return l10n.errorAlreadyQuoted;
+    case 'PAYMENT_NOT_READY':
+      return l10n.errorPaymentNotReady;
+    case 'PAYMENT_ALREADY_FINAL':
+      return l10n.errorPaymentAlreadyFinal;
   }
 
   return switch (error) {

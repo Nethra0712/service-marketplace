@@ -806,4 +806,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorAlreadyQuoted =>
       'You\'ve already sent a quote for this booking.';
+
+  @override
+  String get errorPaymentNotReady =>
+      'This booking hasn\'t been completed yet, so there\'s nothing to pay.';
+
+  @override
+  String get errorPaymentAlreadyFinal => 'This booking has already been paid.';
+
+  @override
+  String get paymentSectionTitle => 'Payment';
+
+  @override
+  String get paymentStatusPending => 'Payment pending';
+
+  @override
+  String get paymentStatusSucceeded => 'Paid';
+
+  @override
+  String get paymentStatusFailed => 'Payment failed';
+
+  @override
+  String get paymentStatusCancelled => 'Payment cancelled';
+
+  @override
+  String get paymentStatusRefunded => 'Refunded';
+
+  @override
+  String get paymentServiceAmountLabel => 'Service amount';
+
+  @override
+  String get paymentCommissionLabel => 'Platform fee';
+
+  @override
+  String get paymentProviderEarningLabel => 'You earn';
+
+  @override
+  String get paymentPayNow => 'Pay now';
+
+  @override
+  String get paymentRetry => 'Try payment again';
+
+  @override
+  String get paymentCheckoutOpened =>
+      'Checkout opened in your browser. Come back here once you\'ve paid.';
+
+  @override
+  String get paymentCheckoutOpenFailed => 'Couldn\'t open the checkout page.';
 }

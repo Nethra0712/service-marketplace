@@ -36,12 +36,14 @@ export const devServiceCategories = [
     name: 'Cleaning',
     description: 'Home and office cleaning, charged by the hour.',
     pricingModel: 'hourly',
+    baseRate: '1500.00', // LKR per hour.
   },
   {
     slug: 'ac-repair',
     name: 'AC Repair',
     description: 'Air-conditioner servicing, gas top-up and repairs.',
     pricingModel: 'fixed',
+    baseRate: '6000.00', // LKR per job.
   },
   {
     slug: 'carpentry',

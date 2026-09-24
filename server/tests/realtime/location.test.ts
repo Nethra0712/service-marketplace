@@ -214,6 +214,10 @@ describe('location updates', () => {
     expect((await providerApi.post(`/api/bookings/${bookingId}/en-route`)).status).toBe(200);
     expect((await providerApi.post(`/api/bookings/${bookingId}/arrived`)).status).toBe(200);
     expect((await providerApi.post(`/api/bookings/${bookingId}/start`)).status).toBe(200);
+    // `cleaning` is hourly-priced: its price is only settled at completion,
+    // from the time actually worked, so some time must pass first (kept well
+    // under the access token's TTL so the request itself still authenticates).
+    t.clock.advanceSeconds(60);
     expect((await providerApi.post(`/api/bookings/${bookingId}/complete`)).status).toBe(200);
 
     const afterCompletion = await emitWithAck<{ ok: boolean; error?: string }>(

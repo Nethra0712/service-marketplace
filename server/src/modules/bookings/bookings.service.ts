@@ -10,6 +10,7 @@ import type { Database } from '../../db/client.js';
 import type { Clock } from '../../lib/clock.js';
 import { isUniqueViolation } from '../../lib/db-errors.js';
 import { AppError, ErrorCode } from '../../lib/errors.js';
+import type { Logger } from '../../lib/logger.js';
 import { blankToNull } from '../../lib/text.js';
 import {
   createBookingsRepository,
@@ -124,6 +125,21 @@ export type NextWaveLookup = (
   jobLocation: { latitude: number; longitude: number } | null,
 ) => Promise<{ providerProfileId: string; distanceKm: number | null }[]>;
 
+/**
+ * Runs right after a booking successfully completes, with its now-settled
+ * price. Supplied by the payments module. Optional — and its failure is
+ * caught and only logged, never allowed to undo the completion itself —
+ * because `payments.service.ts`'s own read paths (`getPaymentForViewer`,
+ * `createCheckoutSession`) self-heal by creating the payment lazily if this
+ * hook did not run or failed.
+ */
+export type BookingCompletedHook = (booking: {
+  id: string;
+  customerId: string;
+  providerProfileId: string;
+  agreedAmount: string;
+}) => Promise<void>;
+
 export interface BookingsServiceDeps {
   db: Database;
   clock: Clock;
@@ -131,6 +147,8 @@ export interface BookingsServiceDeps {
   findProviderProfileId: ProviderProfileLookup;
   isBookable: EligibilityCheck;
   findNextWave: NextWaveLookup;
+  onBookingCompleted?: BookingCompletedHook;
+  logger?: Logger;
 }
 
 const iso = (date: Date | null): string | null => (date ? date.toISOString() : null);
@@ -237,6 +255,8 @@ export function createBookingsService({
   findProviderProfileId,
   isBookable,
   findNextWave,
+  onBookingCompleted,
+  logger,
 }: BookingsServiceDeps) {
   const repository = createBookingsRepository(db);
 
@@ -530,10 +550,16 @@ export function createBookingsService({
       // already succeeded (e.g. the offer was declined in a separate, racing
       // request), throwing — not returning false — rolls the whole attempt
       // back, so `acceptDirect`'s write is never left committed on its own.
+      // Fixed pricing is settled the moment a provider takes the job: the
+      // category's flat rate. Hourly is only knowable once the work is done
+      // (see `complete`), so it stays null here.
+      const agreedAmount = core.pricingModel === 'fixed' ? core.baseRate : null;
+
       const accepted = await db
         .transaction(async (tx) => {
           const repo = createBookingsRepository(tx);
-          if (!(await repo.acceptDirect(bookingId, providerProfileId, now))) return false;
+          if (!(await repo.acceptDirect(bookingId, providerProfileId, now, agreedAmount)))
+            return false;
           if (!(await repo.consumeOfferForAccept(bookingId, providerProfileId, now))) {
             throw OFFER_LOST_RACE;
           }
@@ -590,10 +616,63 @@ export function createBookingsService({
       );
     },
 
+    /**
+     * Completes an in-progress booking. For `hourly` pricing this is also
+     * where the price is finally settled — rate * hours actually worked,
+     * from `workStartedAt` to now — since it cannot be known any earlier;
+     * `fixed` and `quote` already have `agreedAmount` from `accept`/`acceptQuote`.
+     * Once settled, triggers payment creation (see `onBookingCompleted`) —
+     * a failure there is logged and never blocks completion itself.
+     */
     async complete(userId: string, bookingId: string, language: AppLanguage) {
-      return providerTransition(userId, bookingId, language, 'in_progress', (providerId, now) =>
-        repository.complete(bookingId, providerId, now),
+      const providerProfileId = await requireProviderProfileId(userId);
+      const core = await requireOwnCore(
+        bookingId,
+        (c) => c.providerProfileId === providerProfileId,
       );
+      if (core.status !== 'in_progress') {
+        throw invalidState(`This booking cannot be moved from "${core.status}" that way.`);
+      }
+      const now = clock();
+
+      let agreedAmount: string | null = null;
+      if (core.pricingModel === 'hourly' && core.agreedAmount === null) {
+        if (core.baseRate === null || core.workStartedAt === null) {
+          throw invalidState(
+            'This booking is missing the pricing information needed to complete it.',
+          );
+        }
+        const hours = (now.getTime() - core.workStartedAt.getTime()) / (60 * 60 * 1000);
+        if (hours <= 0) {
+          throw invalidState(
+            'This booking cannot be completed before any billable time has passed.',
+          );
+        }
+        agreedAmount = (Number(core.baseRate) * hours).toFixed(2);
+      }
+
+      if (!(await repository.complete(bookingId, providerProfileId, now, agreedAmount))) {
+        throw invalidState(`This booking cannot be moved from "${core.status}" that way.`);
+      }
+
+      const finalAmount = agreedAmount ?? core.agreedAmount;
+      if (onBookingCompleted && finalAmount !== null) {
+        try {
+          await onBookingCompleted({
+            id: bookingId,
+            customerId: core.customerId,
+            providerProfileId,
+            agreedAmount: finalAmount,
+          });
+        } catch (error) {
+          logger?.error(
+            { err: error, bookingId },
+            'onBookingCompleted hook failed; the payment will be created lazily on next access instead',
+          );
+        }
+      }
+
+      return loadForViewer(bookingId, userId, language);
     },
 
     /**

@@ -33,7 +33,7 @@ export function createTestDatabase(): DatabaseHandle {
 /** Empties every application table so each test starts from a known state. */
 export async function resetDatabase(db: Database): Promise<void> {
   await db.execute(
-    sql`truncate table refresh_tokens, auth_sessions, otp_challenges, booking_offers, booking_provider_releases, booking_quotes, bookings, provider_services, provider_profiles, profiles, users, city_categories, service_category_translations, cities, service_categories restart identity cascade`,
+    sql`truncate table refresh_tokens, auth_sessions, otp_challenges, payment_ledger_entries, payments, provider_payouts, booking_offers, booking_provider_releases, booking_quotes, bookings, provider_services, provider_profiles, profiles, users, city_categories, service_category_translations, cities, service_categories restart identity cascade`,
   );
 }
 

@@ -1,0 +1,3 @@
+ALTER TABLE "payments" ADD COLUMN "provider_profile_id" uuid NOT NULL;--> statement-breakpoint
+ALTER TABLE "payments" ADD CONSTRAINT "payments_provider_profile_id_provider_profiles_id_fk" FOREIGN KEY ("provider_profile_id") REFERENCES "public"."provider_profiles"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "payments_provider_payout_lookup_idx" ON "payments" USING btree ("provider_profile_id","status","succeeded_at");

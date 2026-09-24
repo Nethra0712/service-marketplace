@@ -36,6 +36,7 @@ export async function createCatalogue(db: Database) {
     name: 'Cleaning',
     description: 'Home cleaning by the hour.',
     pricingModel: 'hourly',
+    baseRate: '1500.00',
   });
   const carpentry = await createOfferedCategory(db, colombo, {
     slug: 'carpentry',
@@ -47,6 +48,7 @@ export async function createCatalogue(db: Database) {
     slug: 'painting',
     name: 'Painting',
     pricingModel: 'fixed',
+    baseRate: '5000.00',
   });
 
   await translateCategory(db, plumbing, 'si', 'ජලනල කටයුතු', 'කාන්දු සහ කාණු.');

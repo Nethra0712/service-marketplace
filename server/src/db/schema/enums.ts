@@ -82,6 +82,43 @@ export const bookingOfferStatus = pgEnum('booking_offer_status', [
   'superseded',
 ]);
 
+/** Which payment gateway processed (or will process) a payment. A closed set: the app never trusts a caller-supplied provider name. */
+export const paymentProviderName = pgEnum('payment_provider_name', ['mock', 'payhere']);
+
+/**
+ * A payment's lifecycle. `pending` covers both "checkout not started/finished
+ * yet" and "the gateway has not yet told us the outcome" — those are the same
+ * state from this app's point of view, since only a verified callback (or an
+ * explicit refund) ever moves it further.
+ *
+ *   pending -> succeeded -> refunded
+ *   pending -> failed
+ *   pending -> cancelled
+ */
+export const paymentStatus = pgEnum('payment_status', [
+  'pending',
+  'succeeded',
+  'failed',
+  'cancelled',
+  'refunded',
+]);
+
+/**
+ * One immutable event in a payment's audit trail. Never updated once
+ * written; `payments` itself holds the current, mutable state.
+ */
+export const paymentLedgerEntryKind = pgEnum('payment_ledger_entry_kind', [
+  'created',
+  'succeeded',
+  'failed',
+  'cancelled',
+  'refunded',
+  'duplicate_ignored',
+]);
+
+/** A weekly provider payout's status. The actual bank transfer is manual in V1: this only tracks whether it has been done. */
+export const payoutStatus = pgEnum('payout_status', ['pending', 'paid', 'cancelled']);
+
 export type UserStatus = (typeof userStatus.enumValues)[number];
 export type AppLanguage = (typeof appLanguage.enumValues)[number];
 export type PricingModel = (typeof pricingModel.enumValues)[number];
@@ -92,3 +129,7 @@ export type BookingType = (typeof bookingType.enumValues)[number];
 export type BookingStatus = (typeof bookingStatus.enumValues)[number];
 export type BookingQuoteStatus = (typeof bookingQuoteStatus.enumValues)[number];
 export type BookingOfferStatus = (typeof bookingOfferStatus.enumValues)[number];
+export type PaymentProviderName = (typeof paymentProviderName.enumValues)[number];
+export type PaymentStatus = (typeof paymentStatus.enumValues)[number];
+export type PaymentLedgerEntryKind = (typeof paymentLedgerEntryKind.enumValues)[number];
+export type PayoutStatus = (typeof payoutStatus.enumValues)[number];

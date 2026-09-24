@@ -288,5 +288,21 @@
 
   "errorQuoteNotApplicable": "මෙම වර්ගයේ සේවාව සඳහා එය ලබා ගත නොහැක.",
   "errorProviderNotEligible": "මෙම නගරයේ මෙම සේවාව සඳහා ඔබ අනුමත කර නැත.",
-  "errorAlreadyQuoted": "ඔබ දැනටමත් මෙම වෙන්කිරීම සඳහා මිලක් යවා ඇත."
+  "errorAlreadyQuoted": "ඔබ දැනටමත් මෙම වෙන්කිරීම සඳහා මිලක් යවා ඇත.",
+  "errorPaymentNotReady": "මෙම වෙන්කිරීම තවම සම්පූර්ණ කර නැත, එබැවින් ගෙවීමට කිසිවක් නැත.",
+  "errorPaymentAlreadyFinal": "මෙම වෙන්කිරීම දැනටමත් ගෙවා ඇත.",
+
+  "paymentSectionTitle": "ගෙවීම",
+  "paymentStatusPending": "ගෙවීම අපේක්ෂිතයි",
+  "paymentStatusSucceeded": "ගෙවා ඇත",
+  "paymentStatusFailed": "ගෙවීම අසාර්ථකයි",
+  "paymentStatusCancelled": "ගෙවීම අවලංගු කරන ලදී",
+  "paymentStatusRefunded": "ආපසු ගෙවා ඇත",
+  "paymentServiceAmountLabel": "සේවා මුදල",
+  "paymentCommissionLabel": "වේදිකා ගාස්තුව",
+  "paymentProviderEarningLabel": "ඔබ උපයන මුදල",
+  "paymentPayNow": "දැන් ගෙවන්න",
+  "paymentRetry": "නැවත ගෙවීමට උත්සාහ කරන්න",
+  "paymentCheckoutOpened": "ගෙවීම් පිටුව ඔබේ බ්‍රවුසරයේ විවෘත විය. ගෙවීමෙන් පසු මෙහි ආපසු එන්න.",
+  "paymentCheckoutOpenFailed": "ගෙවීම් පිටුව විවෘත කළ නොහැකි විය."
 }

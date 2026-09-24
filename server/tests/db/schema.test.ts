@@ -166,15 +166,43 @@ describe('provider profiles', () => {
 
 describe('service categories', () => {
   it('stores a category, active by default, for each pricing model', async () => {
-    for (const [slug, pricingModel] of [
-      ['plumbing', 'quote'],
-      ['cleaning', 'hourly'],
-      ['ac-repair', 'fixed'],
+    for (const [slug, pricingModel, baseRate] of [
+      ['plumbing', 'quote', undefined],
+      ['cleaning', 'hourly', '1500.00'],
+      ['ac-repair', 'fixed', '6000.00'],
     ] as const) {
-      const category = await createCategory(db, { slug, name: slug, pricingModel });
+      const category = await createCategory(db, { slug, name: slug, pricingModel, baseRate });
       expect(category.pricingModel).toBe(pricingModel);
+      expect(category.baseRate).toBe(baseRate ?? null);
       expect(category.isActive).toBe(true);
     }
+  });
+
+  it('requires a base rate for fixed/hourly pricing, and forbids one for quote pricing', async () => {
+    const missingRate = await expectPgError(() =>
+      createCategory(db, { slug: 'no-rate', name: 'No rate', pricingModel: 'fixed' }),
+    );
+    expect(missingRate.constraint).toBe('service_categories_base_rate_matches_pricing_model');
+
+    const unexpectedRate = await expectPgError(() =>
+      createCategory(db, {
+        slug: 'unexpected-rate',
+        name: 'Unexpected rate',
+        pricingModel: 'quote',
+        baseRate: '100.00',
+      }),
+    );
+    expect(unexpectedRate.constraint).toBe('service_categories_base_rate_matches_pricing_model');
+
+    const nonPositiveRate = await expectPgError(() =>
+      createCategory(db, {
+        slug: 'zero-rate',
+        name: 'Zero rate',
+        pricingModel: 'fixed',
+        baseRate: '0.00',
+      }),
+    );
+    expect(nonPositiveRate.constraint).toBe('service_categories_base_rate_positive');
   });
 
   it('rejects an unknown pricing model', async () => {

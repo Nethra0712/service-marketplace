@@ -1497,6 +1497,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'ve already sent a quote for this booking.'**
   String get errorAlreadyQuoted;
+
+  /// No description provided for @errorPaymentNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking hasn\'t been completed yet, so there\'s nothing to pay.'**
+  String get errorPaymentNotReady;
+
+  /// No description provided for @errorPaymentAlreadyFinal.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking has already been paid.'**
+  String get errorPaymentAlreadyFinal;
+
+  /// No description provided for @paymentSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get paymentSectionTitle;
+
+  /// No description provided for @paymentStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment pending'**
+  String get paymentStatusPending;
+
+  /// No description provided for @paymentStatusSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get paymentStatusSucceeded;
+
+  /// No description provided for @paymentStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment failed'**
+  String get paymentStatusFailed;
+
+  /// No description provided for @paymentStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment cancelled'**
+  String get paymentStatusCancelled;
+
+  /// No description provided for @paymentStatusRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get paymentStatusRefunded;
+
+  /// No description provided for @paymentServiceAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service amount'**
+  String get paymentServiceAmountLabel;
+
+  /// No description provided for @paymentCommissionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform fee'**
+  String get paymentCommissionLabel;
+
+  /// No description provided for @paymentProviderEarningLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'You earn'**
+  String get paymentProviderEarningLabel;
+
+  /// No description provided for @paymentPayNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay now'**
+  String get paymentPayNow;
+
+  /// No description provided for @paymentRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try payment again'**
+  String get paymentRetry;
+
+  /// No description provided for @paymentCheckoutOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout opened in your browser. Come back here once you\'ve paid.'**
+  String get paymentCheckoutOpened;
+
+  /// No description provided for @paymentCheckoutOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the checkout page.'**
+  String get paymentCheckoutOpenFailed;
 }
 
 class _AppLocalizationsDelegate

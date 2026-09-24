@@ -17,6 +17,7 @@ import { createBookingsModule } from './modules/bookings/index.js';
 import { createCatalogueModule } from './modules/catalogue/index.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
 import { createMatchingModule } from './modules/matching/index.js';
+import { createPaymentsModule } from './modules/payments/index.js';
 import { createProvidersModule } from './modules/providers/index.js';
 import type { BookingAccessLookup } from './modules/realtime/index.js';
 import type { SmsProvider } from './modules/sms/index.js';
@@ -35,6 +36,11 @@ export interface AppDependencies {
     | 'otpHmacSecret'
     | 'allowedPhoneCountryCodes'
     | 'trustProxyHops'
+    | 'nodeEnv'
+    | 'paymentProvider'
+    | 'platformCommissionBasisPoints'
+    | 'publicApiBaseUrl'
+    | 'payhere'
   >;
   logger: Logger;
   db: Database;
@@ -130,16 +136,37 @@ export function createApp({
     findDispatchCandidates: providers.service.listDispatchCandidates,
   });
 
+  // Created before bookings: bookings drives payment creation on completion
+  // (see `onBookingCompleted` below), but payments never needs anything back
+  // from the bookings module — it reads booking data directly.
+  const payments = createPaymentsModule({
+    db,
+    clock,
+    logger,
+    config,
+    requireAuth: auth.requireAuth,
+    findProviderProfileId: providers.service.findProviderProfileId,
+  });
+
   const bookings = createBookingsModule({
     db,
     clock,
+    logger,
     requireAuth: auth.requireAuth,
     findOfferedCategory: catalogue.service.findOfferedCategory,
     findProviderProfileId: providers.service.findProviderProfileId,
     isBookable: providers.service.isBookable,
     findNextWave: matching.service.findNextWave,
+    onBookingCompleted: async (booking) => {
+      await payments.service.createPaymentForCompletedBooking(booking.id);
+    },
   });
   app.use('/api/bookings', bookings.router);
+  // Payment routes nested under a booking (checkout, view) — a second router
+  // mounted at the same prefix, on paths the bookings router does not use.
+  app.use('/api/bookings', payments.bookingRouter);
+  // The gateway's own callback endpoint. Public — see its doc comment.
+  app.use('/api/payments', payments.webhookRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

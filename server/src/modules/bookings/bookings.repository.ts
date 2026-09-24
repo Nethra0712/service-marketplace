@@ -68,6 +68,10 @@ export interface BookingCore {
   customerLatitude: string | null;
   customerLongitude: string | null;
   matchingExpiresAt: Date | null;
+  agreedAmount: string | null;
+  workStartedAt: Date | null;
+  /** The category's LKR rate (per job or per hour), for `fixed`/`hourly` pricing. Null for `quote`. */
+  baseRate: string | null;
 }
 
 export interface QuoteRow {
@@ -196,7 +200,7 @@ export function createBookingsRepository(db: Queryable) {
       return row;
     },
 
-    /** Lean lookup for authorization and transition guards; no joins. */
+    /** Lean lookup for authorization and transition guards. Joins only `service_categories`, for `baseRate`. */
     async findCore(id: string): Promise<BookingCore | undefined> {
       const [row] = await db
         .select({
@@ -210,8 +214,12 @@ export function createBookingsRepository(db: Queryable) {
           customerLatitude: bookings.customerLatitude,
           customerLongitude: bookings.customerLongitude,
           matchingExpiresAt: bookings.matchingExpiresAt,
+          agreedAmount: bookings.agreedAmount,
+          workStartedAt: bookings.workStartedAt,
+          baseRate: serviceCategories.baseRate,
         })
         .from(bookings)
+        .innerJoin(serviceCategories, eq(serviceCategories.id, bookings.serviceCategoryId))
         .where(eq(bookings.id, id));
       return row;
     },
@@ -248,11 +256,26 @@ export function createBookingsRepository(db: Queryable) {
 
     // ---- provider assignment ----------------------------------------------
 
-    /** searching (unassigned, non-quote) -> accepted. */
-    async acceptDirect(bookingId: string, providerProfileId: string, now: Date): Promise<boolean> {
+    /**
+     * searching (unassigned, non-quote) -> accepted. `agreedAmount` is set
+     * here for `fixed` pricing (the category's flat rate); left untouched
+     * (still null) for `hourly`, whose amount is only knowable once the work
+     * is actually done — see `complete`.
+     */
+    async acceptDirect(
+      bookingId: string,
+      providerProfileId: string,
+      now: Date,
+      agreedAmount: string | null,
+    ): Promise<boolean> {
       const updated = await db
         .update(bookings)
-        .set({ status: 'accepted', providerProfileId, acceptedAt: now })
+        .set({
+          status: 'accepted',
+          providerProfileId,
+          acceptedAt: now,
+          ...(agreedAmount !== null ? { agreedAmount } : {}),
+        })
         .where(
           and(
             eq(bookings.id, bookingId),
@@ -312,11 +335,25 @@ export function createBookingsRepository(db: Queryable) {
       return updated.length === 1;
     },
 
-    /** in_progress -> completed, scoped to the assigned provider. */
-    async complete(bookingId: string, providerProfileId: string, now: Date): Promise<boolean> {
+    /**
+     * in_progress -> completed, scoped to the assigned provider.
+     * `agreedAmount` is set here for `hourly` pricing (rate * hours worked,
+     * computed by the service); left untouched for `fixed`/`quote`, which
+     * already have it from `acceptDirect`/`acceptQuoteOnBooking`.
+     */
+    async complete(
+      bookingId: string,
+      providerProfileId: string,
+      now: Date,
+      agreedAmount: string | null,
+    ): Promise<boolean> {
       const updated = await db
         .update(bookings)
-        .set({ status: 'completed', completedAt: now })
+        .set({
+          status: 'completed',
+          completedAt: now,
+          ...(agreedAmount !== null ? { agreedAmount } : {}),
+        })
         .where(
           and(
             eq(bookings.id, bookingId),

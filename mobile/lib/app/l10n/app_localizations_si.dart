@@ -808,4 +808,51 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get errorAlreadyQuoted =>
       'ඔබ දැනටමත් මෙම වෙන්කිරීම සඳහා මිලක් යවා ඇත.';
+
+  @override
+  String get errorPaymentNotReady =>
+      'මෙම වෙන්කිරීම තවම සම්පූර්ණ කර නැත, එබැවින් ගෙවීමට කිසිවක් නැත.';
+
+  @override
+  String get errorPaymentAlreadyFinal => 'මෙම වෙන්කිරීම දැනටමත් ගෙවා ඇත.';
+
+  @override
+  String get paymentSectionTitle => 'ගෙවීම';
+
+  @override
+  String get paymentStatusPending => 'ගෙවීම අපේක්ෂිතයි';
+
+  @override
+  String get paymentStatusSucceeded => 'ගෙවා ඇත';
+
+  @override
+  String get paymentStatusFailed => 'ගෙවීම අසාර්ථකයි';
+
+  @override
+  String get paymentStatusCancelled => 'ගෙවීම අවලංගු කරන ලදී';
+
+  @override
+  String get paymentStatusRefunded => 'ආපසු ගෙවා ඇත';
+
+  @override
+  String get paymentServiceAmountLabel => 'සේවා මුදල';
+
+  @override
+  String get paymentCommissionLabel => 'වේදිකා ගාස්තුව';
+
+  @override
+  String get paymentProviderEarningLabel => 'ඔබ උපයන මුදල';
+
+  @override
+  String get paymentPayNow => 'දැන් ගෙවන්න';
+
+  @override
+  String get paymentRetry => 'නැවත ගෙවීමට උත්සාහ කරන්න';
+
+  @override
+  String get paymentCheckoutOpened =>
+      'ගෙවීම් පිටුව ඔබේ බ්‍රවුසරයේ විවෘත විය. ගෙවීමෙන් පසු මෙහි ආපසු එන්න.';
+
+  @override
+  String get paymentCheckoutOpenFailed => 'ගෙවීම් පිටුව විවෘත කළ නොහැකි විය.';
 }

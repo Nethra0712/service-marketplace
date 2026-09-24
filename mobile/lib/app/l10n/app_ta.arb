@@ -288,5 +288,21 @@
 
   "errorQuoteNotApplicable": "இந்த வகை சேவைக்கு அது கிடைக்காது.",
   "errorProviderNotEligible": "இந்த நகரத்தில் இந்தச் சேவைக்கு நீங்கள் அங்கீகரிக்கப்படவில்லை.",
-  "errorAlreadyQuoted": "இந்த முன்பதிவுக்கு நீங்கள் ஏற்கெனவே ஒரு மதிப்பீட்டை அனுப்பியுள்ளீர்கள்."
+  "errorAlreadyQuoted": "இந்த முன்பதிவுக்கு நீங்கள் ஏற்கெனவே ஒரு மதிப்பீட்டை அனுப்பியுள்ளீர்கள்.",
+  "errorPaymentNotReady": "இந்த முன்பதிவு இன்னும் முடிக்கப்படவில்லை, எனவே செலுத்த எதுவும் இல்லை.",
+  "errorPaymentAlreadyFinal": "இந்த முன்பதிவுக்கு ஏற்கெனவே பணம் செலுத்தப்பட்டுள்ளது.",
+
+  "paymentSectionTitle": "கட்டணம்",
+  "paymentStatusPending": "கட்டணம் நிலுவையில் உள்ளது",
+  "paymentStatusSucceeded": "செலுத்தப்பட்டது",
+  "paymentStatusFailed": "கட்டணம் தோல்வியடைந்தது",
+  "paymentStatusCancelled": "கட்டணம் ரத்து செய்யப்பட்டது",
+  "paymentStatusRefunded": "திரும்பச் செலுத்தப்பட்டது",
+  "paymentServiceAmountLabel": "சேவைத் தொகை",
+  "paymentCommissionLabel": "தள கட்டணம்",
+  "paymentProviderEarningLabel": "நீங்கள் சம்பாதிப்பது",
+  "paymentPayNow": "இப்போது செலுத்துங்கள்",
+  "paymentRetry": "மீண்டும் செலுத்த முயற்சிக்கவும்",
+  "paymentCheckoutOpened": "கட்டணப் பக்கம் உங்கள் உலாவியில் திறக்கப்பட்டது. செலுத்திய பின் இங்கு திரும்பி வாருங்கள்.",
+  "paymentCheckoutOpenFailed": "கட்டணப் பக்கத்தைத் திறக்க முடியவில்லை."
 }

@@ -4,6 +4,7 @@ import 'package:mobile/core/location/location_providers.dart';
 import 'package:mobile/core/navigation/navigation_providers.dart';
 import 'package:mobile/features/auth/data/session_store.dart';
 import 'package:mobile/features/booking/application/booking_providers.dart';
+import 'package:mobile/features/payments/application/payment_providers.dart';
 import 'package:mobile/features/provider/application/provider_providers.dart';
 import 'package:mobile/features/services/application/catalogue_providers.dart';
 import 'package:mobile/features/tracking/application/tracking_providers.dart';
@@ -13,6 +14,7 @@ import 'catalogue_fakes.dart';
 import 'fakes.dart';
 import 'location_fakes.dart';
 import 'navigation_fakes.dart';
+import 'payment_fakes.dart';
 import 'pump_app.dart';
 import 'tracking_fakes.dart';
 
@@ -23,6 +25,7 @@ class FeatureHarness {
     FakeCatalogueRepository? catalogue,
     FakeProviderRepository? provider,
     FakeBookingRepository? booking,
+    FakePaymentRepository? payment,
     FakeLocationService? locationService,
     FakeTrackingSocket? tracking,
     FakeUrlLauncherService? urlLauncher,
@@ -30,6 +33,7 @@ class FeatureHarness {
   }) : catalogue = catalogue ?? FakeCatalogueRepository(),
        provider = provider ?? FakeProviderRepository(),
        booking = booking ?? FakeBookingRepository(),
+       payment = payment ?? FakePaymentRepository(),
        locationService = locationService ?? FakeLocationService(),
        tracking = tracking ?? FakeTrackingSocket(),
        urlLauncher = urlLauncher ?? FakeUrlLauncherService() {
@@ -38,6 +42,7 @@ class FeatureHarness {
         catalogueRepositoryProvider.overrideWithValue(this.catalogue),
         providerRepositoryProvider.overrideWithValue(this.provider),
         bookingRepositoryProvider.overrideWithValue(this.booking),
+        paymentRepositoryProvider.overrideWithValue(this.payment),
         locationServiceProvider.overrideWithValue(this.locationService),
         trackingSocketProvider.overrideWithValue(this.tracking),
         urlLauncherServiceProvider.overrideWithValue(this.urlLauncher),
@@ -48,6 +53,7 @@ class FeatureHarness {
   final FakeCatalogueRepository catalogue;
   final FakeProviderRepository provider;
   final FakeBookingRepository booking;
+  final FakePaymentRepository payment;
   final FakeLocationService locationService;
   final FakeTrackingSocket tracking;
   final FakeUrlLauncherService urlLauncher;

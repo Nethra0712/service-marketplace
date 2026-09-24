@@ -90,7 +90,11 @@ describe('provider services (category- and city-specific approval)', () => {
     const b = await createProvider(db);
     const city = await createCity(db);
     const plumbing = await createCategory(db, { slug: 'plumbing' });
-    const cleaning = await createCategory(db, { slug: 'cleaning', pricingModel: 'hourly' });
+    const cleaning = await createCategory(db, {
+      slug: 'cleaning',
+      pricingModel: 'hourly',
+      baseRate: '1500.00',
+    });
 
     await db.insert(providerServices).values([
       { providerProfileId: a.profile.id, serviceCategoryId: plumbing.id, cityId: city.id },

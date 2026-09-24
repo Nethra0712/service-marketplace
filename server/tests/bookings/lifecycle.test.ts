@@ -67,10 +67,15 @@ describe('the fixed/hourly path: direct acceptance', () => {
     expect(bookingOf(started).status).toBe('in_progress');
     expect(bookingOf(started).timestamps.workStartedAt).toBeTypeOf('string');
 
+    // `cleaning` is hourly-priced: its price is only settled at completion,
+    // from the time actually worked, so some time must pass first (kept well
+    // under the access token's TTL so the request itself still authenticates).
+    t.clock.advanceSeconds(60);
     const completed = await provider.api.post(`/api/bookings/${booking.id}/complete`);
     expect(completed.status).toBe(200);
     expect(bookingOf(completed).status).toBe('completed');
     expect(bookingOf(completed).timestamps.completedAt).toBeTypeOf('string');
+    expect(bookingOf(completed).agreedAmount).toBe('25.00'); // 1500/hour * 1 minute
 
     // The customer sees the same final state.
     const seenByCustomer = await customer.get(`/api/bookings/${booking.id}`);

@@ -18,12 +18,29 @@ export interface AppConfig {
   allowedPhoneCountryCodes: string[];
   /** Number of reverse proxies in front of the API, for correct client IPs. */
   trustProxyHops: number;
+  /** Which payment gateway processes checkouts and refunds. `mock` is refused in production. */
+  paymentProvider: 'mock' | 'payhere';
+  /** Platform commission, in basis points (1500 = 15.00%). Never hardcode a rate; read this instead. */
+  platformCommissionBasisPoints: number;
+  /** This API's own publicly reachable base URL, used to build PayHere's return/cancel/notify URLs. Required only when `paymentProvider` is `payhere`. */
+  publicApiBaseUrl: string | undefined;
+  /** PayHere merchant credentials. Present only when `paymentProvider` is `payhere`. */
+  payhere: { merchantId: string; merchantSecret: string; mode: 'sandbox' | 'live' } | undefined;
 }
 
 const isPostgresUrl = (value: string): boolean => {
   try {
     const { protocol } = new URL(value);
     return protocol === 'postgres:' || protocol === 'postgresql:';
+  } catch {
+    return false;
+  }
+};
+
+const isHttpUrl = (value: string): boolean => {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'http:' || protocol === 'https:';
   } catch {
     return false;
   }
@@ -84,6 +101,9 @@ const secretSchema = z
 /** SMS backends that only make sense on a developer machine (they expose OTPs). */
 const DEVELOPMENT_ONLY_SMS_PROVIDERS: readonly string[] = ['mock'];
 
+/** Payment backends that only make sense on a developer machine (no real money moves). */
+const DEVELOPMENT_ONLY_PAYMENT_PROVIDERS: readonly string[] = ['mock'];
+
 const envShape = {
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
@@ -97,6 +117,18 @@ const envShape = {
   SMS_PROVIDER: z.enum(['mock']).default('mock'),
   ALLOWED_PHONE_COUNTRY_CODES: callingCodesSchema,
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),
+  PAYMENT_PROVIDER: z.enum(['mock', 'payhere']).default('mock'),
+  /** Basis points, e.g. 1500 = 15.00%. Configurable so the rate never has to be hardcoded in application code. */
+  PLATFORM_COMMISSION_BASIS_POINTS: z.coerce.number().int().min(0).max(10000).default(1500),
+  PUBLIC_API_BASE_URL: z
+    .string()
+    .refine((value) => value === '' || isHttpUrl(value), {
+      error: 'must be an http:// or https:// URL',
+    })
+    .default(''),
+  PAYHERE_MERCHANT_ID: z.string().default(''),
+  PAYHERE_MERCHANT_SECRET: z.string().default(''),
+  PAYHERE_MODE: z.enum(['sandbox', 'live']).default('sandbox'),
 };
 
 const envSchema = z.object(envShape).check((ctx) => {
@@ -119,6 +151,14 @@ const envSchema = z.object(envShape).check((ctx) => {
         input: env.SMS_PROVIDER,
       });
     }
+    if (DEVELOPMENT_ONLY_PAYMENT_PROVIDERS.includes(env.PAYMENT_PROVIDER)) {
+      ctx.issues.push({
+        code: 'custom',
+        message: 'the mock payment provider is not allowed in production',
+        path: ['PAYMENT_PROVIDER'],
+        input: env.PAYMENT_PROVIDER,
+      });
+    }
     for (const name of ['JWT_ACCESS_SECRET', 'OTP_HMAC_SECRET'] as const) {
       if (env[name].includes('replace-with')) {
         ctx.issues.push({
@@ -128,6 +168,32 @@ const envSchema = z.object(envShape).check((ctx) => {
           input: env[name],
         });
       }
+    }
+  }
+  if (env.PAYMENT_PROVIDER === 'payhere') {
+    if (env.PAYHERE_MERCHANT_ID === '') {
+      ctx.issues.push({
+        code: 'custom',
+        message: 'is required when PAYMENT_PROVIDER=payhere',
+        path: ['PAYHERE_MERCHANT_ID'],
+        input: env.PAYHERE_MERCHANT_ID,
+      });
+    }
+    if (env.PAYHERE_MERCHANT_SECRET === '') {
+      ctx.issues.push({
+        code: 'custom',
+        message: 'is required when PAYMENT_PROVIDER=payhere',
+        path: ['PAYHERE_MERCHANT_SECRET'],
+        input: env.PAYHERE_MERCHANT_SECRET,
+      });
+    }
+    if (env.PUBLIC_API_BASE_URL === '') {
+      ctx.issues.push({
+        code: 'custom',
+        message: 'is required when PAYMENT_PROVIDER=payhere, to build the gateway callback URLs',
+        path: ['PUBLIC_API_BASE_URL'],
+        input: env.PUBLIC_API_BASE_URL,
+      });
     }
   }
 });
@@ -165,6 +231,17 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): AppConfig {
     smsProvider: env.SMS_PROVIDER,
     allowedPhoneCountryCodes: env.ALLOWED_PHONE_COUNTRY_CODES,
     trustProxyHops: env.TRUST_PROXY_HOPS,
+    paymentProvider: env.PAYMENT_PROVIDER,
+    platformCommissionBasisPoints: env.PLATFORM_COMMISSION_BASIS_POINTS,
+    publicApiBaseUrl: env.PUBLIC_API_BASE_URL === '' ? undefined : env.PUBLIC_API_BASE_URL,
+    payhere:
+      env.PAYMENT_PROVIDER === 'payhere'
+        ? {
+            merchantId: env.PAYHERE_MERCHANT_ID,
+            merchantSecret: env.PAYHERE_MERCHANT_SECRET,
+            mode: env.PAYHERE_MODE,
+          }
+        : undefined,
   };
 }
 

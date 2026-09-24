@@ -21,7 +21,8 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed/run.ts",
     "auth:purge": "tsx src/modules/auth/purge.ts",
-    "dev:review": "tsx src/modules/providers/dev-review.ts"
+    "dev:review": "tsx src/modules/providers/dev-review.ts",
+    "dev:payouts": "tsx src/modules/payments/dev-payouts.ts"
   },
   "dependencies": {
     "cors": "^2.8.6",

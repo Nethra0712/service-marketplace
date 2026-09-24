@@ -300,5 +300,21 @@
 
   "errorQuoteNotApplicable": "That's not available for this kind of service.",
   "errorProviderNotEligible": "You're not approved for this service in this city.",
-  "errorAlreadyQuoted": "You've already sent a quote for this booking."
+  "errorAlreadyQuoted": "You've already sent a quote for this booking.",
+  "errorPaymentNotReady": "This booking hasn't been completed yet, so there's nothing to pay.",
+  "errorPaymentAlreadyFinal": "This booking has already been paid.",
+
+  "paymentSectionTitle": "Payment",
+  "paymentStatusPending": "Payment pending",
+  "paymentStatusSucceeded": "Paid",
+  "paymentStatusFailed": "Payment failed",
+  "paymentStatusCancelled": "Payment cancelled",
+  "paymentStatusRefunded": "Refunded",
+  "paymentServiceAmountLabel": "Service amount",
+  "paymentCommissionLabel": "Platform fee",
+  "paymentProviderEarningLabel": "You earn",
+  "paymentPayNow": "Pay now",
+  "paymentRetry": "Try payment again",
+  "paymentCheckoutOpened": "Checkout opened in your browser. Come back here once you've paid.",
+  "paymentCheckoutOpenFailed": "Couldn't open the checkout page."
 }

@@ -9,12 +9,14 @@ import 'package:mobile/core/maps/map_point.dart';
 import 'package:mobile/features/booking/domain/booking.dart';
 import 'package:mobile/features/booking/domain/booking_status.dart';
 import 'package:mobile/features/booking/domain/offer.dart';
+import 'package:mobile/features/payments/domain/payment_status.dart';
 import 'package:mobile/features/provider/domain/provider_profile.dart';
 import 'package:mobile/features/services/domain/pricing_model.dart';
 import 'package:mobile/features/tracking/domain/tracking_socket.dart';
 
 import '../../../helpers/booking_fakes.dart';
 import '../../../helpers/feature_harness.dart';
+import '../../../helpers/payment_fakes.dart';
 import '../../../helpers/pump_app.dart';
 
 void main() {
@@ -215,6 +217,7 @@ void main() {
     });
 
     testWidgets('says so when there are no quotes yet', (tester) async {
+      tallScreen(tester);
       f.booking.bookings.add(
         bookingOf(id: 'b1', pricingModel: PricingModel.quote),
       );
@@ -729,6 +732,121 @@ void main() {
         f.urlLauncher.launchedUrls.single.queryParameters['destination'],
         '6.9271,79.8612',
       );
+    });
+  });
+
+  group('payment section', () {
+    testWidgets('is not shown before the booking is completed', (tester) async {
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.accepted),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('payment_status'), findsNothing);
+    });
+
+    testWidgets(
+      'shows the customer the breakdown and a pay-now button while pending',
+      (tester) async {
+        f.booking.bookings.add(
+          bookingOf(id: 'b1', status: BookingStatus.completed),
+        );
+        f.payment.payments['b1'] = paymentOf(bookingId: 'b1');
+
+        await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+        expect(key('payment_status'), findsOneWidget);
+        expect(find.text(en.bookingAmountLkr('250.00')), findsOneWidget);
+        expect(find.text(en.bookingAmountLkr('37.50')), findsOneWidget);
+        expect(find.text(en.bookingAmountLkr('212.50')), findsOneWidget);
+        expect(key('pay_now_button'), findsOneWidget);
+      },
+    );
+
+    testWidgets('paying opens the checkout url and shows a confirmation', (
+      tester,
+    ) async {
+      tallScreen(tester);
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.completed),
+      );
+      f.payment.payments['b1'] = paymentOf(bookingId: 'b1');
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+      await tapKey(tester, 'pay_now_button');
+
+      expect(f.payment.checkoutCalls, ['b1']);
+      expect(f.urlLauncher.launchedUrls, hasLength(1));
+      expect(find.text(en.paymentCheckoutOpened), findsOneWidget);
+    });
+
+    testWidgets('a checkout failure is shown, not silently swallowed', (
+      tester,
+    ) async {
+      tallScreen(tester);
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.completed),
+      );
+      f.payment.payments['b1'] = paymentOf(bookingId: 'b1');
+      f.payment.failures['createCheckout'] = const NetworkException('offline');
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+      await tapKey(tester, 'pay_now_button');
+
+      expect(find.text(en.errorNetwork), findsOneWidget);
+    });
+
+    testWidgets('a succeeded payment shows no pay button', (tester) async {
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.completed),
+      );
+      f.payment.payments['b1'] = paymentOf(
+        bookingId: 'b1',
+        status: PaymentStatus.succeeded,
+        providerPaymentId: 'gateway-ref-1',
+        succeededAt: DateTime.utc(2026, 1, 1, 11, 5),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(find.text(en.paymentStatusSucceeded), findsOneWidget);
+      expect(key('pay_now_button'), findsNothing);
+    });
+
+    testWidgets(
+      'the assigned provider sees the breakdown too, with no pay button',
+      (tester) async {
+        f.provider.profile = ProviderProfile(
+          id: 'p1',
+          verificationStatus: VerificationStatus.verified,
+        );
+        f.booking.bookings.add(
+          bookingOf(
+            id: 'b1',
+            status: BookingStatus.completed,
+            customer: otherCustomer,
+            provider: const BookingParty(id: 'p1'),
+          ),
+        );
+        f.payment.payments['b1'] = paymentOf(bookingId: 'b1');
+
+        await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+        expect(key('provider_earning_row'), findsOneWidget);
+        expect(key('pay_now_button'), findsNothing);
+      },
+    );
+
+    testWidgets('a load failure is shown', (tester) async {
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.completed),
+      );
+      f.payment.failures['getPayment'] = const NetworkException('offline');
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('payment_error'), findsOneWidget);
     });
   });
 

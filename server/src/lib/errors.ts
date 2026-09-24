@@ -29,6 +29,11 @@ export const ErrorCode = {
   QuoteNotApplicable: 'QUOTE_NOT_APPLICABLE',
   // Matching / dispatch
   NoActiveOffer: 'NO_ACTIVE_OFFER',
+  // Payments
+  PaymentNotFound: 'PAYMENT_NOT_FOUND',
+  PaymentNotReady: 'PAYMENT_NOT_READY',
+  PaymentAlreadyFinal: 'PAYMENT_ALREADY_FINAL',
+  InvalidPaymentCallback: 'INVALID_PAYMENT_CALLBACK',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

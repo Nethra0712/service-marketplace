@@ -16,6 +16,11 @@ export type TestConfig = Pick<
   | 'otpHmacSecret'
   | 'allowedPhoneCountryCodes'
   | 'trustProxyHops'
+  | 'nodeEnv'
+  | 'paymentProvider'
+  | 'platformCommissionBasisPoints'
+  | 'publicApiBaseUrl'
+  | 'payhere'
 >;
 
 // Fixed, obviously fake secrets. They exist only in the test suite.
@@ -28,6 +33,11 @@ export const testConfig: TestConfig = {
   otpHmacSecret: TEST_OTP_SECRET,
   allowedPhoneCountryCodes: ['94'],
   trustProxyHops: 0,
+  nodeEnv: 'test',
+  paymentProvider: 'mock',
+  platformCommissionBasisPoints: 1500,
+  publicApiBaseUrl: 'http://localhost:3000',
+  payhere: undefined,
 };
 
 /** A clock tests can move forward, so expiry is tested without sleeping. */

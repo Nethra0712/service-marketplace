@@ -824,4 +824,53 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get errorAlreadyQuoted =>
       'இந்த முன்பதிவுக்கு நீங்கள் ஏற்கெனவே ஒரு மதிப்பீட்டை அனுப்பியுள்ளீர்கள்.';
+
+  @override
+  String get errorPaymentNotReady =>
+      'இந்த முன்பதிவு இன்னும் முடிக்கப்படவில்லை, எனவே செலுத்த எதுவும் இல்லை.';
+
+  @override
+  String get errorPaymentAlreadyFinal =>
+      'இந்த முன்பதிவுக்கு ஏற்கெனவே பணம் செலுத்தப்பட்டுள்ளது.';
+
+  @override
+  String get paymentSectionTitle => 'கட்டணம்';
+
+  @override
+  String get paymentStatusPending => 'கட்டணம் நிலுவையில் உள்ளது';
+
+  @override
+  String get paymentStatusSucceeded => 'செலுத்தப்பட்டது';
+
+  @override
+  String get paymentStatusFailed => 'கட்டணம் தோல்வியடைந்தது';
+
+  @override
+  String get paymentStatusCancelled => 'கட்டணம் ரத்து செய்யப்பட்டது';
+
+  @override
+  String get paymentStatusRefunded => 'திரும்பச் செலுத்தப்பட்டது';
+
+  @override
+  String get paymentServiceAmountLabel => 'சேவைத் தொகை';
+
+  @override
+  String get paymentCommissionLabel => 'தள கட்டணம்';
+
+  @override
+  String get paymentProviderEarningLabel => 'நீங்கள் சம்பாதிப்பது';
+
+  @override
+  String get paymentPayNow => 'இப்போது செலுத்துங்கள்';
+
+  @override
+  String get paymentRetry => 'மீண்டும் செலுத்த முயற்சிக்கவும்';
+
+  @override
+  String get paymentCheckoutOpened =>
+      'கட்டணப் பக்கம் உங்கள் உலாவியில் திறக்கப்பட்டது. செலுத்திய பின் இங்கு திரும்பி வாருங்கள்.';
+
+  @override
+  String get paymentCheckoutOpenFailed =>
+      'கட்டணப் பக்கத்தைத் திறக்க முடியவில்லை.';
 }
