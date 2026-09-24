@@ -16,6 +16,7 @@ import 'package:mobile/features/booking/presentation/booking_history_screen.dart
 import 'package:mobile/features/booking/presentation/provider_jobs_screen.dart';
 import 'package:mobile/features/booking/presentation/service_request_screen.dart';
 import 'package:mobile/features/home/presentation/home_screen.dart';
+import 'package:mobile/features/notifications/presentation/notification_list_screen.dart';
 import 'package:mobile/features/profile/presentation/profile_screen.dart';
 import 'package:mobile/features/provider/presentation/provider_apply_screen.dart';
 import 'package:mobile/features/provider/presentation/provider_hub_screen.dart';
@@ -126,6 +127,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.bookingDetail.path,
         builder: (context, state) =>
             BookingDetailScreen(bookingId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        name: AppRoutes.notifications.name,
+        path: AppRoutes.notifications.path,
+        builder: (context, state) => const NotificationListScreen(),
       ),
     ],
     errorBuilder: (context, state) => PlaceholderScreen(

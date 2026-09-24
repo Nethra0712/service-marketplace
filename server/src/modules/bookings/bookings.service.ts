@@ -4,6 +4,7 @@ import type {
   BookingQuoteStatus,
   BookingStatus,
   BookingType,
+  NotificationKind,
   PricingModel,
 } from '../../db/schema/index.js';
 import type { Database } from '../../db/client.js';
@@ -140,6 +141,19 @@ export type BookingCompletedHook = (booking: {
   agreedAmount: string;
 }) => Promise<void>;
 
+/**
+ * Notifies one user about one booking event. Supplied by the notifications
+ * module. Optional, and its failure is never allowed to undo or block the
+ * action that triggered it — same posture as {@link BookingCompletedHook}.
+ * Only the party who did NOT cause the event is notified (e.g. the provider
+ * who just accepted a job is not notified about their own action).
+ */
+export type BookingNotificationHook = (event: {
+  kind: NotificationKind;
+  recipientUserId: string;
+  bookingId: string;
+}) => Promise<void>;
+
 export interface BookingsServiceDeps {
   db: Database;
   clock: Clock;
@@ -148,6 +162,9 @@ export interface BookingsServiceDeps {
   isBookable: EligibilityCheck;
   findNextWave: NextWaveLookup;
   onBookingCompleted?: BookingCompletedHook;
+  notifyBookingEvent?: BookingNotificationHook;
+  /** The reverse of {@link ProviderProfileLookup}. Supplied by the providers module. Needed to notify a provider by their provider profile id. */
+  findProviderUserId?: (providerProfileId: string) => Promise<string | undefined>;
   logger?: Logger;
 }
 
@@ -256,9 +273,35 @@ export function createBookingsService({
   isBookable,
   findNextWave,
   onBookingCompleted,
+  notifyBookingEvent,
+  findProviderUserId,
   logger,
 }: BookingsServiceDeps) {
   const repository = createBookingsRepository(db);
+
+  /** Fire-and-forget: never lets a notification failure undo or block the booking action that triggered it. */
+  async function notify(
+    kind: NotificationKind,
+    recipientUserId: string | null | undefined,
+    bookingId: string,
+  ): Promise<void> {
+    if (!notifyBookingEvent || !recipientUserId) return;
+    try {
+      await notifyBookingEvent({ kind, recipientUserId, bookingId });
+    } catch (error) {
+      logger?.error({ err: error, bookingId, kind }, 'notifyBookingEvent hook failed; continuing');
+    }
+  }
+
+  /** `notify` for a provider addressed by their provider profile id, resolving it to a user id first. */
+  async function notifyProvider(
+    kind: NotificationKind,
+    providerProfileId: string | null | undefined,
+    bookingId: string,
+  ): Promise<void> {
+    if (!providerProfileId || !findProviderUserId) return;
+    await notify(kind, await findProviderUserId(providerProfileId), bookingId);
+  }
 
   /** For write actions: a missing profile is something to fix (409), not a 404. */
   async function requireProviderProfileId(userId: string): Promise<string> {
@@ -414,6 +457,7 @@ export function createBookingsService({
     language: AppLanguage,
     fromStatus: BookingStatus,
     run: (providerProfileId: string, now: Date) => Promise<boolean>,
+    notifyKind?: NotificationKind,
   ): Promise<BookingDetailView> {
     const providerProfileId = await requireProviderProfileId(userId);
     const core = await requireOwnCore(bookingId, (c) => c.providerProfileId === providerProfileId);
@@ -423,6 +467,7 @@ export function createBookingsService({
     if (!(await run(providerProfileId, clock()))) {
       throw invalidState(`This booking cannot be moved from "${core.status}" that way.`);
     }
+    if (notifyKind) await notify(notifyKind, core.customerId, bookingId);
     return loadForViewer(bookingId, userId, language);
   }
 
@@ -571,6 +616,7 @@ export function createBookingsService({
           throw error;
         });
       if (!accepted) throw invalidState('This booking has already been taken.');
+      await notify('booking_accepted', core.customerId, bookingId);
       return loadForViewer(bookingId, userId, language);
     },
 
@@ -599,14 +645,24 @@ export function createBookingsService({
     },
 
     async startEnRoute(userId: string, bookingId: string, language: AppLanguage) {
-      return providerTransition(userId, bookingId, language, 'accepted', (providerId, now) =>
-        repository.startEnRoute(bookingId, providerId, now),
+      return providerTransition(
+        userId,
+        bookingId,
+        language,
+        'accepted',
+        (providerId, now) => repository.startEnRoute(bookingId, providerId, now),
+        'provider_en_route',
       );
     },
 
     async markArrived(userId: string, bookingId: string, language: AppLanguage) {
-      return providerTransition(userId, bookingId, language, 'en_route', (providerId, now) =>
-        repository.markArrived(bookingId, providerId, now),
+      return providerTransition(
+        userId,
+        bookingId,
+        language,
+        'en_route',
+        (providerId, now) => repository.markArrived(bookingId, providerId, now),
+        'provider_arrived',
       );
     },
 
@@ -671,6 +727,7 @@ export function createBookingsService({
           );
         }
       }
+      await notify('booking_completed', core.customerId, bookingId);
 
       return loadForViewer(bookingId, userId, language);
     },
@@ -730,6 +787,7 @@ export function createBookingsService({
       if (core.providerProfileId) {
         await repository.supersedeAcceptedOffer(bookingId, core.providerProfileId, now);
       }
+      await notifyProvider('booking_cancelled', core.providerProfileId, bookingId);
       return loadForViewer(bookingId, userId, language);
     },
 
@@ -777,6 +835,7 @@ export function createBookingsService({
         }
         throw error;
       }
+      await notify('quote_created', core.customerId, bookingId);
       return loadForViewer(bookingId, userId, language);
     },
 
@@ -818,6 +877,7 @@ export function createBookingsService({
         return true;
       });
       if (!accepted) throw invalidState('This booking is no longer open.');
+      await notifyProvider('quote_accepted', quote.providerProfileId, bookingId);
       return loadForViewer(bookingId, userId, language);
     },
 
@@ -836,6 +896,7 @@ export function createBookingsService({
       if (!(await repository.rejectQuote(quoteId, now))) {
         throw invalidState('This quote has already been responded to.');
       }
+      await notifyProvider('quote_rejected', quote.providerProfileId, bookingId);
       return loadForViewer(bookingId, userId, language);
     },
 

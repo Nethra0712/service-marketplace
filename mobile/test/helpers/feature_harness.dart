@@ -6,6 +6,7 @@ import 'package:mobile/features/auth/data/session_store.dart';
 import 'package:mobile/features/booking/application/booking_providers.dart';
 import 'package:mobile/features/payments/application/payment_providers.dart';
 import 'package:mobile/features/provider/application/provider_providers.dart';
+import 'package:mobile/features/reviews/application/review_providers.dart';
 import 'package:mobile/features/services/application/catalogue_providers.dart';
 import 'package:mobile/features/tracking/application/tracking_providers.dart';
 
@@ -14,8 +15,10 @@ import 'catalogue_fakes.dart';
 import 'fakes.dart';
 import 'location_fakes.dart';
 import 'navigation_fakes.dart';
+import 'notification_fakes.dart';
 import 'payment_fakes.dart';
 import 'pump_app.dart';
+import 'review_fakes.dart';
 import 'tracking_fakes.dart';
 
 /// The whole app on fake auth, a fake catalogue, a fake provider backend, a
@@ -26,6 +29,9 @@ class FeatureHarness {
     FakeProviderRepository? provider,
     FakeBookingRepository? booking,
     FakePaymentRepository? payment,
+    FakeNotificationRepository? notification,
+    FakeReviewRepository? review,
+    FakePushNotificationService? push,
     FakeLocationService? locationService,
     FakeTrackingSocket? tracking,
     FakeUrlLauncherService? urlLauncher,
@@ -34,15 +40,21 @@ class FeatureHarness {
        provider = provider ?? FakeProviderRepository(),
        booking = booking ?? FakeBookingRepository(),
        payment = payment ?? FakePaymentRepository(),
+       notification = notification ?? FakeNotificationRepository(),
+       review = review ?? FakeReviewRepository(),
+       push = push ?? FakePushNotificationService(),
        locationService = locationService ?? FakeLocationService(),
        tracking = tracking ?? FakeTrackingSocket(),
        urlLauncher = urlLauncher ?? FakeUrlLauncherService() {
     auth = AuthHarness(
+      notification: this.notification,
+      push: this.push,
       extraOverrides: [
         catalogueRepositoryProvider.overrideWithValue(this.catalogue),
         providerRepositoryProvider.overrideWithValue(this.provider),
         bookingRepositoryProvider.overrideWithValue(this.booking),
         paymentRepositoryProvider.overrideWithValue(this.payment),
+        reviewRepositoryProvider.overrideWithValue(this.review),
         locationServiceProvider.overrideWithValue(this.locationService),
         trackingSocketProvider.overrideWithValue(this.tracking),
         urlLauncherServiceProvider.overrideWithValue(this.urlLauncher),
@@ -54,6 +66,9 @@ class FeatureHarness {
   final FakeProviderRepository provider;
   final FakeBookingRepository booking;
   final FakePaymentRepository payment;
+  final FakeNotificationRepository notification;
+  final FakeReviewRepository review;
+  final FakePushNotificationService push;
   final FakeLocationService locationService;
   final FakeTrackingSocket tracking;
   final FakeUrlLauncherService urlLauncher;

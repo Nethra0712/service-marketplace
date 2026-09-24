@@ -26,6 +26,10 @@ export interface AppConfig {
   publicApiBaseUrl: string | undefined;
   /** PayHere merchant credentials. Present only when `paymentProvider` is `payhere`. */
   payhere: { merchantId: string; merchantSecret: string; mode: 'sandbox' | 'live' } | undefined;
+  /** Which push backend delivers notifications. `mock` is refused in production. */
+  pushProvider: 'mock' | 'fcm';
+  /** Firebase Admin SDK service-account credentials. Present only when `pushProvider` is `fcm`. */
+  fcm: { projectId: string; clientEmail: string; privateKey: string } | undefined;
 }
 
 const isPostgresUrl = (value: string): boolean => {
@@ -104,6 +108,9 @@ const DEVELOPMENT_ONLY_SMS_PROVIDERS: readonly string[] = ['mock'];
 /** Payment backends that only make sense on a developer machine (no real money moves). */
 const DEVELOPMENT_ONLY_PAYMENT_PROVIDERS: readonly string[] = ['mock'];
 
+/** Push backends that only make sense on a developer machine (no real devices reached). */
+const DEVELOPMENT_ONLY_PUSH_PROVIDERS: readonly string[] = ['mock'];
+
 const envShape = {
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
@@ -129,6 +136,12 @@ const envShape = {
   PAYHERE_MERCHANT_ID: z.string().default(''),
   PAYHERE_MERCHANT_SECRET: z.string().default(''),
   PAYHERE_MODE: z.enum(['sandbox', 'live']).default('sandbox'),
+  PUSH_PROVIDER: z.enum(['mock', 'fcm']).default('mock'),
+  FCM_PROJECT_ID: z.string().default(''),
+  FCM_CLIENT_EMAIL: z.string().default(''),
+  // FCM service-account private keys are PEM text; env files store the
+  // newlines escaped as literal `\n`, unescaped back to real newlines below.
+  FCM_PRIVATE_KEY: z.string().default(''),
 };
 
 const envSchema = z.object(envShape).check((ctx) => {
@@ -157,6 +170,14 @@ const envSchema = z.object(envShape).check((ctx) => {
         message: 'the mock payment provider is not allowed in production',
         path: ['PAYMENT_PROVIDER'],
         input: env.PAYMENT_PROVIDER,
+      });
+    }
+    if (DEVELOPMENT_ONLY_PUSH_PROVIDERS.includes(env.PUSH_PROVIDER)) {
+      ctx.issues.push({
+        code: 'custom',
+        message: 'the mock push provider is not allowed in production',
+        path: ['PUSH_PROVIDER'],
+        input: env.PUSH_PROVIDER,
       });
     }
     for (const name of ['JWT_ACCESS_SECRET', 'OTP_HMAC_SECRET'] as const) {
@@ -194,6 +215,18 @@ const envSchema = z.object(envShape).check((ctx) => {
         path: ['PUBLIC_API_BASE_URL'],
         input: env.PUBLIC_API_BASE_URL,
       });
+    }
+  }
+  if (env.PUSH_PROVIDER === 'fcm') {
+    for (const name of ['FCM_PROJECT_ID', 'FCM_CLIENT_EMAIL', 'FCM_PRIVATE_KEY'] as const) {
+      if (env[name] === '') {
+        ctx.issues.push({
+          code: 'custom',
+          message: 'is required when PUSH_PROVIDER=fcm',
+          path: [name],
+          input: env[name],
+        });
+      }
     }
   }
 });
@@ -240,6 +273,15 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): AppConfig {
             merchantId: env.PAYHERE_MERCHANT_ID,
             merchantSecret: env.PAYHERE_MERCHANT_SECRET,
             mode: env.PAYHERE_MODE,
+          }
+        : undefined,
+    pushProvider: env.PUSH_PROVIDER,
+    fcm:
+      env.PUSH_PROVIDER === 'fcm'
+        ? {
+            projectId: env.FCM_PROJECT_ID,
+            clientEmail: env.FCM_CLIENT_EMAIL,
+            privateKey: env.FCM_PRIVATE_KEY.replace(/\\n/g, '\n'),
           }
         : undefined,
   };

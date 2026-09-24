@@ -315,6 +315,10 @@ export function createProvidersService({ db, clock }: ProvidersServiceDeps) {
     findProviderProfileId: async (userId: string): Promise<string | undefined> =>
       (await repository.findProfileByUserId(userId))?.id,
 
+    /** The reverse of {@link findProviderProfileId}: whose account a provider profile belongs to. Used to address that provider's notifications. */
+    findProviderUserId: async (providerProfileId: string): Promise<string | undefined> =>
+      (await repository.findProfileById(providerProfileId))?.userId,
+
     // ---- the bookable-provider gate (used by the catalogue and bookings modules) ----
 
     listBookableProviderServices: (filter: BookableFilter) => repository.listBookable(filter),

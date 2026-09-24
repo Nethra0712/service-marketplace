@@ -111,6 +111,12 @@ abstract final class AppRoutes {
     access: RouteAccess.authenticatedOnly,
   );
 
+  static const notifications = AppRoute(
+    name: 'notifications',
+    path: '/notifications',
+    access: RouteAccess.authenticatedOnly,
+  );
+
   static const all = [
     splash,
     auth,
@@ -127,6 +133,7 @@ abstract final class AppRoutes {
     serviceRequest,
     bookings,
     bookingDetail,
+    notifications,
   ];
 
   /// The location of one service's detail screen.

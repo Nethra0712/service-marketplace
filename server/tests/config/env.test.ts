@@ -42,6 +42,8 @@ describe('loadEnv', () => {
       platformCommissionBasisPoints: 1500,
       publicApiBaseUrl: undefined,
       payhere: undefined,
+      pushProvider: 'mock',
+      fcm: undefined,
     });
   });
 
@@ -197,6 +199,16 @@ describe('loadEnv: authentication settings', () => {
       expect(problemsFor(production)).toContain('PAYMENT_PROVIDER');
     });
 
+    it('refuses the mock push provider, so a real device is never expected to receive a push from a fake backend', () => {
+      const message = problemsFor({ ...production, PUSH_PROVIDER: 'mock' });
+      expect(message).toContain('PUSH_PROVIDER');
+      expect(message).toContain('mock');
+    });
+
+    it('refuses the mock push provider even when PUSH_PROVIDER is left unset (its default)', () => {
+      expect(problemsFor(production)).toContain('PUSH_PROVIDER');
+    });
+
     it('raises no PayHere-related problem in production once properly configured', () => {
       // SMS_PROVIDER has no production-ready option yet (a separate, pre-existing
       // gap), so this checks that PAYHERE_* specifically is satisfied, not that
@@ -257,6 +269,57 @@ describe('loadEnv: authentication settings', () => {
         PAYHERE_MERCHANT_SECRET: 'a-real-looking-secret-value',
       });
       expect(message).not.toContain('a-real-looking-secret-value');
+    });
+  });
+
+  describe('PUSH_PROVIDER=fcm', () => {
+    it('requires all three service-account fields, even outside production', () => {
+      const message = problemsFor({ ...validEnv, PUSH_PROVIDER: 'fcm' });
+      expect(message).toContain('FCM_PROJECT_ID');
+      expect(message).toContain('FCM_CLIENT_EMAIL');
+      expect(message).toContain('FCM_PRIVATE_KEY');
+    });
+
+    it('never includes the private key value itself in the error message', () => {
+      // Missing FCM_PROJECT_ID, so this throws (about that field) — the
+      // point is that the private key value never leaks into that message.
+      const message = problemsFor({
+        ...validEnv,
+        PUSH_PROVIDER: 'fcm',
+        FCM_CLIENT_EMAIL: 'firebase-adminsdk@my-project.iam.gserviceaccount.com',
+        FCM_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nMIIfake\\n-----END PRIVATE KEY-----\\n',
+      });
+      expect(message).toContain('FCM_PROJECT_ID');
+      expect(message).not.toContain('MIIfake');
+    });
+
+    it('unescapes literal \\n sequences in FCM_PRIVATE_KEY into real newlines', () => {
+      const config = loadEnv({
+        ...validEnv,
+        PUSH_PROVIDER: 'fcm',
+        FCM_PROJECT_ID: 'my-project',
+        FCM_CLIENT_EMAIL: 'firebase-adminsdk@my-project.iam.gserviceaccount.com',
+        FCM_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nMIIfake\\n-----END PRIVATE KEY-----\\n',
+      });
+      expect(config.fcm?.privateKey).toBe(
+        '-----BEGIN PRIVATE KEY-----\nMIIfake\n-----END PRIVATE KEY-----\n',
+      );
+    });
+
+    it('accepts fcm in development/test once properly configured (production-shaped config, non-production env)', () => {
+      const config = loadEnv({
+        ...validEnv,
+        PUSH_PROVIDER: 'fcm',
+        FCM_PROJECT_ID: 'my-project',
+        FCM_CLIENT_EMAIL: 'firebase-adminsdk@my-project.iam.gserviceaccount.com',
+        FCM_PRIVATE_KEY: 'key',
+      });
+      expect(config.pushProvider).toBe('fcm');
+      expect(config.fcm).toEqual({
+        projectId: 'my-project',
+        clientEmail: 'firebase-adminsdk@my-project.iam.gserviceaccount.com',
+        privateKey: 'key',
+      });
     });
   });
 

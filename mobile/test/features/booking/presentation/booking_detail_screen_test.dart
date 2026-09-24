@@ -11,6 +11,7 @@ import 'package:mobile/features/booking/domain/booking_status.dart';
 import 'package:mobile/features/booking/domain/offer.dart';
 import 'package:mobile/features/payments/domain/payment_status.dart';
 import 'package:mobile/features/provider/domain/provider_profile.dart';
+import 'package:mobile/features/reviews/domain/review.dart';
 import 'package:mobile/features/services/domain/pricing_model.dart';
 import 'package:mobile/features/tracking/domain/tracking_socket.dart';
 
@@ -18,6 +19,7 @@ import '../../../helpers/booking_fakes.dart';
 import '../../../helpers/feature_harness.dart';
 import '../../../helpers/payment_fakes.dart';
 import '../../../helpers/pump_app.dart';
+import '../../../helpers/review_fakes.dart';
 
 void main() {
   final en = lookupAppLocalizations(const Locale('en'));
@@ -884,6 +886,120 @@ void main() {
 
       expect(find.text(en.errorValidation), findsOneWidget);
       expect(f.booking.bookings.single.status, BookingStatus.searching);
+    });
+  });
+
+  group('review section', () {
+    testWidgets('is not shown before the booking is completed', (tester) async {
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.accepted),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('review_rating_input'), findsNothing);
+    });
+
+    testWidgets('the customer can rate and submit a review', (tester) async {
+      tallScreen(tester);
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.completed),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+      expect(key('review_rating_input'), findsOneWidget);
+
+      await tapKey(tester, 'star_4');
+      await tester.enterText(key('review_comment_field'), 'Great work!');
+      await tapKey(tester, 'submit_review_button');
+
+      expect(f.review.submitted, ['b1']);
+      expect(find.text(en.reviewSubmitted), findsOneWidget);
+      expect(f.review.reviews['b1']?.mine, isNotNull);
+      expect(f.review.reviews['b1']?.mine?.rating, 4);
+    });
+
+    testWidgets('the submit button is disabled until a star is picked', (
+      tester,
+    ) async {
+      tallScreen(tester);
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.completed),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      final button = tester.widget<FilledButton>(key('submit_review_button'));
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets(
+      'an already-submitted review is shown read-only, not the form',
+      (tester) async {
+        f.booking.bookings.add(
+          bookingOf(id: 'b1', status: BookingStatus.completed),
+        );
+        f.review.reviews['b1'] = BookingReviews(
+          mine: reviewOf(id: 'r1', bookingId: 'b1', rating: 5),
+        );
+
+        await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+        expect(key('review_r1'), findsOneWidget);
+        expect(find.text(en.reviewYourReview), findsOneWidget);
+        expect(key('review_rating_input'), findsNothing);
+      },
+    );
+
+    testWidgets("shows the counterpart's review once they have submitted one", (
+      tester,
+    ) async {
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.completed),
+      );
+      f.review.reviews['b1'] = BookingReviews(
+        mine: reviewOf(id: 'r1', bookingId: 'b1', rating: 5),
+        theirs: reviewOf(
+          id: 'r2',
+          bookingId: 'b1',
+          rating: 4,
+          comment: null,
+          isMine: false,
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(find.text(en.reviewCounterpartReview), findsOneWidget);
+      expect(key('review_r2'), findsOneWidget);
+      expect(find.text(en.reviewNoComment), findsOneWidget);
+    });
+
+    testWidgets('a submit failure is shown, not silently swallowed', (
+      tester,
+    ) async {
+      tallScreen(tester);
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.completed),
+      );
+      f.review.failures['submitReview'] = const NetworkException('offline');
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+      await tapKey(tester, 'star_3');
+      await tapKey(tester, 'submit_review_button');
+
+      expect(find.text(en.errorNetwork), findsOneWidget);
+    });
+
+    testWidgets('a load failure is shown', (tester) async {
+      f.booking.bookings.add(
+        bookingOf(id: 'b1', status: BookingStatus.completed),
+      );
+      f.review.failures['getForBooking'] = const NetworkException('offline');
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+
+      expect(key('review_error'), findsOneWidget);
     });
   });
 }

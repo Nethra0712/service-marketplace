@@ -12,6 +12,12 @@ void main() {
   setUp(() => h = AuthHarness());
   tearDown(() => h.dispose());
 
+  void tallScreen(WidgetTester tester) {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
+
   testWidgets('starts on the sign-in screen, in English, when signed out', (
     tester,
   ) async {
@@ -25,6 +31,7 @@ void main() {
   testWidgets('navigates to each placeholder route once signed in', (
     tester,
   ) async {
+    tallScreen(tester);
     await SessionStore(h.storage).write(makeSession(h.clock.now));
     await pumpApp(tester, h);
     expect(homeWelcome, findsOneWidget);
@@ -72,6 +79,7 @@ void main() {
   );
 
   testWidgets('the signed-in home screen is localized too', (tester) async {
+    tallScreen(tester);
     await SessionStore(h.storage).write(makeSession(h.clock.now));
     await pumpApp(tester, h);
 

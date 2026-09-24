@@ -32,6 +32,14 @@ String errorMessage(AppLocalizations l10n, Object error) {
       return l10n.errorPaymentNotReady;
     case 'PAYMENT_ALREADY_FINAL':
       return l10n.errorPaymentAlreadyFinal;
+    case 'NOT_BOOKING_PARTICIPANT':
+      return l10n.errorNotBookingParticipant;
+    case 'BOOKING_NOT_COMPLETED':
+      return l10n.errorBookingNotCompleted;
+    case 'ALREADY_REVIEWED':
+      return l10n.errorAlreadyReviewed;
+    case 'DEVICE_TOKEN_NOT_OWNED':
+      return l10n.errorDeviceTokenNotOwned;
   }
 
   return switch (error) {

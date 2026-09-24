@@ -303,6 +303,10 @@
   "errorAlreadyQuoted": "You've already sent a quote for this booking.",
   "errorPaymentNotReady": "This booking hasn't been completed yet, so there's nothing to pay.",
   "errorPaymentAlreadyFinal": "This booking has already been paid.",
+  "errorNotBookingParticipant": "You're not part of this booking.",
+  "errorBookingNotCompleted": "This booking hasn't been completed yet.",
+  "errorAlreadyReviewed": "You've already reviewed this booking.",
+  "errorDeviceTokenNotOwned": "That device isn't registered to your account.",
 
   "paymentSectionTitle": "Payment",
   "paymentStatusPending": "Payment pending",
@@ -316,5 +320,25 @@
   "paymentPayNow": "Pay now",
   "paymentRetry": "Try payment again",
   "paymentCheckoutOpened": "Checkout opened in your browser. Come back here once you've paid.",
-  "paymentCheckoutOpenFailed": "Couldn't open the checkout page."
+  "paymentCheckoutOpenFailed": "Couldn't open the checkout page.",
+
+  "notificationsTitle": "Notifications",
+  "notificationsEmpty": "No notifications yet.",
+  "notificationMarkAllRead": "Mark all as read",
+  "notificationPermissionTitle": "Stay updated",
+  "notificationPermissionBody": "Turn on notifications to know when your booking status changes, a quote arrives, or a payment completes.",
+  "notificationPermissionAllow": "Turn on notifications",
+  "notificationPermissionNotNow": "Not now",
+  "notificationPreferencesTitle": "Push notifications",
+  "notificationPreferencesSubtitle": "Get a push notification for important updates, in addition to your in-app notification list.",
+
+  "reviewSectionTitle": "Reviews",
+  "reviewRatingLabel": "Your rating",
+  "reviewCommentLabel": "Comment (optional)",
+  "reviewCommentHint": "Share more about your experience",
+  "reviewSubmit": "Submit review",
+  "reviewSubmitted": "Review submitted.",
+  "reviewYourReview": "Your review",
+  "reviewCounterpartReview": "Their review",
+  "reviewNoComment": "No comment left."
 }

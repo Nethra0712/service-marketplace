@@ -7,6 +7,8 @@ import 'package:mobile/app/router/app_routes.dart';
 import 'package:mobile/app/theme/app_spacing.dart';
 import 'package:mobile/features/auth/application/auth_providers.dart';
 import 'package:mobile/features/auth/domain/phone_number.dart';
+import 'package:mobile/features/notifications/presentation/notification_bell.dart';
+import 'package:mobile/features/notifications/presentation/notification_permission_banner.dart';
 
 /// Placeholder home screen. Demonstrates localization, navigation and sign-out.
 class HomeScreen extends ConsumerWidget {
@@ -21,13 +23,14 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
-        actions: const [LanguageMenu()],
+        actions: const [NotificationBell(), LanguageMenu()],
       ),
       body: SafeArea(
         child: ListView(
           padding: AppSpacing.screen,
           children: [
             const SizedBox(height: AppSpacing.lg),
+            const NotificationPermissionBanner(),
             Text(l10n.homeWelcome, style: textTheme.headlineMedium),
             const SizedBox(height: AppSpacing.sm),
             Text(l10n.homeSubtitle, style: textTheme.bodyLarge),

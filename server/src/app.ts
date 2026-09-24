@@ -17,9 +17,11 @@ import { createBookingsModule } from './modules/bookings/index.js';
 import { createCatalogueModule } from './modules/catalogue/index.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
 import { createMatchingModule } from './modules/matching/index.js';
+import { createNotificationsModule } from './modules/notifications/index.js';
 import { createPaymentsModule } from './modules/payments/index.js';
 import { createProvidersModule } from './modules/providers/index.js';
 import type { BookingAccessLookup } from './modules/realtime/index.js';
+import { createReviewsModule } from './modules/reviews/index.js';
 import type { SmsProvider } from './modules/sms/index.js';
 
 /** Largest JSON request body accepted. Raise per-route later if a feature needs it. */
@@ -41,6 +43,8 @@ export interface AppDependencies {
     | 'platformCommissionBasisPoints'
     | 'publicApiBaseUrl'
     | 'payhere'
+    | 'pushProvider'
+    | 'fcm'
   >;
   logger: Logger;
   db: Database;
@@ -136,6 +140,17 @@ export function createApp({
     findDispatchCandidates: providers.service.listDispatchCandidates,
   });
 
+  // Created before bookings and payments: both notify through it on their own
+  // events, but it never needs anything back from either.
+  const notifications = createNotificationsModule({
+    db,
+    clock,
+    logger,
+    config,
+    requireAuth: auth.requireAuth,
+  });
+  app.use('/api/notifications', notifications.router);
+
   // Created before bookings: bookings drives payment creation on completion
   // (see `onBookingCompleted` below), but payments never needs anything back
   // from the bookings module — it reads booking data directly.
@@ -146,6 +161,8 @@ export function createApp({
     config,
     requireAuth: auth.requireAuth,
     findProviderProfileId: providers.service.findProviderProfileId,
+    findProviderUserId: providers.service.findProviderUserId,
+    onPaymentEvent: (event) => notifications.service.notify(event),
   });
 
   const bookings = createBookingsModule({
@@ -155,11 +172,13 @@ export function createApp({
     requireAuth: auth.requireAuth,
     findOfferedCategory: catalogue.service.findOfferedCategory,
     findProviderProfileId: providers.service.findProviderProfileId,
+    findProviderUserId: providers.service.findProviderUserId,
     isBookable: providers.service.isBookable,
     findNextWave: matching.service.findNextWave,
     onBookingCompleted: async (booking) => {
       await payments.service.createPaymentForCompletedBooking(booking.id);
     },
+    notifyBookingEvent: (event) => notifications.service.notify(event),
   });
   app.use('/api/bookings', bookings.router);
   // Payment routes nested under a booking (checkout, view) — a second router
@@ -167,6 +186,12 @@ export function createApp({
   app.use('/api/bookings', payments.bookingRouter);
   // The gateway's own callback endpoint. Public — see its doc comment.
   app.use('/api/payments', payments.webhookRouter);
+
+  // Review routes nested under a booking (submit, view) — a third router at
+  // the same prefix, on paths neither of the above uses.
+  const reviews = createReviewsModule({ db, requireAuth: auth.requireAuth });
+  app.use('/api/bookings', reviews.bookingRouter);
+  app.use('/api/reviews', reviews.providerRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

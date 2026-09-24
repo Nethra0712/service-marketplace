@@ -815,6 +815,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorPaymentAlreadyFinal => 'This booking has already been paid.';
 
   @override
+  String get errorNotBookingParticipant => 'You\'re not part of this booking.';
+
+  @override
+  String get errorBookingNotCompleted =>
+      'This booking hasn\'t been completed yet.';
+
+  @override
+  String get errorAlreadyReviewed => 'You\'ve already reviewed this booking.';
+
+  @override
+  String get errorDeviceTokenNotOwned =>
+      'That device isn\'t registered to your account.';
+
+  @override
   String get paymentSectionTitle => 'Payment';
 
   @override
@@ -853,4 +867,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentCheckoutOpenFailed => 'Couldn\'t open the checkout page.';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsEmpty => 'No notifications yet.';
+
+  @override
+  String get notificationMarkAllRead => 'Mark all as read';
+
+  @override
+  String get notificationPermissionTitle => 'Stay updated';
+
+  @override
+  String get notificationPermissionBody =>
+      'Turn on notifications to know when your booking status changes, a quote arrives, or a payment completes.';
+
+  @override
+  String get notificationPermissionAllow => 'Turn on notifications';
+
+  @override
+  String get notificationPermissionNotNow => 'Not now';
+
+  @override
+  String get notificationPreferencesTitle => 'Push notifications';
+
+  @override
+  String get notificationPreferencesSubtitle =>
+      'Get a push notification for important updates, in addition to your in-app notification list.';
+
+  @override
+  String get reviewSectionTitle => 'Reviews';
+
+  @override
+  String get reviewRatingLabel => 'Your rating';
+
+  @override
+  String get reviewCommentLabel => 'Comment (optional)';
+
+  @override
+  String get reviewCommentHint => 'Share more about your experience';
+
+  @override
+  String get reviewSubmit => 'Submit review';
+
+  @override
+  String get reviewSubmitted => 'Review submitted.';
+
+  @override
+  String get reviewYourReview => 'Your review';
+
+  @override
+  String get reviewCounterpartReview => 'Their review';
+
+  @override
+  String get reviewNoComment => 'No comment left.';
 }

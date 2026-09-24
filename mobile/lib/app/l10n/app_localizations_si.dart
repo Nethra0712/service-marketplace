@@ -817,6 +817,21 @@ class AppLocalizationsSi extends AppLocalizations {
   String get errorPaymentAlreadyFinal => 'මෙම වෙන්කිරීම දැනටමත් ගෙවා ඇත.';
 
   @override
+  String get errorNotBookingParticipant =>
+      'ඔබ මෙම වෙන්කිරීමේ කොටස්කරුවෙකු නොවේ.';
+
+  @override
+  String get errorBookingNotCompleted => 'මෙම වෙන්කිරීම තවම සම්පූර්ණ කර නැත.';
+
+  @override
+  String get errorAlreadyReviewed =>
+      'ඔබ දැනටමත් මෙම වෙන්කිරීම ඇගයීමට ලක් කර ඇත.';
+
+  @override
+  String get errorDeviceTokenNotOwned =>
+      'එම උපාංගය ඔබේ ගිණුමට ලියාපදිංචි කර නැත.';
+
+  @override
   String get paymentSectionTitle => 'ගෙවීම';
 
   @override
@@ -855,4 +870,60 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get paymentCheckoutOpenFailed => 'ගෙවීම් පිටුව විවෘත කළ නොහැකි විය.';
+
+  @override
+  String get notificationsTitle => 'දැනුම්දීම්';
+
+  @override
+  String get notificationsEmpty => 'තවම දැනුම්දීම් නැත.';
+
+  @override
+  String get notificationMarkAllRead => 'සියල්ල කියවූ ලෙස සලකුණු කරන්න';
+
+  @override
+  String get notificationPermissionTitle => 'යාවත්කාලීනව සිටින්න';
+
+  @override
+  String get notificationPermissionBody =>
+      'ඔබේ වෙන්කිරීමේ තත්ත්වය වෙනස් වන විට, මිල ගණනක් පැමිණෙන විට, හෝ ගෙවීමක් සම්පූර්ණ වන විට දැනගැනීමට දැනුම්දීම් සක්‍රිය කරන්න.';
+
+  @override
+  String get notificationPermissionAllow => 'දැනුම්දීම් සක්‍රිය කරන්න';
+
+  @override
+  String get notificationPermissionNotNow => 'දැන් නොවේ';
+
+  @override
+  String get notificationPreferencesTitle => 'තල්ලු දැනුම්දීම්';
+
+  @override
+  String get notificationPreferencesSubtitle =>
+      'ඔබේ යෙදුම තුළ දැනුම්දීම් ලැයිස්තුවට අමතරව, වැදගත් යාවත්කාලීන සඳහා තල්ලු දැනුම්දීමක් ලබා ගන්න.';
+
+  @override
+  String get reviewSectionTitle => 'ඇගයීම්';
+
+  @override
+  String get reviewRatingLabel => 'ඔබේ ශ්‍රේණිගත කිරීම';
+
+  @override
+  String get reviewCommentLabel => 'අදහස (විකල්ප)';
+
+  @override
+  String get reviewCommentHint => 'ඔබේ අත්දැකීම ගැන වැඩිදුර බෙදාගන්න';
+
+  @override
+  String get reviewSubmit => 'ඇගයීම යවන්න';
+
+  @override
+  String get reviewSubmitted => 'ඇගයීම යවන ලදී.';
+
+  @override
+  String get reviewYourReview => 'ඔබේ ඇගයීම';
+
+  @override
+  String get reviewCounterpartReview => 'ඔවුන්ගේ ඇගයීම';
+
+  @override
+  String get reviewNoComment => 'අදහසක් තබා නැත.';
 }

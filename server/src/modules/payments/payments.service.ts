@@ -1,12 +1,33 @@
 import { randomUUID } from 'node:crypto';
 
 import type { Database } from '../../db/client.js';
-import type { Payment, PaymentStatus, ProviderPayout } from '../../db/schema/index.js';
+import type {
+  NotificationKind,
+  Payment,
+  PaymentStatus,
+  ProviderPayout,
+} from '../../db/schema/index.js';
 import type { Clock } from '../../lib/clock.js';
 import { AppError, ErrorCode } from '../../lib/errors.js';
+import type { Logger } from '../../lib/logger.js';
 import { calculateCommission } from './commission.js';
 import { createPaymentsRepository, type PaymentsRepository } from './payments.repository.js';
 import type { CheckoutSession, PaymentProvider } from './payment-provider.js';
+
+/**
+ * Notifies one user about a payment or payout event. Supplied by the
+ * notifications module. Optional, and its failure never blocks the callback
+ * or payout action that triggered it — same posture as bookings' own
+ * `BookingNotificationHook`.
+ */
+export type PaymentNotificationHook = (event: {
+  kind: NotificationKind;
+  recipientUserId: string;
+  bookingId?: string;
+  paymentId?: string;
+  payoutId?: string;
+  params?: { amount: string; currency: string };
+}) => Promise<void>;
 
 export interface PaymentView {
   id: string;
@@ -47,6 +68,11 @@ export interface PaymentsServiceDeps {
   commissionBasisPoints: number;
   /** This API's own base URL, for building the gateway's return/cancel/notify URLs. */
   publicApiBaseUrl: string;
+  /** From the notifications module. */
+  onPaymentEvent?: PaymentNotificationHook;
+  /** From the providers module: resolves a provider profile id to its owner's user id, for payout notifications. */
+  findProviderUserId?: (providerProfileId: string) => Promise<string | undefined>;
+  logger?: Logger;
 }
 
 const iso = (date: Date | null): string | null => (date ? date.toISOString() : null);
@@ -108,8 +134,38 @@ export function createPaymentsService({
   provider,
   commissionBasisPoints,
   publicApiBaseUrl,
+  onPaymentEvent,
+  findProviderUserId,
+  logger,
 }: PaymentsServiceDeps) {
   const repository = createPaymentsRepository(db);
+
+  /** Fire-and-forget: never lets a notification failure undo or block the payment/payout action that triggered it. */
+  async function notify(
+    kind: NotificationKind,
+    recipientUserId: string | null | undefined,
+    event: {
+      bookingId?: string;
+      paymentId?: string;
+      payoutId?: string;
+      amount: string;
+      currency: string;
+    },
+  ): Promise<void> {
+    if (!onPaymentEvent || !recipientUserId) return;
+    try {
+      await onPaymentEvent({
+        kind,
+        recipientUserId,
+        bookingId: event.bookingId,
+        paymentId: event.paymentId,
+        payoutId: event.payoutId,
+        params: { amount: event.amount, currency: event.currency },
+      });
+    } catch (error) {
+      logger?.error({ err: error, kind }, 'onPaymentEvent hook failed; continuing');
+    }
+  }
 
   /** The actual insert + `created` ledger entry, shared by both entry points below. */
   async function createPaymentRow(bookingId: string): Promise<Payment> {
@@ -345,6 +401,20 @@ export function createPaymentsService({
         providerPaymentId: updated.providerPaymentId,
         rawPayload: verified.raw,
       });
+
+      if (verified.status === 'succeeded' || verified.status === 'failed') {
+        const context = await repository.findBookingContext(updated.bookingId);
+        await notify(
+          verified.status === 'succeeded' ? 'payment_succeeded' : 'payment_failed',
+          context?.customerId,
+          {
+            bookingId: updated.bookingId,
+            paymentId: updated.id,
+            amount: updated.serviceAmount,
+            currency: updated.currency,
+          },
+        );
+      }
     },
 
     /**
@@ -446,7 +516,17 @@ export function createPaymentsService({
     /** Marks a payout as paid. The actual bank transfer is a manual, out-of-band step; this just records that it happened. NOT reachable over HTTP: see the module doc comment. */
     async markPayoutPaid(payoutId: string, note: string | null): Promise<PayoutView> {
       const payout = await repository.markPayoutPaid(payoutId, clock(), note);
-      if (payout) return toPayoutView(payout);
+      if (payout) {
+        const recipientUserId = findProviderUserId
+          ? await findProviderUserId(payout.providerProfileId)
+          : undefined;
+        await notify('payout_paid', recipientUserId, {
+          payoutId: payout.id,
+          amount: payout.totalProviderEarningAmount,
+          currency: 'LKR',
+        });
+        return toPayoutView(payout);
+      }
 
       const existing = await repository.findPayoutById(payoutId);
       if (!existing) throw notFound('Payout not found.');

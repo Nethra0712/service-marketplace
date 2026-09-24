@@ -834,6 +834,22 @@ class AppLocalizationsTa extends AppLocalizations {
       'இந்த முன்பதிவுக்கு ஏற்கெனவே பணம் செலுத்தப்பட்டுள்ளது.';
 
   @override
+  String get errorNotBookingParticipant =>
+      'நீங்கள் இந்த முன்பதிவின் பங்கேற்பாளர் அல்ல.';
+
+  @override
+  String get errorBookingNotCompleted =>
+      'இந்த முன்பதிவு இன்னும் முடிக்கப்படவில்லை.';
+
+  @override
+  String get errorAlreadyReviewed =>
+      'நீங்கள் ஏற்கெனவே இந்த முன்பதிவை மதிப்பீடு செய்துள்ளீர்கள்.';
+
+  @override
+  String get errorDeviceTokenNotOwned =>
+      'அந்த சாதனம் உங்கள் கணக்கில் பதிவு செய்யப்படவில்லை.';
+
+  @override
   String get paymentSectionTitle => 'கட்டணம்';
 
   @override
@@ -873,4 +889,60 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get paymentCheckoutOpenFailed =>
       'கட்டணப் பக்கத்தைத் திறக்க முடியவில்லை.';
+
+  @override
+  String get notificationsTitle => 'அறிவிப்புகள்';
+
+  @override
+  String get notificationsEmpty => 'இதுவரை அறிவிப்புகள் இல்லை.';
+
+  @override
+  String get notificationMarkAllRead => 'அனைத்தையும் படித்ததாகக் குறிக்கவும்';
+
+  @override
+  String get notificationPermissionTitle => 'புதுப்பித்த நிலையில் இருங்கள்';
+
+  @override
+  String get notificationPermissionBody =>
+      'உங்கள் முன்பதிவு நிலை மாறும்போது, ஒரு மதிப்பீடு வரும்போது, அல்லது கட்டணம் முடிந்தவுடன் அறிய அறிவிப்புகளை இயக்கவும்.';
+
+  @override
+  String get notificationPermissionAllow => 'அறிவிப்புகளை இயக்கவும்';
+
+  @override
+  String get notificationPermissionNotNow => 'இப்போது வேண்டாம்';
+
+  @override
+  String get notificationPreferencesTitle => 'புஷ் அறிவிப்புகள்';
+
+  @override
+  String get notificationPreferencesSubtitle =>
+      'உங்கள் ஆப்பிற்குள் இருக்கும் அறிவிப்புப் பட்டியலுடன், முக்கியமான புதுப்பிப்புகளுக்கு புஷ் அறிவிப்பையும் பெறுங்கள்.';
+
+  @override
+  String get reviewSectionTitle => 'மதிப்பீடுகள்';
+
+  @override
+  String get reviewRatingLabel => 'உங்கள் மதிப்பீடு';
+
+  @override
+  String get reviewCommentLabel => 'கருத்து (விருப்பத்தேர்வு)';
+
+  @override
+  String get reviewCommentHint => 'உங்கள் அனுபவத்தைப் பற்றி மேலும் பகிரவும்';
+
+  @override
+  String get reviewSubmit => 'மதிப்பீட்டை அனுப்பவும்';
+
+  @override
+  String get reviewSubmitted => 'மதிப்பீடு அனுப்பப்பட்டது.';
+
+  @override
+  String get reviewYourReview => 'உங்கள் மதிப்பீடு';
+
+  @override
+  String get reviewCounterpartReview => 'அவர்களின் மதிப்பீடு';
+
+  @override
+  String get reviewNoComment => 'கருத்து எதுவும் இல்லை.';
 }

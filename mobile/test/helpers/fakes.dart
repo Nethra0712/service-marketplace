@@ -11,8 +11,13 @@ import 'package:mobile/features/auth/domain/auth_repository.dart';
 import 'package:mobile/features/auth/domain/auth_session.dart';
 import 'package:mobile/features/auth/domain/current_user.dart';
 import 'package:mobile/features/auth/domain/otp_challenge.dart';
+import 'package:mobile/features/notifications/application/notification_providers.dart';
+import 'package:mobile/features/notifications/data/noop_push_notification_service.dart';
+import 'package:mobile/features/notifications/domain/notification_repository.dart';
+import 'package:mobile/features/notifications/domain/push_notification_service.dart';
 
 import 'fake_tile_provider.dart';
+import 'notification_fakes.dart';
 
 /// Secure storage that lives in memory, so tests never touch a platform channel.
 class InMemorySecureStorage implements SecureStorage {
@@ -156,9 +161,13 @@ class AuthHarness {
   AuthHarness({
     DateTime? start,
     InMemorySecureStorage? storage,
+    NotificationRepository? notification,
+    PushNotificationService? push,
     this.extraOverrides = const [],
   }) : clock = TestClock(start),
-       storage = storage ?? InMemorySecureStorage() {
+       storage = storage ?? InMemorySecureStorage(),
+       notification = notification ?? FakeNotificationRepository(),
+       push = push ?? const NoopPushNotificationService() {
     auth = FakeAuthRepository(clock);
     users = FakeCurrentUserRepository();
     container = ProviderContainer(overrides: overrides);
@@ -166,6 +175,14 @@ class AuthHarness {
 
   final TestClock clock;
   final InMemorySecureStorage storage;
+  // Every screen watches these (the app bar's bell, the home screen's
+  // permission banner), not just notification screens, so they must always
+  // be overridden with SOMETHING safe — never real I/O — even for a test
+  // that never mentions notifications. `FeatureHarness` supplies its own
+  // inspectable fakes here instead of layering a second override in
+  // `extraOverrides`, which Riverpod refuses (one override per provider).
+  final NotificationRepository notification;
+  final PushNotificationService push;
 
   /// Extra overrides (feature repositories, usually) applied on top of the
   /// auth fakes.
@@ -189,6 +206,8 @@ class AuthHarness {
     clockProvider.overrideWithValue(clock.call),
     // Never let a widget test render a real map tile over the network.
     appMapTileProviderOverrideProvider.overrideWithValue(FakeTileProvider()),
+    notificationRepositoryProvider.overrideWithValue(notification),
+    pushNotificationServiceProvider.overrideWithValue(push),
     ...extraOverrides,
   ];
 

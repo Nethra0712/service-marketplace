@@ -7,6 +7,7 @@ import { createBookingsRouter } from './bookings.routes.js';
 import {
   createBookingsService,
   type BookingCompletedHook,
+  type BookingNotificationHook,
   type BookingsService,
   type EligibilityCheck,
   type NextWaveLookup,
@@ -14,7 +15,7 @@ import {
   type ProviderProfileLookup,
 } from './bookings.service.js';
 
-export type { BookingCompletedHook } from './bookings.service.js';
+export type { BookingCompletedHook, BookingNotificationHook } from './bookings.service.js';
 
 export type {
   BookingDetailView,
@@ -39,6 +40,10 @@ export interface BookingsModuleDeps {
   findNextWave: NextWaveLookup;
   /** From the payments module. Runs after a booking completes; failures are logged, never fatal to completion. */
   onBookingCompleted?: BookingCompletedHook;
+  /** From the notifications module. Failures are logged, never fatal to the action that triggered them. */
+  notifyBookingEvent?: BookingNotificationHook;
+  /** From the providers module: resolves a provider profile id to its owner's user id. */
+  findProviderUserId?: (providerProfileId: string) => Promise<string | undefined>;
   logger?: Logger;
 }
 
@@ -58,6 +63,8 @@ export function createBookingsModule({
   isBookable,
   findNextWave,
   onBookingCompleted,
+  notifyBookingEvent,
+  findProviderUserId,
   logger,
 }: BookingsModuleDeps): BookingsModule {
   const service = createBookingsService({
@@ -68,6 +75,8 @@ export function createBookingsModule({
     isBookable,
     findNextWave,
     onBookingCompleted,
+    notifyBookingEvent,
+    findProviderUserId,
     logger,
   });
   return { router: createBookingsRouter({ service, requireAuth }), service };

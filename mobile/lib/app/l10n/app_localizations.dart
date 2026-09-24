@@ -1510,6 +1510,30 @@ abstract class AppLocalizations {
   /// **'This booking has already been paid.'**
   String get errorPaymentAlreadyFinal;
 
+  /// No description provided for @errorNotBookingParticipant.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re not part of this booking.'**
+  String get errorNotBookingParticipant;
+
+  /// No description provided for @errorBookingNotCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking hasn\'t been completed yet.'**
+  String get errorBookingNotCompleted;
+
+  /// No description provided for @errorAlreadyReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve already reviewed this booking.'**
+  String get errorAlreadyReviewed;
+
+  /// No description provided for @errorDeviceTokenNotOwned.
+  ///
+  /// In en, this message translates to:
+  /// **'That device isn\'t registered to your account.'**
+  String get errorDeviceTokenNotOwned;
+
   /// No description provided for @paymentSectionTitle.
   ///
   /// In en, this message translates to:
@@ -1587,6 +1611,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t open the checkout page.'**
   String get paymentCheckoutOpenFailed;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet.'**
+  String get notificationsEmpty;
+
+  /// No description provided for @notificationMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get notificationMarkAllRead;
+
+  /// No description provided for @notificationPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay updated'**
+  String get notificationPermissionTitle;
+
+  /// No description provided for @notificationPermissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on notifications to know when your booking status changes, a quote arrives, or a payment completes.'**
+  String get notificationPermissionBody;
+
+  /// No description provided for @notificationPermissionAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on notifications'**
+  String get notificationPermissionAllow;
+
+  /// No description provided for @notificationPermissionNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notificationPermissionNotNow;
+
+  /// No description provided for @notificationPreferencesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications'**
+  String get notificationPreferencesTitle;
+
+  /// No description provided for @notificationPreferencesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a push notification for important updates, in addition to your in-app notification list.'**
+  String get notificationPreferencesSubtitle;
+
+  /// No description provided for @reviewSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get reviewSectionTitle;
+
+  /// No description provided for @reviewRatingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rating'**
+  String get reviewRatingLabel;
+
+  /// No description provided for @reviewCommentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment (optional)'**
+  String get reviewCommentLabel;
+
+  /// No description provided for @reviewCommentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share more about your experience'**
+  String get reviewCommentHint;
+
+  /// No description provided for @reviewSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit review'**
+  String get reviewSubmit;
+
+  /// No description provided for @reviewSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Review submitted.'**
+  String get reviewSubmitted;
+
+  /// No description provided for @reviewYourReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Your review'**
+  String get reviewYourReview;
+
+  /// No description provided for @reviewCounterpartReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Their review'**
+  String get reviewCounterpartReview;
+
+  /// No description provided for @reviewNoComment.
+  ///
+  /// In en, this message translates to:
+  /// **'No comment left.'**
+  String get reviewNoComment;
 }
 
 class _AppLocalizationsDelegate

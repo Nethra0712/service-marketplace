@@ -119,6 +119,31 @@ export const paymentLedgerEntryKind = pgEnum('payment_ledger_entry_kind', [
 /** A weekly provider payout's status. The actual bank transfer is manual in V1: this only tracks whether it has been done. */
 export const payoutStatus = pgEnum('payout_status', ['pending', 'paid', 'cancelled']);
 
+/** Which push backend a device token was registered through. A closed set: never trusted from the client beyond selecting one of these. */
+export const pushProviderName = pgEnum('push_provider_name', ['mock', 'fcm']);
+
+/** The OS a registered device token belongs to, for provider-specific payload shaping later. */
+export const devicePlatform = pgEnum('device_platform', ['android', 'ios']);
+
+/**
+ * Every event the app can notify someone about. One in-app `notifications`
+ * row and (if the recipient allows push) one push message per event —
+ * see `notifications.service.ts`'s `notify`.
+ */
+export const notificationKind = pgEnum('notification_kind', [
+  'booking_accepted',
+  'provider_en_route',
+  'provider_arrived',
+  'booking_completed',
+  'booking_cancelled',
+  'quote_created',
+  'quote_accepted',
+  'quote_rejected',
+  'payment_succeeded',
+  'payment_failed',
+  'payout_paid',
+]);
+
 export type UserStatus = (typeof userStatus.enumValues)[number];
 export type AppLanguage = (typeof appLanguage.enumValues)[number];
 export type PricingModel = (typeof pricingModel.enumValues)[number];
@@ -133,3 +158,6 @@ export type PaymentProviderName = (typeof paymentProviderName.enumValues)[number
 export type PaymentStatus = (typeof paymentStatus.enumValues)[number];
 export type PaymentLedgerEntryKind = (typeof paymentLedgerEntryKind.enumValues)[number];
 export type PayoutStatus = (typeof payoutStatus.enumValues)[number];
+export type PushProviderName = (typeof pushProviderName.enumValues)[number];
+export type DevicePlatform = (typeof devicePlatform.enumValues)[number];
+export type NotificationKind = (typeof notificationKind.enumValues)[number];

@@ -21,6 +21,8 @@ export type TestConfig = Pick<
   | 'platformCommissionBasisPoints'
   | 'publicApiBaseUrl'
   | 'payhere'
+  | 'pushProvider'
+  | 'fcm'
 >;
 
 // Fixed, obviously fake secrets. They exist only in the test suite.
@@ -38,6 +40,8 @@ export const testConfig: TestConfig = {
   platformCommissionBasisPoints: 1500,
   publicApiBaseUrl: 'http://localhost:3000',
   payhere: undefined,
+  pushProvider: 'mock',
+  fcm: undefined,
 };
 
 /** A clock tests can move forward, so expiry is tested without sleeping. */

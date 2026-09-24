@@ -34,6 +34,12 @@ export const ErrorCode = {
   PaymentNotReady: 'PAYMENT_NOT_READY',
   PaymentAlreadyFinal: 'PAYMENT_ALREADY_FINAL',
   InvalidPaymentCallback: 'INVALID_PAYMENT_CALLBACK',
+  // Notifications
+  DeviceTokenNotOwned: 'DEVICE_TOKEN_NOT_OWNED',
+  // Reviews
+  NotBookingParticipant: 'NOT_BOOKING_PARTICIPANT',
+  BookingNotCompleted: 'BOOKING_NOT_COMPLETED',
+  AlreadyReviewed: 'ALREADY_REVIEWED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
