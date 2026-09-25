@@ -1,12 +1,23 @@
 import express, { Router, type RequestHandler } from 'express';
 
 import { getAuth } from '../auth/index.js';
+import { createIpRateLimiter } from '../../middleware/ip-rate-limit.js';
 import { parseRequest } from '../../lib/validation.js';
 import { paymentsSchemas } from './payments.schemas.js';
 import type { PaymentsService } from './payments.service.js';
 
 /** Largest webhook body accepted. Gateway callbacks are a handful of short fields. */
 const WEBHOOK_BODY_LIMIT = '20kb';
+
+/**
+ * Deliberately generous: the gateway calls this from its own, small pool of
+ * server IPs, so many different customers' legitimate callbacks can arrive
+ * from the same address in a short window. This is not meant to shape real
+ * traffic — `handleCallback`'s signature check is what actually decides
+ * whether a callback is trusted — only to cap the cost of someone flooding
+ * an unauthenticated, publicly-reachable endpoint with garbage.
+ */
+const WEBHOOK_RATE_LIMIT = { windowMs: 60_000, limit: 300 };
 
 export interface PaymentsRoutesDeps {
   service: PaymentsService;
@@ -72,6 +83,7 @@ export function createPaymentsWebhookRouter({ service }: { service: PaymentsServ
   const router = Router();
   router.use(express.urlencoded({ extended: false, limit: WEBHOOK_BODY_LIMIT }));
   router.use(express.json({ limit: WEBHOOK_BODY_LIMIT }));
+  router.use(createIpRateLimiter(WEBHOOK_RATE_LIMIT));
 
   router.post('/webhook', async (req, res) => {
     const { body } = parseRequest(paymentsSchemas.webhook, req);

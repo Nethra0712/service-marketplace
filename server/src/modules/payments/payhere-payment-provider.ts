@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 
+import { safeEqual } from '../../lib/crypto.js';
 import type {
   CheckoutParams,
   CheckoutSession,
@@ -111,7 +112,7 @@ export class PayHereProvider implements PaymentProvider {
     const expected = md5Upper(
       `${merchantId}${orderId}${amount}${currency}${statusCode}${this.secretHash()}`,
     );
-    if (expected !== md5sig.toUpperCase()) return undefined;
+    if (!safeEqual(expected, md5sig.toUpperCase())) return undefined;
 
     const status = STATUS_CODE[statusCode];
     if (!status) return undefined;

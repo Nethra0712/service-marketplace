@@ -165,6 +165,17 @@ export interface BookingsServiceDeps {
   notifyBookingEvent?: BookingNotificationHook;
   /** The reverse of {@link ProviderProfileLookup}. Supplied by the providers module. Needed to notify a provider by their provider profile id. */
   findProviderUserId?: (providerProfileId: string) => Promise<string | undefined>;
+  /**
+   * From the realtime module: drops any cached live-location state for a
+   * booking. Called whenever a booking leaves a trackable stage (completed,
+   * cancelled, expired, or its provider released) so a stale position can
+   * never be handed to whoever next joins that booking's room. Not required
+   * for correctness — `realtime.service.ts` re-validates the booking's status
+   * from the database on every join/update anyway — but without this, each
+   * booking's cache entry would otherwise sit in memory for the life of the
+   * process instead of being freed once it is no longer needed.
+   */
+  onBookingEnded?: (bookingId: string) => void;
   logger?: Logger;
 }
 
@@ -275,9 +286,20 @@ export function createBookingsService({
   onBookingCompleted,
   notifyBookingEvent,
   findProviderUserId,
+  onBookingEnded,
   logger,
 }: BookingsServiceDeps) {
   const repository = createBookingsRepository(db);
+
+  /** Never lets a failure here undo or block the booking action that triggered it — same posture as {@link notify}. */
+  function endTracking(bookingId: string): void {
+    if (!onBookingEnded) return;
+    try {
+      onBookingEnded(bookingId);
+    } catch (error) {
+      logger?.error({ err: error, bookingId }, 'onBookingEnded hook failed; continuing');
+    }
+  }
 
   /** Fire-and-forget: never lets a notification failure undo or block the booking action that triggered it. */
   async function notify(
@@ -332,10 +354,12 @@ export function createBookingsService({
    * no-op otherwise. There is no lock around "decide the next wave number,
    * then insert it": two concurrent requests settling the same idle booking
    * at the same instant could both attempt it. That is rare (settlement only
-   * runs when the previous wave is already fully resolved) and harmless — the
-   * losing attempt's insert hits `booking_offers_booking_provider_wave_uidx`
-   * or `..._pending_uidx` and is treated as "someone else already dispatched
-   * this wave," not an error.
+   * runs when the previous wave is already fully resolved) and harmless —
+   * `insertOfferWave` skips (via `onConflictDoNothing`) only the specific
+   * candidate rows that collide with `booking_offers_booking_provider_wave_uidx`
+   * or `..._pending_uidx`, rather than failing the whole batch, so the losing
+   * attempt's genuinely-new candidates (if its candidate set differs at all)
+   * still land instead of being silently dropped.
    */
   async function dispatchWave(
     bookingId: string,
@@ -347,22 +371,13 @@ export function createBookingsService({
     const nextWave = (await repository.maxOfferWave(bookingId)) + 1;
     const candidates = await findNextWave(target, excluded, jobLocation);
     if (candidates.length === 0) return; // Nobody eligible right now; stays searching until it expires.
-    try {
-      await repository.insertOfferWave(
-        bookingId,
-        nextWave,
-        candidates,
-        now,
-        new Date(now.getTime() + OFFER_RESPONSE_WINDOW_MS),
-      );
-    } catch (error) {
-      if (
-        !isUniqueViolation(error, 'booking_offers_booking_provider_wave_uidx') &&
-        !isUniqueViolation(error, 'booking_offers_booking_provider_pending_uidx')
-      ) {
-        throw error;
-      }
-    }
+    await repository.insertOfferWave(
+      bookingId,
+      nextWave,
+      candidates,
+      now,
+      new Date(now.getTime() + OFFER_RESPONSE_WINDOW_MS),
+    );
   }
 
   const jobLocationOf = (core: {
@@ -390,6 +405,7 @@ export function createBookingsService({
         await repo.expireDueOffers(bookingId, now);
         await repo.expireBooking(bookingId);
       });
+      endTracking(bookingId);
       return;
     }
 
@@ -710,6 +726,7 @@ export function createBookingsService({
       if (!(await repository.complete(bookingId, providerProfileId, now, agreedAmount))) {
         throw invalidState(`This booking cannot be moved from "${core.status}" that way.`);
       }
+      endTracking(bookingId);
 
       const finalAmount = agreedAmount ?? core.agreedAmount;
       if (onBookingCompleted && finalAmount !== null) {
@@ -759,6 +776,7 @@ export function createBookingsService({
         return true;
       });
       if (!released) throw invalidState('This booking can no longer be released.');
+      endTracking(bookingId);
 
       const freshCore = await repository.findCore(bookingId);
       if (freshCore) {
@@ -783,6 +801,7 @@ export function createBookingsService({
       if (!(await repository.cancelByCustomer(bookingId, userId, reason, now))) {
         throw invalidState('This booking can no longer be cancelled.');
       }
+      endTracking(bookingId);
       await repository.supersedeAllPendingOffers(bookingId, now);
       if (core.providerProfileId) {
         await repository.supersedeAcceptedOffer(bookingId, core.providerProfileId, now);

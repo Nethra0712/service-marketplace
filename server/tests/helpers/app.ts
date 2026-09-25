@@ -76,6 +76,8 @@ export interface TestApp {
   clock: FakeClock;
   /** What the realtime module needs from this app instance, for tests that build one on top of it. */
   realtime: RealtimeDependencies;
+  /** See `app.ts`'s own doc comment — call once a realtime module has been built on top of this app. */
+  onRealtimeReady: (forgetBooking: (bookingId: string) => void) => void;
 }
 
 export function buildTestApp({
@@ -89,7 +91,7 @@ export function buildTestApp({
 }: TestAppOptions): TestApp {
   const sms = new MockSmsProvider();
   const clock = new FakeClock();
-  const { app, realtime } = createApp({
+  const { app, realtime, onRealtimeReady } = createApp({
     config: { ...testConfig, ...config },
     logger,
     db,
@@ -99,5 +101,5 @@ export function buildTestApp({
     authPolicy,
     catalogueRateLimit,
   });
-  return { app, sms, clock, realtime };
+  return { app, sms, clock, realtime, onRealtimeReady };
 }

@@ -56,11 +56,43 @@ class BookingTrackingController extends AsyncNotifier<TrackedLocation?> {
     _watchAccount(ref);
     final socket = ref.watch(trackingSocketProvider);
 
-    final subscription = socket.locationUpdates
+    final locationSubscription = socket.locationUpdates
         .where((update) => update.bookingId == bookingId)
         .listen((update) => state = AsyncData(update.location));
+
+    // Room membership lives on the socket.io connection itself, not on the
+    // account: a reconnect after a drop is a brand-new connection, so the
+    // server has already forgotten this room even though the badge goes
+    // straight back to "Live". Without rejoining here, location updates
+    // would silently stay dark after any network blip until the screen is
+    // reopened. `disconnected` can be followed by one or more `connecting`
+    // attempts before it lands on `connected` again, so what marks a
+    // transition as a genuine reconnect (rather than the very first connect,
+    // which `joinBooking` below already handles) is "has there been a drop
+    // since the last time this was joined" — not just the immediately
+    // preceding state.
+    var droppedSinceLastJoin = false;
+    final connectionSubscription = socket.connectionState.listen((
+      connectionState,
+    ) {
+      if (connectionState == TrackingConnectionState.disconnected) {
+        droppedSinceLastJoin = true;
+        return;
+      }
+      if (connectionState == TrackingConnectionState.connected &&
+          droppedSinceLastJoin) {
+        droppedSinceLastJoin = false;
+        unawaited(
+          socket.joinBooking(bookingId).then((info) {
+            state = AsyncData(info.lastLocation);
+          }),
+        );
+      }
+    });
+
     ref.onDispose(() {
-      unawaited(subscription.cancel());
+      unawaited(locationSubscription.cancel());
+      unawaited(connectionSubscription.cancel());
       unawaited(socket.leaveBooking(bookingId));
     });
 

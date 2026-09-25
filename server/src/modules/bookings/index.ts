@@ -44,6 +44,8 @@ export interface BookingsModuleDeps {
   notifyBookingEvent?: BookingNotificationHook;
   /** From the providers module: resolves a provider profile id to its owner's user id. */
   findProviderUserId?: (providerProfileId: string) => Promise<string | undefined>;
+  /** From the realtime module (indirectly — see `app.ts`'s own comment on why). Drops cached live-location state once a booking leaves a trackable stage. */
+  onBookingEnded?: (bookingId: string) => void;
   logger?: Logger;
 }
 
@@ -65,6 +67,7 @@ export function createBookingsModule({
   onBookingCompleted,
   notifyBookingEvent,
   findProviderUserId,
+  onBookingEnded,
   logger,
 }: BookingsModuleDeps): BookingsModule {
   const service = createBookingsService({
@@ -77,6 +80,7 @@ export function createBookingsModule({
     onBookingCompleted,
     notifyBookingEvent,
     findProviderUserId,
+    onBookingEnded,
     logger,
   });
   return { router: createBookingsRouter({ service, requireAuth }), service };

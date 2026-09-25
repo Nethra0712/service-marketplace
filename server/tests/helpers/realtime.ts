@@ -25,6 +25,7 @@ export async function startRealtimeTestServer(testApp: TestApp): Promise<Realtim
     logger: createLogger({ logLevel: 'silent' }),
     corsOrigins: [],
   });
+  testApp.onRealtimeReady(realtimeModule.forgetBooking);
   await new Promise<void>((resolve) => httpServer.listen(0, resolve));
   const { port } = httpServer.address() as AddressInfo;
   return {

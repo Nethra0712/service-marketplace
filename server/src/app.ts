@@ -76,6 +76,15 @@ export interface RealtimeDependencies {
 export interface CreateAppResult {
   app: Express;
   realtime: RealtimeDependencies;
+  /**
+   * Wires the realtime module's cache-eviction hook into the bookings
+   * module, once the caller has actually built the realtime module (which
+   * needs the `http.Server` this function's caller creates — see
+   * {@link RealtimeDependencies}'s own doc comment). A no-op until called,
+   * which is harmless: nothing can be caching a location for a booking
+   * before the realtime module exists to accept one.
+   */
+  onRealtimeReady: (forgetBooking: (bookingId: string) => void) => void;
 }
 
 /**
@@ -94,6 +103,13 @@ export function createApp({
   catalogueRateLimit,
 }: AppDependencies): CreateAppResult {
   const app = express();
+
+  // A forward reference to the realtime module's `forgetBooking`, resolved
+  // once it exists (see `CreateAppResult.onRealtimeReady`'s doc comment).
+  // Calling it before that happens is a safe no-op.
+  let forgetTrackedBooking: (bookingId: string) => void = () => {
+    /* no realtime module yet */
+  };
 
   // Behind a load balancer the client address comes from X-Forwarded-For. Trust
   // exactly the configured number of hops, otherwise per-IP limits would
@@ -190,6 +206,9 @@ export function createApp({
       await payments.service.createPaymentForCompletedBooking(booking.id);
     },
     notifyBookingEvent: (event) => notifications.service.notify(event),
+    onBookingEnded: (bookingId) => {
+      forgetTrackedBooking(bookingId);
+    },
   });
   app.use('/api/bookings', bookings.router);
   // Payment routes nested under a booking (checkout, view) — a second router
@@ -226,6 +245,9 @@ export function createApp({
       authenticate: auth.authenticate,
       findBookingAccess: bookings.service.findAccess,
       findProviderProfileId: providers.service.findProviderProfileId,
+    },
+    onRealtimeReady: (forgetBooking) => {
+      forgetTrackedBooking = forgetBooking;
     },
   };
 }

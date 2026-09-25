@@ -1,7 +1,19 @@
 # Service Marketplace: mobile
 
-Flutter app (Android + iOS) for the Service Marketplace platform. One codebase
-with role-based customer/provider experiences (roles are not implemented yet).
+Flutter app (Android + iOS) for the Service Marketplace platform. One
+codebase with role-based customer/provider experiences: OTP phone
+sign-in, browsing service categories, creating and tracking a booking
+end to end (matching, provider travel with live location, service
+completion), paying through PayHere, leaving/reading reviews, push
+notifications, and — on the provider side — a provider profile,
+category applications, availability, and live location broadcasting.
+There is no admin functionality here; that's the separate
+[`admin/`](../admin/README.md) web app, for internal staff only.
+
+Features: `auth`, `booking`, `home`, `notifications`, `payments`,
+`profile`, `provider`, `reviews`, `services`, `tracking` — each under
+`lib/features/`, one folder per feature (see Architecture below). Test
+suite: 33 files, ~478 tests (`flutter test`).
 
 ## Running
 
@@ -20,9 +32,12 @@ flutter build apk --dart-define-from-file=config/prod.json
 | `APP_ENV`      | `dev` (default), `staging` or `prod`                 |
 | `API_BASE_URL` | Backend base URL. Must be `https` outside `dev`.     |
 
-The staging/prod URLs are `.invalid` placeholders until the backend exists.
-A plain `flutter run` works in dev (falls back to the emulator's host alias).
-An invalid configuration fails at app start.
+The staging/prod URLs are still `.invalid` placeholders — there is no
+deployed staging or production backend yet, only a local one (see
+`../server/README.md`). Point `config/staging.json`/`config/prod.json` at
+real deployed URLs once those exist. A plain `flutter run` works in dev
+(falls back to the emulator's host alias). An invalid configuration fails
+at app start.
 
 Windows: building Android apps that use plugins requires **Developer Mode**
 (Settings, System, For developers), because Flutter needs symlink support.
@@ -71,12 +86,30 @@ files run `flutter gen-l10n` (also runs on `flutter run`/`build`). Use
 `AppLocalizations.of(context).<key>`. The Sinhala/Tamil strings are initial
 examples and need review by native speakers.
 
-### Authentication (not implemented)
+### Authentication
 
-`authStatusProvider` currently always reports signed-out, and routes carry a
-`RouteAccess` (`public`, `authenticatedOnly`, `guestOnly`) that the router
-already enforces. `accessTokenReaderProvider` is the seam where the auth
-feature will supply tokens to Dio.
+OTP-over-SMS sign-in against the backend's `auth` module: phone number in,
+a 6-digit code confirms it, the backend returns an access token (short-lived,
+sent as `Authorization: Bearer` on every request via
+`core/network/access_token_interceptor.dart`) and a refresh token (used to
+transparently renew the access token on a 401 — see
+`token_refresh_interceptor_test.dart`). A refresh-token replay is detected
+server-side and revokes the whole session; the app reacts by signing the
+user out (`session_manager_test.dart`). Routes carry a `RouteAccess`
+(`public`, `authenticatedOnly`, `guestOnly`) that the router enforces via
+`authStatusProvider`.
+
+### Live tracking
+
+While a booking is in a trackable stage (accepted through in-progress), the
+customer sees the provider's live location over a Socket.IO connection
+(`features/tracking/`). The connection badge reflects the socket's actual
+state (`connecting`/`connected`/`disconnected` — labeled "Connecting…" /
+"Live" / "Reconnecting…"), and the booking room is automatically rejoined
+after a genuine reconnect (not just the initial connect) — see
+`BookingTrackingController` in
+`lib/features/tracking/application/tracking_providers.dart` and its tests
+in `booking_detail_screen_test.dart`'s "live tracking" groups.
 
 ## Quality checks
 

@@ -25,7 +25,11 @@ try {
 
 const logger = createLogger(config);
 const database = createDatabase(config.databaseUrl, { logger });
-const { app, realtime: realtimeDeps } = createApp({
+const {
+  app,
+  realtime: realtimeDeps,
+  onRealtimeReady,
+} = createApp({
   config,
   logger,
   db: database.db,
@@ -37,7 +41,7 @@ const { app, realtime: realtimeDeps } = createApp({
 // Socket.IO attaches to the raw HTTP server, not to Express itself, so the
 // server is created explicitly here instead of via `app.listen(...)`.
 const server = http.createServer(app);
-createRealtimeModule({
+const realtime = createRealtimeModule({
   httpServer: server,
   authenticate: realtimeDeps.authenticate,
   findBookingAccess: realtimeDeps.findBookingAccess,
@@ -46,6 +50,7 @@ createRealtimeModule({
   logger,
   corsOrigins: config.corsOrigins,
 });
+onRealtimeReady(realtime.forgetBooking);
 
 server.listen(config.port, () => {
   logger.info({ port: config.port, env: config.nodeEnv }, 'API server listening');

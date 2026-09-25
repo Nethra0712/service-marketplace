@@ -185,31 +185,35 @@ export function createPaymentsService({
     }
 
     const breakdown = calculateCommission(context.agreedAmount, commissionBasisPoints);
-    const payment = await repository.insert({
-      bookingId,
-      providerProfileId: context.providerProfileId,
-      provider: provider.name,
-      status: 'pending',
-      serviceAmount: breakdown.serviceAmount,
-      commissionBasisPoints,
-      commissionAmount: breakdown.commissionAmount,
-      providerEarningAmount: breakdown.providerEarningAmount,
-      currency: 'LKR',
-      externalReference: `SM-${randomUUID()}`,
+    const providerProfileId = context.providerProfileId;
+    return db.transaction(async (tx) => {
+      const repo = createPaymentsRepository(tx);
+      const payment = await repo.insert({
+        bookingId,
+        providerProfileId,
+        provider: provider.name,
+        status: 'pending',
+        serviceAmount: breakdown.serviceAmount,
+        commissionBasisPoints,
+        commissionAmount: breakdown.commissionAmount,
+        providerEarningAmount: breakdown.providerEarningAmount,
+        currency: 'LKR',
+        externalReference: `SM-${randomUUID()}`,
+      });
+      await repo.insertLedgerEntry({
+        paymentId: payment.id,
+        kind: 'created',
+        status: payment.status,
+        serviceAmount: payment.serviceAmount,
+        commissionAmount: payment.commissionAmount,
+        gatewayFeeAmount: payment.gatewayFeeAmount,
+        providerEarningAmount: payment.providerEarningAmount,
+        externalReference: payment.externalReference,
+        providerPaymentId: payment.providerPaymentId,
+        note: 'Payment created on booking completion.',
+      });
+      return payment;
     });
-    await repository.insertLedgerEntry({
-      paymentId: payment.id,
-      kind: 'created',
-      status: payment.status,
-      serviceAmount: payment.serviceAmount,
-      commissionAmount: payment.commissionAmount,
-      gatewayFeeAmount: payment.gatewayFeeAmount,
-      providerEarningAmount: payment.providerEarningAmount,
-      externalReference: payment.externalReference,
-      providerPaymentId: payment.providerPaymentId,
-      note: 'Payment created on booking completion.',
-    });
-    return payment;
   }
 
   /**
@@ -355,52 +359,62 @@ export function createPaymentsService({
       if (verified.status === 'pending') return; // Nothing changed; not worth a ledger entry.
 
       const now = clock();
-      const updated =
-        verified.status === 'succeeded'
-          ? await repository.markSucceeded(payment.id, {
-              providerPaymentId: verified.providerPaymentId,
-              succeededAt: now,
-            })
-          : verified.status === 'failed'
-            ? await repository.markFailed(payment.id, {
+      const newStatus = verified.status;
+      // The status transition and its ledger entry land together: a crash
+      // between them must never leave a payment marked succeeded/failed with
+      // no matching audit trail for that event.
+      const updated = await db.transaction(async (tx) => {
+        const repo = createPaymentsRepository(tx);
+        const result =
+          newStatus === 'succeeded'
+            ? await repo.markSucceeded(payment.id, {
                 providerPaymentId: verified.providerPaymentId,
-                failedAt: now,
+                succeededAt: now,
               })
-            : await repository.markCancelled(payment.id, {
-                providerPaymentId: verified.providerPaymentId,
-                cancelledAt: now,
-              });
+            : newStatus === 'failed'
+              ? await repo.markFailed(payment.id, {
+                  providerPaymentId: verified.providerPaymentId,
+                  failedAt: now,
+                })
+              : await repo.markCancelled(payment.id, {
+                  providerPaymentId: verified.providerPaymentId,
+                  cancelledAt: now,
+                });
 
-      if (!updated) {
-        // Lost a race to a concurrent callback between the read above and this write.
-        await repository.insertLedgerEntry({
-          paymentId: payment.id,
-          kind: 'duplicate_ignored',
-          status: payment.status,
-          serviceAmount: payment.serviceAmount,
-          commissionAmount: payment.commissionAmount,
-          gatewayFeeAmount: payment.gatewayFeeAmount,
-          providerEarningAmount: payment.providerEarningAmount,
-          externalReference: payment.externalReference,
-          providerPaymentId: verified.providerPaymentId,
+        if (!result) {
+          // Lost a race to a concurrent callback between the read above and this write.
+          await repo.insertLedgerEntry({
+            paymentId: payment.id,
+            kind: 'duplicate_ignored',
+            status: payment.status,
+            serviceAmount: payment.serviceAmount,
+            commissionAmount: payment.commissionAmount,
+            gatewayFeeAmount: payment.gatewayFeeAmount,
+            providerEarningAmount: payment.providerEarningAmount,
+            externalReference: payment.externalReference,
+            providerPaymentId: verified.providerPaymentId,
+            rawPayload: verified.raw,
+            note: 'Concurrent callback lost a race; ignored.',
+          });
+          return undefined;
+        }
+
+        await repo.insertLedgerEntry({
+          paymentId: result.id,
+          kind: newStatus,
+          status: result.status,
+          serviceAmount: result.serviceAmount,
+          commissionAmount: result.commissionAmount,
+          gatewayFeeAmount: result.gatewayFeeAmount,
+          providerEarningAmount: result.providerEarningAmount,
+          externalReference: result.externalReference,
+          providerPaymentId: result.providerPaymentId,
           rawPayload: verified.raw,
-          note: 'Concurrent callback lost a race; ignored.',
         });
-        return;
-      }
-
-      await repository.insertLedgerEntry({
-        paymentId: updated.id,
-        kind: verified.status,
-        status: updated.status,
-        serviceAmount: updated.serviceAmount,
-        commissionAmount: updated.commissionAmount,
-        gatewayFeeAmount: updated.gatewayFeeAmount,
-        providerEarningAmount: updated.providerEarningAmount,
-        externalReference: updated.externalReference,
-        providerPaymentId: updated.providerPaymentId,
-        rawPayload: verified.raw,
+        return result;
       });
+
+      if (!updated) return;
 
       if (verified.status === 'succeeded' || verified.status === 'failed') {
         const context = await repository.findBookingContext(updated.bookingId);
@@ -440,6 +454,14 @@ export function createPaymentsService({
         throw paymentAlreadyFinal('This payment has no gateway reference to refund.');
       }
 
+      // The gateway call cannot be part of the DB transaction below (it's an
+      // external HTTP call), so a crash between it succeeding and the write
+      // below committing would leave this payment looking un-refunded, and a
+      // retry would call the gateway a second time. Not a live risk today —
+      // `PayHereProvider.refund` is not actually wired to PayHere's Refund
+      // API yet and always rejects (see its own doc comment); only the mock
+      // provider used in dev/test can reach this point. Revisit with a
+      // gateway-side idempotency key once a real refund integration exists.
       await provider.refund({
         providerPaymentId: payment.providerPaymentId,
         amount: payment.serviceAmount,
@@ -447,23 +469,27 @@ export function createPaymentsService({
         reason,
       });
 
-      const refunded = await repository.markRefunded(paymentId, clock());
-      if (!refunded) {
-        throw paymentAlreadyFinal(
-          'This payment changed state while the refund was being processed.',
-        );
-      }
-      await repository.insertLedgerEntry({
-        paymentId: refunded.id,
-        kind: 'refunded',
-        status: refunded.status,
-        serviceAmount: refunded.serviceAmount,
-        commissionAmount: refunded.commissionAmount,
-        gatewayFeeAmount: refunded.gatewayFeeAmount,
-        providerEarningAmount: refunded.providerEarningAmount,
-        externalReference: refunded.externalReference,
-        providerPaymentId: refunded.providerPaymentId,
-        note: reason,
+      const refunded = await db.transaction(async (tx) => {
+        const repo = createPaymentsRepository(tx);
+        const result = await repo.markRefunded(paymentId, clock());
+        if (!result) {
+          throw paymentAlreadyFinal(
+            'This payment changed state while the refund was being processed.',
+          );
+        }
+        await repo.insertLedgerEntry({
+          paymentId: result.id,
+          kind: 'refunded',
+          status: result.status,
+          serviceAmount: result.serviceAmount,
+          commissionAmount: result.commissionAmount,
+          gatewayFeeAmount: result.gatewayFeeAmount,
+          providerEarningAmount: result.providerEarningAmount,
+          externalReference: result.externalReference,
+          providerPaymentId: result.providerPaymentId,
+          note: reason,
+        });
+        return result;
       });
       return toPaymentView(refunded);
     },
@@ -496,18 +522,29 @@ export function createPaymentsService({
         // index if it somehow did.
         if (existingProviderIds.has(total.providerProfileId)) continue;
 
-        const payout = await repository.insertPayout({
-          providerProfileId: total.providerProfileId,
-          periodStart,
-          periodEnd,
-          totalServiceAmount: total.totalServiceAmount,
-          totalCommissionAmount: total.totalCommissionAmount,
-          totalGatewayFeeAmount: total.totalGatewayFeeAmount,
-          totalProviderEarningAmount: total.totalProviderEarningAmount,
-          paymentCount: total.paymentCount,
-          status: 'pending',
+        // One transaction per provider: inserting the payout row and
+        // stamping its payments with `payoutId` must land together. Without
+        // this, a crash between the two would leave a payout row that looks
+        // final (this function's own idempotency check skips any provider
+        // who already has one for the period) while its payments are never
+        // marked as swept into it — silently unpayable, forever, with no
+        // error surfaced anywhere.
+        const payout = await db.transaction(async (tx) => {
+          const repo = createPaymentsRepository(tx);
+          const inserted = await repo.insertPayout({
+            providerProfileId: total.providerProfileId,
+            periodStart,
+            periodEnd,
+            totalServiceAmount: total.totalServiceAmount,
+            totalCommissionAmount: total.totalCommissionAmount,
+            totalGatewayFeeAmount: total.totalGatewayFeeAmount,
+            totalProviderEarningAmount: total.totalProviderEarningAmount,
+            paymentCount: total.paymentCount,
+            status: 'pending',
+          });
+          await repo.assignToPayout(total.paymentIds, inserted.id);
+          return inserted;
         });
-        await repository.assignToPayout(total.paymentIds, payout.id);
         results.push(payout);
       }
       return results.map(toPayoutView);

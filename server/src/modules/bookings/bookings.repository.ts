@@ -455,16 +455,28 @@ export function createBookingsRepository(db: Queryable) {
       respondsBy: Date,
     ): Promise<void> {
       if (candidates.length === 0) return;
-      await db.insert(bookingOffers).values(
-        candidates.map((c) => ({
-          bookingId,
-          providerProfileId: c.providerProfileId,
-          wave,
-          offeredAt,
-          respondsBy,
-          distanceKm: c.distanceKm === null ? null : c.distanceKm.toFixed(2),
-        })),
-      );
+      // `onConflictDoNothing` with no target applies to any unique
+      // constraint on the table (both `booking_offers_booking_provider_wave_uidx`
+      // and `..._pending_uidx`), and — critically for a multi-row insert —
+      // Postgres skips only the individual rows that collide, not the whole
+      // batch. A plain insert would instead fail the entire statement on a
+      // partial collision (some candidates new, one already offered by a
+      // concurrent dispatch for this booking), silently dropping the
+      // legitimately-new candidates along with it. See `dispatchWave`'s own
+      // caller, which can race with itself across concurrent requests.
+      await db
+        .insert(bookingOffers)
+        .values(
+          candidates.map((c) => ({
+            bookingId,
+            providerProfileId: c.providerProfileId,
+            wave,
+            offeredAt,
+            respondsBy,
+            distanceKm: c.distanceKm === null ? null : c.distanceKm.toFixed(2),
+          })),
+        )
+        .onConflictDoNothing();
     },
 
     /**

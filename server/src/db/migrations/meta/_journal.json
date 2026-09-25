@@ -127,6 +127,13 @@
       "when": 1790261844849,
       "tag": "0017_admin_updated_at_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790267295782,
+      "tag": "0018_little_menace",
+      "breakpoints": true
     }
   ]
 }

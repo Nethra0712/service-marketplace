@@ -6,6 +6,7 @@ import type { AdminAuthService } from './admin-auth.service.js';
 import { adminAuthSchemas } from './admin-auth.schemas.js';
 import { clearAdminCookies, setCsrfCookie, setSessionCookie } from './cookies.js';
 import { getAdminAuth } from './require-admin-auth.js';
+import { requireCsrf } from './require-csrf.js';
 import { randomToken } from '../../lib/crypto.js';
 
 export interface AdminAuthRoutesDeps {
@@ -22,7 +23,10 @@ export interface AdminAuthRoutesDeps {
  * account.
  *
  *   POST /login    email + password -> session cookie + CSRF cookie
- *   POST /logout   revokes the session, clears both cookies
+ *   POST /logout   revokes the session, clears both cookies (CSRF-protected
+ *                  like every other mutating admin route, even though
+ *                  SameSite=Strict already keeps the session cookie itself
+ *                  from ever reaching a cross-site request)
  *   GET  /me        the caller's own admin identity
  */
 export function createAdminAuthRouter({
@@ -43,7 +47,7 @@ export function createAdminAuthRouter({
     res.json({ admin });
   });
 
-  router.post('/logout', requireAdminAuth, async (req, res) => {
+  router.post('/logout', requireAdminAuth, requireCsrf, async (req, res) => {
     await service.logout(getAdminAuth(req).sessionId);
     clearAdminCookies(res, isProduction);
     res.status(204).send();

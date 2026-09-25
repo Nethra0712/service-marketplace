@@ -1,0 +1,547 @@
+<title>Sprint 11 Report</title>
+<meta name="description" content="Testing and security-hardening report for Service Marketplace: 1,435 tests across three codebases, a full security audit, financial-integrity and concurrency review, real bugs found and fixed, and a release-readiness assessment.">
+<style>
+  :root {
+    --bg: #f7f5f1;
+    --surface: #ffffff;
+    --surface-2: #f0eee8;
+    --border: #e2ddd2;
+    --text: #241f18;
+    --text-dim: #6b6252;
+    --text-faint: #948a76;
+    --accent: #8a3b2b;
+    --accent-dim: #b5583f;
+    --mono-bg: #efe9dd;
+
+    --sev-critical-bg: #fbe3e0;
+    --sev-critical-fg: #9a2c1f;
+    --sev-high-bg: #fbe9d9;
+    --sev-high-fg: #9c5211;
+    --sev-medium-bg: #fdf1cf;
+    --sev-medium-fg: #8a6a0a;
+    --sev-low-bg: #e4eef6;
+    --sev-low-fg: #2b5d82;
+    --sev-info-bg: #eeece6;
+    --sev-info-fg: #635a48;
+    --sev-clean-bg: #e3ede3;
+    --sev-clean-fg: #33612f;
+
+    --status-fixed-bg: #e3ede3;
+    --status-fixed-fg: #2e5e2a;
+    --status-deferred-bg: #f0eee8;
+    --status-deferred-fg: #6b6252;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1815;
+      --surface: #262119;
+      --surface-2: #2d271e;
+      --border: #423a2c;
+      --text: #efe8da;
+      --text-dim: #b8ac96;
+      --text-faint: #8a806c;
+      --accent: #e08a6f;
+      --accent-dim: #c96e50;
+      --mono-bg: #2d271e;
+
+      --sev-critical-bg: #3d211c;
+      --sev-critical-fg: #f0a495;
+      --sev-high-bg: #3c2c17;
+      --sev-high-fg: #f0b578;
+      --sev-medium-bg: #3a3115;
+      --sev-medium-fg: #ecca6b;
+      --sev-low-bg: #1c2e3a;
+      --sev-low-fg: #8fc1e8;
+      --sev-info-bg: #2d2921;
+      --sev-info-fg: #b8ac96;
+      --sev-clean-bg: #1e2e1c;
+      --sev-clean-fg: #8fc98a;
+
+      --status-fixed-bg: #1e2e1c;
+      --status-fixed-fg: #8fc98a;
+      --status-deferred-bg: #2d2921;
+      --status-deferred-fg: #b8ac96;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1815;
+    --surface: #262119;
+    --surface-2: #2d271e;
+    --border: #423a2c;
+    --text: #efe8da;
+    --text-dim: #b8ac96;
+    --text-faint: #8a806c;
+    --accent: #e08a6f;
+    --accent-dim: #c96e50;
+    --mono-bg: #2d271e;
+    --sev-critical-bg: #3d211c;
+    --sev-critical-fg: #f0a495;
+    --sev-high-bg: #3c2c17;
+    --sev-high-fg: #f0b578;
+    --sev-medium-bg: #3a3115;
+    --sev-medium-fg: #ecca6b;
+    --sev-low-bg: #1c2e3a;
+    --sev-low-fg: #8fc1e8;
+    --sev-info-bg: #2d2921;
+    --sev-info-fg: #b8ac96;
+    --sev-clean-bg: #1e2e1c;
+    --sev-clean-fg: #8fc98a;
+    --status-fixed-bg: #1e2e1c;
+    --status-fixed-fg: #8fc98a;
+    --status-deferred-bg: #2d2921;
+    --status-deferred-fg: #b8ac96;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    line-height: 1.55;
+    padding: 0 16px;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding-block: 48px 80px; }
+
+  h1, h2, h3, .label, .mono, nav, .pill, th, .stat-num, .stat-label {
+    font-family: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+  }
+  .mono, code, .path { font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace; }
+
+  header.masthead {
+    border-bottom: 3px solid var(--text);
+    padding-bottom: 22px;
+    margin-bottom: 8px;
+  }
+  .eyebrow {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-dim);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 40px);
+    line-height: 1.12;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .subtitle {
+    font-size: 16px;
+    color: var(--text-dim);
+    margin: 0 0 18px;
+    max-width: 60ch;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+  .meta-row b { color: var(--text-dim); font-weight: 600; }
+
+  nav.toc {
+    margin: 28px 0 40px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  nav.toc .label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; display: block; }
+  nav.toc ol { columns: 2; column-gap: 24px; margin: 0; padding-left: 18px; }
+  nav.toc li { break-inside: avoid; margin-bottom: 5px; }
+  nav.toc a { color: var(--text-dim); text-decoration: none; }
+  nav.toc a:hover { color: var(--accent-dim); text-decoration: underline; }
+
+  section { margin: 44px 0; }
+  h2 {
+    font-size: 22px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 0 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    scroll-margin-top: 16px;
+  }
+  h2 .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent-dim);
+    background: var(--sev-info-bg);
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  h3 { font-size: 15px; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; margin: 26px 0 8px; color: var(--text); }
+  p { margin: 0 0 14px; }
+  p.lede { font-size: 15px; color: var(--text-dim); margin-top: 12px; }
+  ul, ol.plain { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 5px; }
+  a { color: var(--accent-dim); }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 18px 0 28px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat-num { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stat-num .of { font-size: 15px; font-weight: 500; color: var(--text-faint); }
+  .stat-label { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+  .stat.pass .stat-num { color: var(--sev-clean-fg); }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 22px; font-size: 13.5px; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-faint);
+    font-weight: 600;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .tbl-wrap table { margin: 0; }
+  .tbl-wrap th:first-child, .tbl-wrap td:first-child { padding-left: 14px; }
+  .tbl-wrap th:last-child, .tbl-wrap td:last-child { padding-right: 14px; }
+
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .sev-critical { background: var(--sev-critical-bg); color: var(--sev-critical-fg); }
+  .sev-high { background: var(--sev-high-bg); color: var(--sev-high-fg); }
+  .sev-medium { background: var(--sev-medium-bg); color: var(--sev-medium-fg); }
+  .sev-low { background: var(--sev-low-bg); color: var(--sev-low-fg); }
+  .sev-info { background: var(--sev-info-bg); color: var(--sev-info-fg); }
+  .sev-clean { background: var(--sev-clean-bg); color: var(--sev-clean-fg); }
+  .status-fixed { background: var(--status-fixed-bg); color: var(--status-fixed-fg); }
+  .status-deferred { background: var(--status-deferred-bg); color: var(--status-deferred-fg); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 14px 0;
+  }
+  .card + .card { margin-top: 10px; }
+  .finding-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .finding-title { font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; font-size: 14.5px; }
+  .finding-meta { font-size: 12px; color: var(--text-faint); font-family: 'IBM Plex Sans', sans-serif; }
+  .finding-body p { font-size: 13.5px; margin-bottom: 8px; }
+  .finding-body p:last-child { margin-bottom: 0; }
+
+  code, .path {
+    background: var(--mono-bg);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.86em;
+  }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    border-radius: 0 10px 10px 0;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    color: var(--text-dim);
+  }
+  .callout.warn { border-left-color: var(--sev-high-fg); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .clean-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; margin: 12px 0 20px; }
+  .clean-item { font-size: 13px; display: flex; gap: 8px; align-items: flex-start; }
+  .clean-item .dot { color: var(--sev-clean-fg); font-weight: 700; flex-shrink: 0; }
+  @media (max-width: 620px) { .clean-grid { grid-template-columns: 1fr; } .stat-grid { grid-template-columns: repeat(2, 1fr); } nav.toc ol { columns: 1; } }
+
+  footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-faint); font-family: 'IBM Plex Sans', sans-serif; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Service Marketplace &middot; Internal Report</p>
+    <h1>Sprint 11: Testing, Security &amp; Release Readiness</h1>
+    <p class="subtitle">A full-depth pass across the backend, admin dashboard, and mobile app: comprehensive test coverage, a security audit against a standard vulnerability checklist, a financial-integrity and concurrency review, and an honest accounting of what still stands between this system and a first production deployment.</p>
+    <div class="meta-row">
+      <span><b>Scope</b> server/, admin/, mobile/</span>
+      <span><b>Prior sprints</b> 1&ndash;10 complete</span>
+      <span><b>Status</b> audit complete, nothing committed or pushed</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <span class="label">Contents</span>
+    <ol>
+      <li><a href="#tests-run">Tests run</a></li>
+      <li><a href="#tests-result">Tests passed / failed</a></li>
+      <li><a href="#findings">Security &amp; correctness findings</a></li>
+      <li><a href="#clean">Reviewed and confirmed clean</a></li>
+      <li><a href="#risks">Remaining risks</a></li>
+      <li><a href="#blockers">Production blockers</a></li>
+      <li><a href="#performance">Performance results</a></li>
+      <li><a href="#readiness">Deployment readiness</a></li>
+    </ol>
+  </nav>
+
+  <section id="tests-run">
+    <h2><span class="num">1</span> Tests run</h2>
+    <p class="lede">Unit, integration (against a real PostgreSQL instance &mdash; no mocked database anywhere in the backend suite), API/HTTP, authorization (including IDOR checks and admin-vs-everyone-else boundaries), and concurrency tests (genuine parallel <code>Promise.all</code> requests racing the same resource, not just sequential steps).</p>
+
+    <div class="stat-grid">
+      <div class="stat pass"><div class="stat-num">942</div><div class="stat-label">Backend tests &middot; 59 files</div></div>
+      <div class="stat pass"><div class="stat-num">15</div><div class="stat-label">Admin app tests &middot; 3 files</div></div>
+      <div class="stat pass"><div class="stat-num">478</div><div class="stat-label">Mobile tests &middot; 34 files</div></div>
+      <div class="stat pass"><div class="stat-num">1,435</div><div class="stat-label">Total, all green</div></div>
+    </div>
+
+    <h3>New this sprint</h3>
+    <p>12 backend tests and 2 mobile widget tests were added specifically to close gaps a dedicated coverage audit found, and to cover the fixes below: admin session expiry (2), admin logout CSRF (1), admin account lockout (4), the realtime-tracking cache-eviction wiring (5), and mobile tracking disconnect/reconnect + room-rejoin behavior (2).</p>
+
+    <h3>Static analysis &amp; builds</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Check</th><th>Backend</th><th>Admin</th><th>Mobile</th></tr>
+        <tr><td>Typecheck</td><td>clean</td><td>clean</td><td>&mdash;</td></tr>
+        <tr><td>Lint</td><td>clean</td><td>clean</td><td>clean (1 pre-existing informational hint, unrelated to this sprint)</td></tr>
+        <tr><td>Format</td><td>clean</td><td>clean</td><td>clean</td></tr>
+        <tr><td>Build</td><td><code>npm run build</code> succeeds</td><td><code>next build</code> succeeds, all 15 routes</td><td>Android debug APK builds successfully</td></tr>
+      </table>
+    </div>
+    <p class="lede">iOS release build was <b>not verified</b> &mdash; this sprint ran on Windows, which cannot build or sign an iOS app. See <a href="#blockers">blockers</a>.</p>
+  </section>
+
+  <section id="tests-result">
+    <h2><span class="num">2</span> Tests passed / failed</h2>
+    <p>All 1,435 tests pass. Zero failures. Zero skipped or pending tests were found anywhere in any of the three suites (checked explicitly for <code>it.skip</code>, <code>describe.skip</code>, <code>xit</code>, and similar across all three codebases).</p>
+    <div class="callout">
+      <p>A dedicated coverage audit compared the existing suite against the full critical end-to-end flow (registration through admin visibility) and a list of edge cases from the sprint brief (provider/customer cancellation, no available provider, payment failure, duplicate callback, duplicate acceptance, network interruption, expired auth, revoked session). Every item was already covered except two, both closed this sprint: admin session natural expiry, and mobile tracking reconnect &mdash; see the findings below.</p>
+    </div>
+  </section>
+
+  <section id="findings">
+    <h2><span class="num">3&ndash;4</span> Security &amp; correctness findings</h2>
+    <p class="lede">From three focused audits (authentication/authorization/injection/CSRF/CORS/rate-limiting/secrets; financial integrity and concurrency; test-coverage gap analysis) plus manual follow-up. Ordered by severity. Every finding below was fixed this sprint unless marked otherwise, and every fix was verified against the full test suite afterward.</p>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-medium">Medium&ndash;High</span><span class="finding-title">Payout calculation wasn't transactional</span><span class="pill status-fixed">Fixed</span></div>
+      <div class="finding-meta">Financial integrity &middot; <span class="path">payments.service.ts</span></div>
+      <div class="finding-body">
+        <p><b>Scenario:</b> <code>calculatePayoutsForPeriod</code> inserted a payout row, then separately stamped its payments with that payout's id. A crash between the two left a payout row that looked final &mdash; the function's own idempotency check would skip that provider on every future recompute &mdash; while the underlying payments were never marked as swept into it. Those payments would then be silently, permanently excluded from any payout, with no error anywhere.</p>
+        <p><b>Fix:</b> both writes now run inside a single <code>db.transaction</code>, per provider.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-medium">Medium</span><span class="finding-title">Admin login had no per-account lockout</span><span class="pill status-fixed">Fixed</span></div>
+      <div class="finding-meta">Authentication &middot; <span class="path">admin-auth.service.ts</span></div>
+      <div class="finding-body">
+        <p><b>Scenario:</b> the only defense against password guessing was a per-IP rate limit (10 attempts / 15 min). An attacker distributing guesses across many source IPs faced no account-level limit at all.</p>
+        <p><b>Fix:</b> added a database-backed per-account lockout &mdash; 10 consecutive failures locks the account for 15 minutes, timing-consistent with the existing unknown-email/wrong-password path so a locked account can't be distinguished from a merely-wrong-password one by response time. A locked-out account's lock is never extended by further attempts (a fixed window, not sliding), so hammering a locked account can't be used to keep it locked indefinitely.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-medium">Medium</span><span class="finding-title">Refund calls the gateway before persisting state</span><span class="pill status-deferred">Documented, not code-fixed</span></div>
+      <div class="finding-meta">Financial integrity &middot; <span class="path">payments.service.ts</span> &middot; <span class="path">payhere-payment-provider.ts</span></div>
+      <div class="finding-body">
+        <p><b>Scenario:</b> a crash between the gateway refund call succeeding and the local DB write committing would leave the payment looking un-refunded; a retry (the natural recovery action) would call the gateway a second time.</p>
+        <p><b>Why not fixed in code:</b> PayHere's real Refund API is not wired up in this codebase &mdash; <code>PayHereProvider.refund</code> always rejects with a clear error. Only the mock provider can reach this path today, so the risk is currently dormant, not live. Documented in <code>docs/INCIDENT_RESPONSE.md</code> with a note to add a gateway-side idempotency key when real refunds are implemented.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-medium">Medium</span><span class="finding-title">Real bug: tracking never rejoined after a reconnect</span><span class="pill status-fixed">Fixed</span></div>
+      <div class="finding-meta">Reliability &middot; Mobile &middot; <span class="path">tracking_providers.dart</span></div>
+      <div class="finding-body">
+        <p><b>Scenario:</b> found via the coverage-gap audit, not the security audits. Socket.IO room membership lives on the connection itself. After any network blip, the client's socket reconnects with a brand-new underlying connection &mdash; the server has silently forgotten the room &mdash; but the app never rejoined it. The UI's connection badge would correctly flip back to &ldquo;Live&rdquo;, while location updates for that booking would stay dark for the rest of the session.</p>
+        <p><b>Fix:</b> <code>BookingTrackingController</code> now detects a genuine reconnect (a <code>disconnected</code> state, however many <code>connecting</code> retries follow, landing on <code>connected</code>) and rejoins the room automatically &mdash; while correctly not re-joining on the very first connect, which is already handled. Two new widget tests cover both the connection-state UI transitions and the actual rejoin call.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-low">Low</span><span class="finding-title">Two more payment writes weren't transactional</span><span class="pill status-fixed">Fixed</span></div>
+      <div class="finding-meta">Financial integrity (audit-trail only) &middot; <span class="path">payments.service.ts</span></div>
+      <div class="finding-body">
+        <p><b>Scenario:</b> <code>createPaymentRow</code> (the insert + its ledger entry) and the success path of <code>handleCallback</code> (the status transition + its ledger entry) were each two separate statements. A crash between them would leave the payment's own <code>status</code> column &mdash; the actual source of truth for idempotency everywhere else in the system &mdash; correct, but with a missing ledger entry for that one event: an audit-trail gap, never a double-processing or money-safety issue.</p>
+        <p><b>Fix:</b> both pairs now run inside a single transaction each.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-low">Low</span><span class="finding-title">A concurrent dispatch wave could drop legitimate offers</span><span class="pill status-fixed">Fixed</span></div>
+      <div class="finding-meta">Concurrency &middot; <span class="path">bookings.repository.ts</span></div>
+      <div class="finding-body">
+        <p><b>Scenario:</b> <code>insertOfferWave</code> did one multi-row insert and caught-and-swallowed unique-violation errors from the whole statement. A <i>partial</i> collision (some candidate rows new, one colliding with a concurrent dispatch for the same booking) failed and discarded the entire wave, including the legitimately-new candidates, not just the colliding one.</p>
+        <p><b>Fix:</b> switched to <code>onConflictDoNothing()</code>, which Postgres applies per-row on a multi-row insert &mdash; only the actually-colliding rows are skipped.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-info">Informational</span><span class="finding-title">Live-location cache was never wired to booking lifecycle events</span><span class="pill status-fixed">Fixed</span></div>
+      <div class="finding-meta">Reliability (memory hygiene, not a privacy leak) &middot; <span class="path">app.ts</span> &middot; <span class="path">bookings.service.ts</span></div>
+      <div class="finding-body">
+        <p><b>Scenario:</b> the realtime module's <code>forgetBooking</code> cleanup hook was built but its return value was discarded in <code>server.ts</code> &mdash; nothing ever called it. Not a privacy issue: every room join and location update independently re-validates the booking's live database status, so a stale cached location could never actually reach anyone. It was purely an unbounded in-memory growth risk for a long-running process.</p>
+        <p><b>Fix:</b> wired via a forward-reference (the realtime module is necessarily constructed after the Express app, which needed a small indirection) into booking completion, cancellation, release, and matching-window expiry.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-info">Informational</span><span class="finding-title">Non-constant-time webhook signature comparison</span><span class="pill status-fixed">Fixed</span></div>
+      <div class="finding-meta">Authentication &middot; <span class="path">payhere-payment-provider.ts</span></div>
+      <div class="finding-body">
+        <p>The PayHere callback signature check used <code>!==</code> on two strings. Theoretical timing side-channel; very low practical risk given MD5-over-HTTPS with a random merchant secret. Switched to the codebase's existing <code>timingSafeEqual</code>-backed <code>safeEqual</code> helper, already used for OTP and CSRF comparisons.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-info">Informational</span><span class="finding-title">Payment webhook had no rate limiting</span><span class="pill status-fixed">Fixed</span></div>
+      <div class="finding-meta">Rate limiting &middot; <span class="path">payments.routes.ts</span></div>
+      <div class="finding-body">
+        <p>By necessity &mdash; it's an unauthenticated gateway callback endpoint, so it can't require a session. Signature verification is the real protection against state-changing abuse; the gap was a minor request-flooding surface. Added a generous IP-based limit (300/min) as defense-in-depth, sized so it won't interfere with the gateway's own legitimate traffic from its small pool of server IPs.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-info">Informational</span><span class="finding-title">Admin logout wasn't CSRF-protected</span><span class="pill status-fixed">Fixed</span></div>
+      <div class="finding-meta">CSRF &middot; <span class="path">admin-auth.routes.ts</span></div>
+      <div class="finding-body">
+        <p>Every other mutating admin route required the CSRF header; logout didn't. Not actually exploitable &mdash; the session cookie's <code>SameSite=Strict</code> already stops it being sent on a cross-site request at all &mdash; but inconsistent. Added <code>requireCsrf</code> for consistency, with a regression test proving the session survives a CSRF-missing logout attempt.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-info">Informational</span><span class="finding-title">No test proved admin sessions expire naturally</span><span class="pill status-fixed">Fixed</span></div>
+      <div class="finding-meta">Test coverage &middot; <span class="path">auth.test.ts</span></div>
+      <div class="finding-body">
+        <p>Only logout-revocation and a forged/garbage cookie were tested; nothing advanced the clock past a session's natural lifetime. Added both a just-before-expiry (still works) and just-after-expiry (rejected) test.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="finding-head"><span class="pill sev-info">Informational</span><span class="finding-title">Outdated transitive dependencies with advisories</span><span class="pill status-deferred">Deferred</span></div>
+      <div class="finding-meta">Dependencies</div>
+      <div class="finding-body">
+        <p><b><span class="path">server/</span>:</b> <code>firebase-admin</code>'s transitive <code>uuid</code> dependency has a moderate advisory (a buffer bounds check). Fixing it requires a <code>firebase-admin</code> major version bump, which needs a retest against real FCM push delivery &mdash; scheduled as a follow-up rather than done blind in this sprint.</p>
+        <p><b><span class="path">admin/</span>:</b> two moderate/high advisories, both in dev/build-only transitive dependencies (Vitest's mocker; Next.js's bundled PostCSS) &mdash; neither ships to the production runtime, and fixing them requires major version bumps (Next 15&rarr;16, Vitest 3&rarr;5).</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="clean">
+    <h2><span class="num">&#10003;</span> Reviewed and confirmed clean</h2>
+    <p class="lede">Checked against actual code, not inferred from naming &mdash; each of these was verified by reading the relevant handler, schema, or query, not assumed.</p>
+    <div class="clean-grid">
+      <div class="clean-item"><span class="dot">&#10003;</span> Authentication bypass &mdash; every protected route gated, JWT algorithm/issuer/audience pinned, DB-checked on every request</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Authorization bypass / IDOR &mdash; every owned resource scoped to the caller; a booking/payment/review/application that isn't theirs 404s</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> SQL injection &mdash; no raw string-concatenated SQL anywhere; the few <code>sql\`\`</code> uses are parameterized</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> XSS &mdash; pure JSON API; no user input is ever interpolated into an SMS/notification template</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Insecure CORS &mdash; explicit origin allow-list, never wildcard + credentials</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> OTP abuse &mdash; CSPRNG codes, HMAC-hashed at rest, 5 attempts/challenge, 5 challenges/hour/phone, advisory-locked against races</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Token leakage &mdash; Authorization/cookie headers redacted in logs; no token ever logged in application code</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Refresh-token reuse &mdash; a replayed token revokes the whole session family, not a silent reissue</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Sensitive logging &mdash; no password, OTP code, or full JWT logged anywhere; mock-SMS OTP-in-log is explicitly production-refused</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Admin privilege escalation &mdash; no HTTP path creates an admin account; no route accepts a caller-supplied role field</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Mass assignment &mdash; <code>z.strictObject</code> allow-lists throughout; price/status/verification fields are never client-writable</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Unsafe file uploads &mdash; no upload capability exists anywhere in the codebase</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Duplicate payment / payout prevention &mdash; enforced at the database level, not just application logic</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Booking double-acceptance &mdash; DB-level conditional update + unique index, verified with real concurrent requests</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Server-side commission &amp; pricing &mdash; never client-supplied, anywhere, for any pricing model</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Rounding correctness &mdash; commission + provider earning always sum exactly to the service amount, by construction</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Financial record immutability &mdash; ledger and payout totals are never updated after insert</div>
+      <div class="clean-item"><span class="dot">&#10003;</span> Location privacy &mdash; no history persisted; room join re-validated against live status; tracking self-heals on every access</div>
+    </div>
+  </section>
+
+  <section id="risks">
+    <h2><span class="num">5</span> Remaining risks</h2>
+    <ul>
+      <li><b>Refund/gateway crash window</b> &mdash; dormant until PayHere's real Refund API is implemented; needs a gateway-side idempotency key at that point (see finding above).</li>
+      <li><b>Rate limiting is single-instance only</b> &mdash; counters live in process memory; running more than one backend instance behind a load balancer makes every limit approximate until a shared store (Redis) replaces it.</li>
+      <li><b>Outdated transitive dependencies</b> with moderate/high advisories, deferred pending major version bumps and (for <code>firebase-admin</code>) a push-delivery retest.</li>
+      <li><b>No dedicated load-testing tooling</b> in this environment &mdash; concurrency <i>correctness</i> was verified with real parallel requests (see Performance below), but sustained-throughput numbers under hundreds of simultaneous users were not measured.</li>
+    </ul>
+  </section>
+
+  <section id="blockers">
+    <h2><span class="num">6</span> Production blockers</h2>
+    <p>None of these are code-correctness defects &mdash; the application logic was thoroughly tested and audited this sprint. These are operational and release-engineering gaps that come before a first real deployment.</p>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>#</th><th>Blocker</th><th>Area</th></tr>
+        <tr><td>1</td><td>No automated database backups configured anywhere</td><td>Ops</td></tr>
+        <tr><td>2</td><td>PayHere's real Refund API isn't implemented (mock provider only)</td><td>Backend</td></tr>
+        <tr><td>3</td><td>Rate limiting doesn't survive multiple backend instances</td><td>Ops</td></tr>
+        <tr><td>4</td><td>No CI pipeline &mdash; checks are run by hand today</td><td>All three apps</td></tr>
+        <tr><td>5</td><td>No monitoring or alerting configured</td><td>Ops</td></tr>
+        <tr><td>6</td><td>Android <code>applicationId</code> is still the <code>com.example.mobile</code> placeholder</td><td>Mobile</td></tr>
+        <tr><td>7</td><td>Android release build is signed with the debug keystore</td><td>Mobile</td></tr>
+        <tr><td>8</td><td>iOS release build unverified (no macOS available this sprint)</td><td>Mobile</td></tr>
+        <tr><td>9</td><td>No staging or production backend is actually deployed yet</td><td>All three apps</td></tr>
+      </table>
+    </div>
+    <p class="lede">Full detail and reasoning for each: <code>docs/DEPLOYMENT.md</code>.</p>
+  </section>
+
+  <section id="performance">
+    <h2><span class="num">7</span> Performance results</h2>
+    <h3>Response times (local dev-scale data)</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Endpoint</th><th>Cold</th><th>Warm (typical)</th></tr>
+        <tr><td>Public catalogue (<code>/api/cities</code>, <code>/api/service-categories</code>)</td><td>~18&ndash;24 ms</td><td>3&ndash;5 ms</td></tr>
+        <tr><td>Admin dashboard aggregate (8 parallel queries)</td><td>~178 ms</td><td>15&ndash;18 ms</td></tr>
+      </table>
+    </div>
+    <h3>Database query plans</h3>
+    <p>The provider-matching candidate query &mdash; the hottest path in dispatch &mdash; was checked with <code>EXPLAIN ANALYZE</code> against real indexes: confirmed to use <code>provider_services_city_category_status_idx</code> as an index scan, not a sequential scan, with the join to <code>provider_profiles</code> resolved by primary key. Index design for every other concurrency-critical query (booking acceptance, payment lookup by external reference, payout idempotency) was reviewed structurally in the financial-integrity audit and confirmed backed by the appropriate unique index &mdash; see <code>docs/DATABASE.md</code>.</p>
+    <h3>Concurrency correctness</h3>
+    <p>Not raw throughput, but the thing that actually matters here: every documented race condition was verified with <i>genuine</i> parallel requests (real <code>Promise.all</code>, not sequential steps dressed up as a race), and every one of them produces exactly one winner, every time:</p>
+    <ul>
+      <li>Two and three simultaneous booking-accept attempts on the same offer wave, repeated across 10 trials</li>
+      <li>Simultaneous quote acceptance</li>
+      <li>Simultaneous OTP request volume-cap and simultaneous OTP guess attempts</li>
+      <li>Simultaneous refresh-token use of the same token</li>
+      <li>Simultaneous identical provider category applications</li>
+      <li>Simultaneous conflicting provider-review decisions</li>
+    </ul>
+    <h3>What wasn't measured</h3>
+    <p class="lede">No dedicated load-generation tool (k6, Artillery, or similar) is installed in this environment, so sustained-concurrency throughput &mdash; hundreds of simultaneous bookings, payment callbacks, or location updates &mdash; was not measured under real load. The backend's own 942-test suite (heavy real-database I/O, a fresh app instance per file) completing in roughly 205 seconds is a rough proxy that nothing is pathologically slow, not a substitute for real load testing.</p>
+  </section>
+
+  <section id="readiness">
+    <h2><span class="num">8</span> Deployment readiness</h2>
+    <p>The application itself &mdash; authentication, authorization, the booking lifecycle, matching, payments and commission, payouts, reviews, notifications, and the admin dashboard &mdash; is thoroughly tested (1,435 passing tests, including real-concurrency races) and was security-audited this sprint against a standard vulnerability checklist, with every finding either fixed or explicitly documented as a deferred, low-exploitability risk.</p>
+    <p>What stands between this and a first production deployment is entirely operational: no backups, no CI, no monitoring, no deployed environment, and two concrete mobile release-signing steps. None of it is a defect in what's been built. The nine items in <a href="#blockers">Production blockers</a> are the honest, complete list.</p>
+  </section>
+
+  <footer>
+    Sprint 11 &middot; Testing, Security &amp; Release Readiness &middot; Nothing in this sprint's changes has been committed or pushed, per the sprint's own instruction. Full detail lives alongside the code: <code>docs/ARCHITECTURE.md</code>, <code>docs/API.md</code>, <code>docs/DATABASE.md</code>, <code>docs/DEPLOYMENT.md</code>, <code>docs/INCIDENT_RESPONSE.md</code>.
+  </footer>
+
+</div>

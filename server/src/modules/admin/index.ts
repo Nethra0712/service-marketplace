@@ -34,7 +34,7 @@ import { requireCsrf } from './require-csrf.js';
 export { getAdminAuth, type AdminAuthContext } from './require-admin-auth.js';
 
 /** One week: long enough that an admin is not signed out mid-shift, short enough that a stolen cookie is not a standing risk. */
-const ADMIN_SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
+export const ADMIN_SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 export interface AdminModuleDeps {
   db: Database;
@@ -72,7 +72,7 @@ export function createAdminModule({
   });
   const sessions = createAdminSessionService({ db, clock, tokens });
   const requireAdminAuth = createRequireAdminAuth({ tokens, sessions });
-  const authService = createAdminAuthService({ db, sessions });
+  const authService = createAdminAuthService({ db, sessions, clock });
   const audit = createAuditLogService({ db, clock });
 
   const router = Router();

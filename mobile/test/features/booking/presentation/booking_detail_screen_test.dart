@@ -617,6 +617,76 @@ void main() {
 
       expect(find.text(en.trackingLive), findsOneWidget);
     });
+
+    testWidgets('reflects a disconnect and then a reconnect', (tester) async {
+      f.booking.bookings.add(
+        bookingOf(
+          id: 'b1',
+          status: BookingStatus.accepted,
+          provider: const BookingParty(id: 'p1'),
+        ),
+      );
+
+      await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+      f.tracking.emitConnectionState(TrackingConnectionState.connected);
+      await settle(tester);
+      expect(find.text(en.trackingLive), findsOneWidget);
+
+      f.tracking.emitConnectionState(TrackingConnectionState.disconnected);
+      await settle(tester);
+      expect(find.text(en.trackingDisconnected), findsOneWidget);
+
+      f.tracking.emitConnectionState(TrackingConnectionState.connecting);
+      await settle(tester);
+      expect(find.text(en.trackingConnecting), findsOneWidget);
+
+      f.tracking.emitConnectionState(TrackingConnectionState.connected);
+      await settle(tester);
+      expect(find.text(en.trackingLive), findsOneWidget);
+    });
+
+    testWidgets(
+      'rejoins the booking room after a genuine reconnect, not on the initial connect',
+      (tester) async {
+        f.booking.bookings.add(
+          bookingOf(
+            id: 'b1',
+            status: BookingStatus.accepted,
+            provider: const BookingParty(id: 'p1'),
+          ),
+        );
+
+        await f.open(tester, AppRoutes.bookingDetailLocation('b1'));
+        expect(f.tracking.joinedBookingIds, ['b1']);
+
+        // The initial connect (as the real socket.io client would report it,
+        // before this room was ever joined) must not trigger a second join.
+        f.tracking.emitConnectionState(TrackingConnectionState.connected);
+        await settle(tester);
+        expect(f.tracking.joinedBookingIds, ['b1']);
+
+        // A drop followed by the socket coming back up is a brand-new
+        // connection server-side, so it has to actually rejoin the room —
+        // otherwise the badge would say "Live" while updates stay dark.
+        f.tracking.emitConnectionState(TrackingConnectionState.disconnected);
+        f.tracking.emitConnectionState(TrackingConnectionState.connecting);
+        f.tracking.emitConnectionState(TrackingConnectionState.connected);
+        await settle(tester);
+        expect(f.tracking.joinedBookingIds, ['b1', 'b1']);
+
+        // And tracking genuinely works again afterwards.
+        f.tracking.emitLocation(
+          'b1',
+          TrackedLocation(
+            latitude: 6.9019,
+            longitude: 79.8607,
+            at: DateTime.utc(2026, 1, 1, 9),
+          ),
+        );
+        await settle(tester);
+        expect(key('map_marker_provider'), findsOneWidget);
+      },
+    );
   });
 
   group('live tracking, provider view', () {
